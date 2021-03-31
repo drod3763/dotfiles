@@ -1,0 +1,31 @@
+# CD preferences
+shopt -s cdable_vars
+## Automatically fix directory name typos when changing directory.
+shopt -s cdspell
+## Automatically expand directory globs and fix directory name typos whilst completing. Note, this works in conjuction with the cdspell option listed above.
+shopt -s direxpand dirspell
+## Enable the ** globstar recursive pattern in file and directory expansions.
+shopt -s globstar
+
+# History preferences
+shopt -s histappend
+shopt -s histreedit
+shopt -s histverify
+HISTCONTROL='ignoreboth':erasedups
+HISTIGNORE=?:??
+HISTFILESIZE=50000
+HISTSIZE=50000
+PROMPT_COMMAND="history -a;history -c;history -r; $PROMPT_COMMAND"
+
+export DOTFILES=$HOME/Dropbox/dotfiles
+
+# Source common scripts
+source $DOTFILES/common-setup
+
+alias reload='source ~/.bash_profile'
+alias -- -='cd -'
+alias ..='cd ..'
+alias ..2='..; ..'
+alias ..3='..2; ..'
+alias ..4='..3; ..'
+alias ..5='..4; ..'

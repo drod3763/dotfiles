@@ -1,0 +1,91 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+export DOTFILES=$HOME/Dropbox/dotfiles
+source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+
+[[ -e /usr/share/oh-my-zsh/zshrc ]] && source $DOTFILES/ohmyzsh
+
+# Setup history since its forgotten by default
+HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
+SAVEHIST=5000
+HISTSIZE=2000
+
+#chpwd() { nnn }
+setopt SHARE_HISTORY # share history across multiple zsh sessions
+setopt APPEND_HISTORY # append to history
+setopt INC_APPEND_HISTORY # adds commands as they are typed, not at shell exit
+setopt HIST_IGNORE_DUPS # do not store duplications
+setopt HIST_REDUCE_BLANKS # removes blank lines from history
+setopt EXTENDED_HISTORY # adds a bit more data to the history entries
+setopt CORRECT_ALL # correct all commands
+setopt AUTO_CD # shell will automatically change directory if your forget to type CD
+setopt NO_CASE_GLOB # case insensitive globbing
+setopt HASH_LIST_ALL # update list of commands so you don't get corrections for real things
+
+# Source common scripts
+source $DOTFILES/common-setup
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f $HOME/.p10k.zsh ]] || source $HOME/.p10k.zsh
+
+if [[ `uname --kernel-name` == "Darwin" ]]; then
+  # Starting small with Powerlevel10k
+  source $HOMEBREW/opt/powerlevel10k/powerlevel10k.zsh-theme
+
+  zstyle :compinstall filename '/Users/derick/.zshrc'
+  # Homebrew Completions
+  if type brew &>/dev/null; then
+    FPATH=$(brew --prefix)/share/zsh/site-functions:$FPATH
+
+    autoload -Uz compinit
+    compinit
+  fi
+fi
+
+# Case insensitive completion
+# zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*'
+
+## case-insensitive (uppercase from lowercase) completion
+#zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+## case-insensitive (all) completion
+#zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+## case-insensitive,partial-word and then substring completion
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+
+zstyle ':completion:*' menu select # select completions with arrow keys
+zstyle ':completion:*' group-name '' # group results by category
+zstyle ':completion:::::' completer _expand _complete _ignored _approximate # enable approximate matches for completion
+
+# partial completion suggestions
+zstyle ':completion:*' list-suffixes
+zstyle ':completion:*' expand prefix suffix
+
+# Bind delete key to delete and not insert ~
+bindkey '^[[3~' delete-char
+bindkey '^[3;5~' delete-char
+
+# binds Up and Down (adjust for your own escape sequences) to a history search, backwards and forwards, based upon what has already been entered at the prompt.
+bindkey "^[[A" history-beginning-search-backward
+bindkey "^[[B" history-beginning-search-forward
+
+autoload -Uz compinit && compinit
+
+# load bashcompinit for some old bash completions
+autoload bashcompinit && bashcompinit
+[[ -r ~/Projects/autopkg_complete/autopkg ]] && source ~/Projects/autopkg_complete/autopkg
+
+# a custom zle widget to wrap history-incremental-search-backward and pass the $BUFFER variable which contains the contents of the zsh prompt typed so far. You can then continue typing in the minibuffer to further narrow your search.
+_history-incremental-search-backward () {
+    zle .history-incremental-search-backward $BUFFER
+}
+zle -N history-incremental-search-backward _history-incremental-search-backward
+
+alias reload='source ~/.zshrc'
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
