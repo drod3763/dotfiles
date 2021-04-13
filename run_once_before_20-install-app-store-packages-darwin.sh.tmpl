@@ -3,11 +3,6 @@
 
 set -eufo pipefail
 
-{{ $email := promptString "App Store ID" -}}
-{{ $password := promptString "App Store Password" -}}
-
-mas login
-
 ids=(
     918858936
 	1091189122
