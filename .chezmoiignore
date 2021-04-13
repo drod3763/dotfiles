@@ -1,11 +1,32 @@
+*.deb
+*.tar.gz
+1password_settings.json
 aliases
 common_setup
 exports
 functions
-1password_settings.json
+install.sh
+Makefile
+README.md
 vscode_settings.json
 
 {{- if ne .chezmoi.os "linux" }}
-    ~/.config/paru
-    ~/.config/1Password
+~/.config/paru
+~/.config/1Password
 {{- end }}
+
+{{ if ne .chezmoi.os "windows" }}
+Documents
+{{ else }}
+.bash_aliases
+.inputrc
+.oh-my-zsh
+.p10k.zsh
+.ssh/authorized_keys
+.ssh/id_rsa
+.ssh/id_rsa.pub
+.tmux.conf
+.vim
+.vimrc
+.zshrc
+{{ end }}

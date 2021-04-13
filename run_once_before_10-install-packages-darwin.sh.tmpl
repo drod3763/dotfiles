@@ -1,0 +1,83 @@
+{{- if (eq .chezmoi.os "darwin") -}}
+#!/bin/bash
+
+set -eufo pipefail
+
+taps=(
+    wez/wezterm
+)
+
+formulae=(
+	1password
+    1password-cli
+    alfred
+    asdf
+    bat
+    betterzip
+    curl
+	docker
+    duet
+    dust
+    exa
+    fd
+    firefox-developer-edition
+    fzf
+    gh
+    git-delta
+    google-chrome-canary
+    httpie
+    kaleidoscope
+    krisp
+    macs-fan-control
+    mas
+    mosh
+    muzzle
+    postman
+    ripgrep
+    romkatv/powerlevel10k/powerlevel10k
+    snagit
+    soulver
+    soundsource
+    sqlpro-studio
+    tealdeer
+    thefuck
+    textexpander
+    visual-studio-code
+    wezterm
+    yubikey-agent
+    zoxide
+)
+
+{{ if .personal }}
+formulae+=(
+    aerial
+    airfoil
+    balenaetcher
+	cointop
+    default-folder-x
+    disk-drill
+    flume
+    garagesale
+    hazel
+    iina
+    imagemagick
+    istat-menus
+    ivpn
+    ledger-live
+    luna-display
+    mountain-duck
+    pdf-expert
+    permute
+    protonvpn
+    ricoh-theta
+    sensei
+    slack
+    sonos
+    switchresx
+    vivaldi
+    windscribe
+)
+{{ end }}
+
+brew install ${formulae[@]}
+{{ end }}

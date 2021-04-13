@@ -1,2 +1,39 @@
+{{/* boolean feature tags */}}
+{{- $headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
+{{- $transient := false -}}{{/* true if this machine is temporary, e.g. a cloud or VM instance */}}
+{{- $isovalent := false -}}{{/* true if this machine should have Isovalent secrets */}}
+{{- $personal := false -}}{{/* true if this machine should have personal secrets */}}
+{{- "" -}}
+
+{{/* detect GitHub codespaces and VSCode remote containers */}}
+{{- if or (env "CODESPACES") (env "REMOTE_CONTAINERS_IPC") -}}
+{{-   $headless = true -}}
+{{-   $transient = true -}}
+{{- end -}}
+
+{{- $hostname := .chezmoi.hostname -}}
+
+{{- if not $transient -}}
+{{-   if eq $hostname "cb-feeder" -}}
+{{-     $headless = true -}}
+{{-     $personal = true -}}
+{{-   else if eq $hostname "cb-media" -}}
+{{-     $headless = true -}}
+{{-     $personal = true -}}
+{{-   end -}}
+{{- end -}}
+
+remove = true
+{{- if eq .chezmoi.os "windows" -}}
+[cd]
+    command = "powershell"
+    args = ["-nologo"]
+{{ end -}}
+[data]
+    headless = {{ $headless }}
+    hostname = {{ $hostname | quote }}
+    transient = {{ $transient }}
+    isovalent = {{ $isovalent }}
+    personal = {{ $personal }}
 [git]
     autoAdd = true

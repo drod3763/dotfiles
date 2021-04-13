@@ -1,0 +1,28 @@
+{{- if (eq .chezmoi.os "darwin") -}}
+#!/bin/bash
+
+set -eufo pipefail
+
+{{ $email := promptString "App Store ID" -}}
+{{ $password := promptString "App Store Password" -}}
+
+mas login
+
+ids=(
+    918858936
+	1091189122
+    441258766
+    993487541
+    1382386877
+    1547147101
+    445189367
+    904280696
+)
+
+{{ if .personal }}
+ids+=(
+)
+{{ end }}
+
+mas install ${formulae[@]}
+{{ end }}
