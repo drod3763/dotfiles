@@ -35,7 +35,6 @@ formulae=(
     muzzle
     postman
     ripgrep
-    romkatv/powerlevel10k/powerlevel10k
     snagit
     soulver
     soundsource
@@ -80,5 +79,6 @@ formulae+=(
 )
 {{ end }}
 
+brew tap ${taps[@]}
 brew install ${formulae[@]}
 {{ end }}
