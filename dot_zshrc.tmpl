@@ -83,7 +83,7 @@ setopt NO_CASE_GLOB # case insensitive globbing
 setopt HASH_LIST_ALL # update list of commands so you don't get corrections for real things
 chpwd() { ll }
 
-{{- if eq chezmoi.os "darwin" }}
+{{- if eq .chezmoi.os "darwin" }}
 
 # Starting small with Powerlevel10k
 source $HOMEBREW/opt/powerlevel10k/powerlevel10k.zsh-theme

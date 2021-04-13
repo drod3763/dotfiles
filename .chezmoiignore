@@ -15,7 +15,7 @@ vscode_settings.json
 ~/.config/1Password
 {{- end }}
 
-{{ if ne .chezmoi.os "windows" }}
+{{- if ne .chezmoi.os "windows" }}
 Documents
 {{ else }}
 .bash_aliases

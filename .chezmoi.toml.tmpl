@@ -24,11 +24,12 @@
 {{- end -}}
 
 remove = true
+
 {{- if eq .chezmoi.os "windows" -}}
 [cd]
     command = "powershell"
     args = ["-nologo"]
-{{ end -}}
+{{ end }}
 [data]
     headless = {{ $headless }}
     hostname = {{ $hostname | quote }}
