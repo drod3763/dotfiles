@@ -2,7 +2,8 @@ aliases
 common_setup
 exports
 functions
-settings.json
+1password_settings.json
+vscode_settings.json
 
 {{- if ne .chezmoi.os "linux" }}
     ~/.config/paru

@@ -20,7 +20,7 @@ PROMPT_COMMAND="history -a;history -c;history -r; $PROMPT_COMMAND"
 export DOTFILES= {{- .chezmoi.sourceDir }}
 
 # Source common scripts 
-source $DOTFILES/common_setup
+source ~/.config/common_setup
 
 alias reload='source ~/.bashrc'
 alias -- -='cd -'

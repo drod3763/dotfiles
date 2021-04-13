@@ -8,7 +8,7 @@ fi
 export DOTFILES= {{- .chezmoi.sourceDir }}
 source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 
-[[ -e /usr/share/oh-my-zsh/zshrc ]] && source $DOTFILES/ohmyzsh
+#[[ -e /usr/share/oh-my-zsh/zshrc ]] && source $DOTFILES/ohmyzsh
 
 # Setup history since its forgotten by default
 HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
@@ -27,7 +27,7 @@ setopt HASH_LIST_ALL # update list of commands so you don't get corrections for 
 #chpwd() { ll }
 
 # Source common scripts
-source $DOTFILES/common_setup
+source ~/.config/common_setup
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f $HOME/.p10k.zsh ]] || source $HOME/.p10k.zsh

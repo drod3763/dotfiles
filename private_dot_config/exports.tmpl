@@ -1,5 +1,5 @@
 # Basic Environment Variables
-export OS={{- .chezmoi.os}}
+export OS= {{- .chezmoi.os }}
 export CLICOLOR=1
 export LSCOLORS=GxFxCxDxBxegedabagaced
 
@@ -16,7 +16,7 @@ if hash pwsh 2> /dev/null; then
     export POWERSHELL_TELEMETRY_OPTOUT=1
 fi
 
-{{- if ne .chezmoi.os "darwin" }}
+{{- if eq .chezmoi.os "darwin" }}
 
 # Homebrew Folder
 export HOMEBREW=$(brew --prefix)
@@ -37,7 +37,8 @@ export PYTHONPATH=$HOME/.python
 
 {{- end }}
 
-{{- if ne .chezmoi.os "linux" }}
+{{- if eq .chezmoi.os "linux" }}
+
 export XDG_CONFIG_HOME=$HOME/.config
 export XDG_CACHE_HOME=$HOME/.cache
 export XDG_DATA_HOME=$HOME/.local/share

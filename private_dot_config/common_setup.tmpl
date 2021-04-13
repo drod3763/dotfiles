@@ -1,7 +1,6 @@
 source $DOTFILES/functions/base_funcs
-source $DOTFILES/exports
+source ~/.config/exports
 source $DOTFILES/aliases
-source $DOTFILES/$OS/setup
 
 # Config for thefuck
 if hash fuck 2> /dev/null; then
@@ -22,7 +21,7 @@ else
   echo "'zoxide' is not installed"
 fi
 
-{{- if ne .chezmoi.os "darwin" }}
+{{- if eq .chezmoi.os "darwin" }}
 
 # PATH Modifications
 addpath $HOME/Homebrew/bin/

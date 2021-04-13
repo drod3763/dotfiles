@@ -214,5 +214,3 @@ cd() {
   fi
   builtin cd "$dest"
 }
-
-source $DOT
