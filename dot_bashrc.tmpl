@@ -17,12 +17,12 @@ HISTFILESIZE=50000
 HISTSIZE=50000
 PROMPT_COMMAND="history -a;history -c;history -r; $PROMPT_COMMAND"
 
-export DOTFILES=$HOME/Dropbox/dotfiles
+export DOTFILES= {{- .chezmoi.sourceDir }}
 
-# Source common scripts
-source $DOTFILES/common-setup
+# Source common scripts 
+source $DOTFILES/common_setup
 
-alias reload='source ~/.bash_profile'
+alias reload='source ~/.bashrc'
 alias -- -='cd -'
 alias ..='cd ..'
 alias ..2='..; ..'

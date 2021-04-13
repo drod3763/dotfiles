@@ -1,0 +1,76 @@
+# Include system wide settings which are ignored
+# by default if one has their own .inputrc
+# Source: https://robertmarkbramprogrammer.blogspot.com/2008/08/inputrc-for-bash-history-completion.html
+$include /etc/inputrc
+
+# The TAB key cycles forward through the completion choices. Press an arrow key, such as right-arrow, to choose a selection.
+TAB: menu-complete
+set completion-ignore-case On
+
+# The Shift-TAB key cycles backward through the completion choices. This is useful if you pressed TAB too many times and overshot the desired choice. Like TAB, press an arrow key, such as right-arrow, to choose a selection.
+"\e[Z": menu-complete-backward
+
+# The first press of the completion key, TAB, will display a list of choices that match the given prefix, whilst the next press of the completion key will start cycling through the available choices.
+set menu-complete-display-prefix on
+
+# Display completion matches upon the first press of the TAB key.
+set show-all-if-ambiguous on
+
+# Enable colors when completing filenames and directories.
+set colored-stats on
+
+# Ignore case when completing.
+set completion-ignore-case on
+
+# Treat hypens and underscores as equivalent when completing.
+set completion-map-case on
+
+# When a completion matches multiple items highlight the common matching prefix in color.
+set colored-completion-prefix on
+
+# Automatically append the / slash character to the end of symlinked directories when completing.
+set mark-symlinked-directories on
+
+# Disable beeps and do not display control characters.
+set bell-style none
+set echo-control-characters off
+
+# Below is from:
+# http://robertmarkbramprogrammer.blogspot.com/2008/08/inputrc-for-bash-history-completion.html
+
+# By default up/down are bound to previous-history
+# and next-history respectively. The following does the
+# same but gives the extra functionality where if you
+# type any text (or more accurately, if there is any text
+# between the start of the line and the cursor),
+# the subset of the history starting with that text
+# is searched (like 4dos for e.g.).
+# Note to get rid of a line just Ctrl-C
+"\e[B": history-search-forward
+"\e[A": history-search-backward
+
+$if Bash
+  # F10 toggles mc on and off
+  # Note Ctrl-o toggles panes on and off in mc
+  "\e[21~": "mc\C-M"
+
+  #do history expansion when space entered
+  Space: magic-space
+$endif
+
+# Navigation
+# Source: https://linuxart.com/log/archives/2005/10/13/super-useful-inputrc/
+"\e[1~": beginning-of-line
+"\e[4~": end-of-line
+"\e[5~": beginning-of-history
+"\e[6~": end-of-history
+"\e[3~": delete-char
+"\e[2~": quoted-insert
+"\e[5C": forward-word
+"\e[5D": backward-word
+"\e\e[C": forward-word
+"\e\e[D": backward-word
+
+# Include system wide settings which are ignored
+# by default if one has their own .inputrc
+$include /etc/inputrc

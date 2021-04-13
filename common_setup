@@ -1,0 +1,74 @@
+source $DOTFILES/functions/base_funcs
+source $DOTFILES/exports
+source $DOTFILES/aliases
+source $DOTFILES/$OS/setup
+
+# Config for thefuck
+if hash fuck 2> /dev/null; then
+  eval $(thefuck --alias)
+else
+  echo "'the fuck' is not installed"
+fi
+
+# op 
+# if type op &>/dev/null; then
+#    eval $(op signin my)
+# fi
+
+# zoxide
+if hash zoxide 2> /dev/null; then
+  eval "$(zoxide init bash)"
+else
+  echo "'zoxide' is not installed"
+fi
+
+{{- if ne .chezmoi.os "darwin" }}
+
+# PATH Modifications
+addpath $HOME/Homebrew/bin/
+addpath $HOME/Homebrew/sbin/
+addpath $HOME/Library/Python/3.8/bin
+
+# iterm2 Shell Integration
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+# asdf-vm
+if hash asdf 2> /dev/null; then
+    $(brew --prefix asdf)/asdf.sh
+else
+    echo "'asdf' not installed"
+fi
+
+alias brewup='brew update && brew upgrade && brew cu && brew cleanup'
+alias zapfix="sudo launchctl load -w /Library/LaunchDaemons/com.zscaler.service.plist"
+alias sed='gsed '
+
+# See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies
+alias brewdep='brew deps --tree --installed'
+alias brewlf='brew deps --include-build --tree $(brew leaves)'
+
+# Python Setup
+addpath -f $PYTHON_HOME/bin # Needed to execute commands installed using pip install --user
+
+function java_asdf_link() {
+    macOS_java_dir=/Library/Java/JavaVirtualMachines
+    asdf_java_dir=$HOME/.asdf/installs/java/
+    echo To create links on $macOS_java_dir this script needs Super User powers.
+
+    if [ -d $asdf_java_dir ]; then
+        installs=( $(find $asdf_java_dir -type d -depth 1 -print) )
+        for install in ${installs[*]}; do
+            found=$(find $install -name bin -print)
+            if [ ! -z $found ]; then
+                destination=$(dirname $found)
+                source=${destination##*/}
+                sudo ln -sf "$destination" "$macOS_java_dir/$source"
+            fi
+        done
+    fi
+}
+
+function kerb {
+	kinit --keychain drodriguez@BOOKER.LOCAL
+}
+{{- end }}

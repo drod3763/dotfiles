@@ -1,0 +1,52 @@
+alias wtfport="lsof -i -P -n | grep LISTEN"
+
+# Basic
+if hash exa 2> /dev/null; then
+    alias ls='exa --grid  --color auto --icons --all --sort type'
+    alias ll='exa --long --color always --icons --all --sort type'
+fi
+
+alias ln='ln --symbolic --force'
+
+if hash bat 2> /dev/null; then
+    alias cat='bat --style=plain --pager=never --theme="Nord"'
+    alias catf='bat `fzf -i`'
+fi
+
+if hash trash 2> /dev/null; then
+    alias rm='trash'
+fi
+
+# Confirm unsafe file operations.
+if hash rsync 2> /dev/null; then
+    alias cp='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
+    alias mv='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
+else
+    alias cp='/bin/cp --interactive '
+    alias mv='/bin/mv --interactive '
+fi
+
+alias cpf='/bin/cp --interactive `fzf -i`'
+alias mvf='/bin/mv --interactive `fzf -i`'
+alias rm='/bin/rm --interactive '
+alias rmf='/bin/rm --interactive `fzf -i`'
+
+if hash docker 2> /dev/null; then
+    # Docker
+    # Referenced from https://medium.com/the-code-review/clean-out-your-docker-images-containers-and-volumes-with-single-commands-b8e38253c271
+    alias docker-clean-unused='docker system prune --all --force --volumes'
+    alias docker-clean-all='docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes'
+    alias dc='docker-compose '
+    alias dstart='docker start '
+    alias dstop='docker stop'
+    alias dls='docker image ls'
+    alias dimg='docker image rmi'
+    alias dconls='docker ps --all'
+    alias ddcon='docker rm $(docker ps --all --filter status=exited --quiet)'
+fi
+
+alias sshrm='ssh keygen -R'
+
+if hash rsync 2> /dev/null; then
+    alias scp='rsync --verbose --progress --partial'
+fi

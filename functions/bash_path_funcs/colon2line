@@ -1,0 +1,18 @@
+###############################################################################
+#
+# Name:         colon2line
+#
+# Description:
+#
+# splits a colon separated string into its components and writes them
+# to stdout on separate lines
+#
+# Author:      Stephen Collyer (scollyer@netspinner.co.uk)
+#
+# Copyright:   Netspinner Ltd 2000-2003
+#
+###############################################################################
+
+colon2line() {
+    awk 'BEGIN{RS=":"}{print}'
+}

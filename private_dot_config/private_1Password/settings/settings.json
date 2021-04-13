@@ -1,0 +1,11 @@
+{
+  "app.theme": "dark",
+  "app.keepInTray": true,
+  "security.autolock.minutes": -1,
+  "security.autolock.onDeviceLock": false,
+  "security.autolock.onWindowClose": false,
+  "security.authenticatedUnlock.enabled": true,
+  "browsers.extension.enabled": true,
+  "advanced.EnableDebuggingTools": true,
+  "ui.routes.lastUsedRoute": "{\"type\":\"ItemList\",\"content\":{\"unlockedRoute\":{\"collectionUuid\":\"CLKKMRR6AZEOTG2UKABORXTLXE\"},\"itemListType\":{\"type\":\"AllItems\"},\"category\":null,\"sortBehavior\":null}}"
+}

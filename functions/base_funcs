@@ -1,0 +1,218 @@
+source $DOTFILES/functions/bash_path_funcs/colon2line
+source $DOTFILES/functions/bash_path_funcs/space2line
+source $DOTFILES/functions/bash_path_funcs/Usage
+source $DOTFILES/functions/bash_path_funcs/options
+source $DOTFILES/functions/bash_path_funcs/makepath
+source $DOTFILES/functions/bash_path_funcs/addpath
+source $DOTFILES/functions/bash_path_funcs/delpath
+source $DOTFILES/functions/bash_path_funcs/listpath
+source $DOTFILES/functions/bash_path_funcs/uniqpath
+source $DOTFILES/functions/bash_path_funcs/edpath
+source $DOTFILES/functions/bash_path_funcs/realpath_filter
+
+### ARCHIVE EXTRACTION
+# usage: ex <file>
+ex ()
+{
+  if [ -f $1 ] ; then
+    case $1 in
+      *.tar.bz2)   tar xjf $1   ;;
+      *.tar.gz)    tar xzf $1   ;;
+      *.bz2)       bunzip2 $1   ;;
+      *.rar)       unrar x $1   ;;
+      *.gz)        gunzip $1    ;;
+      *.tar)       tar xf $1    ;;
+      *.tbz2)      tar xjf $1   ;;
+      *.tgz)       tar xzf $1   ;;
+      *.zip)       unzip $1     ;;
+      *.Z)         uncompress $1;;
+      *.7z)        7z x $1      ;;
+      *.deb)       ar x $1      ;;
+      *.tar.xz)    tar xf $1    ;;
+      *.tar.zst)   unzstd $1    ;;      
+      *)           echo "'$1' cannot be extracted via ex()" ;;
+    esac
+  else
+    echo "'$1' is not a valid file"
+  fi
+}
+
+# Docker
+function dockerbuild() {
+  docker build -t ${1} .
+}
+
+function dockerrun() {
+	docker run -it --name ${1} ${2}
+}
+
+function dockerrunmnt() {
+	docker run -it --name ${1} --mount type=bind,source=${3},target={4} ${2}
+}
+
+# Update pip packages
+function pipu() {
+	pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U --user
+}
+
+# export -f pipu
+
+# Create a new directory and enter it
+function mkd() { 
+    mkdir -p "$@" && cd "$_";
+}
+
+function sha {
+	openssl dgst -sha256 ${1} | cut -d ' ' -f2 # | tr -d '[:space:]'
+}
+
+function md5 {
+	openssl dgst -md5 ${1} | cut -d ' ' -f2 # | tr -d '[:space:]'
+}
+
+function comp {
+    STRING1=${1}
+    STRING2=${2}
+
+	if [ "$STRING1" = "$STRING2" ] ; then
+		echo "match"
+	else 
+		echo "no match"
+	fi
+}
+
+shacomp() {
+	comp "$(sha "${1}")" "$(sha "${2}")"
+}
+
+# Base 64 encode any file
+function b64enc {
+	openssl base64 -in "${1}" > "${1}.b64"
+}
+
+# Stands for "last downloaded file"
+# http://blog.jpalardy.com/posts/get-your-last-downloaded-file/
+ldf() {  
+  local file=~/Downloads/$(\ls -1t ~/Downloads/ | head -n1)
+  read -p "confirm: $file "
+  mv "$file" .
+}
+
+# This creates a directory under $HOME/.throw-away, changes (cd) into it 
+# and launches a shell there. When the shell exits, the directory is deleted 
+# with all its content.
+# http://blog.jpalardy.com/posts/garbage-collected-directories/
+tad() {
+  local ts=$(date +%s)
+  local d="$HOME/.throw-away/$ts"
+  mkdir -p $d
+  (cd $d; bash)
+  rm -r $d
+}
+
+# list all users
+function lusers () {
+	dscl . list /Users | grep -v ^_.*
+}
+
+# use ImageMagick convert
+# the order is important. the density argument applies to input.pdf and resize and rotate to output.pdf
+# https://gist.github.com/andyrbell/25c8632e15d17c83a54602f6acde2724
+# May need ghostscript installed on mac (brew install gs)
+function fakeScan() {
+	convert -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
+}
+
+# Stolen from the nextdns guys https://nextdns.io/install. 
+# Will use this to tailer my dotfiles per machine.....
+function detect_os() {
+    if [ "$FORCE_OS" ]; then
+        echo "$FORCE_OS"; return 0
+    fi
+    case $(uname -s) in
+    Linux)
+        case $(uname -o) in
+        GNU/Linux)
+            if grep -q -e '^EdgeRouter' -e '^UniFiSecurityGateway' /etc/version 2> /dev/null; then
+                echo "edgeos"; return 0
+            fi
+            if uname -u 2>/dev/null | grep -q '^synology'; then
+                echo "synology"; return 0
+            fi
+            # shellcheck disable=SC1091
+            dist=$(. /etc/os-release; echo "$ID")
+            case $dist in
+            debian|ubuntu|elementary|raspbian|centos|fedora|rhel|arch|manjaro|openwrt|clear-linux-os|linuxmint|opensuse-tumbleweed|opensuse|solus|pop)
+                echo "$dist"; return 0
+                ;;
+            esac
+            ;;
+        ASUSWRT-Merlin*)
+            echo "asuswrt-merlin"; return 0
+            ;;
+        DD-WRT)
+            echo "ddwrt"; return 0
+        esac
+        ;;
+    Darwin)
+        echo "darwin"; return 0
+        ;;
+    FreeBSD)
+        if [ -f /etc/platform ]; then
+            case $(cat /etc/platform) in
+            pfSense)
+                echo "pfsense"; return 0
+                ;;
+            esac
+        fi
+        if [ -x /usr/local/sbin/opnsense-version ]; then
+            case $(/usr/local/sbin/opnsense-version -N) in
+            OPNsense)
+                echo "opnsense"; return 0
+                ;;
+            esac
+        fi
+        echo "freebsd"; return 0
+        ;;
+    NetBSD)
+        echo "netbsd"; return 0
+        ;;
+    OpenBSD)
+        echo "openbsd"; return 0
+        ;;
+    *)
+    esac
+    log_error "Unsupported OS: $(uname -s)"
+    return 1
+}
+
+# Source: https://blog.jpalardy.com/posts/cd-until-git-directory/
+# cd .. until a .git directory is found
+cd_() {
+  local p=$PWD
+  while [ $p != "/" ]; do
+    if [ -d "$p/.git" ]; then
+      cd "$p"
+      break
+    fi
+    p=${p:h}
+  done
+}
+
+# won't cd unless a .git directory is found
+# can be used multiple times if multiple .git parents are expected
+
+# wrap `cd`, add behaviors
+cd() {
+  local dest="${@:-"$HOME"}"
+  if [ "$dest" = "_" ]; then
+    cd_ "$dest"
+    return
+  fi
+  if [ -f "$dest" ]; then
+    dest=${dest:h}
+  fi
+  builtin cd "$dest"
+}
+
+source $DOT
