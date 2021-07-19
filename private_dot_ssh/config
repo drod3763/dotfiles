@@ -9,6 +9,11 @@ Host dsm
     Hostname nas3763.local
     Port 12121
     User d3763
+Host dockervm
+    Hostname 192.168.2.113
+    # Hostname docker.local
+    Port 22
+    User docker
 Host printer
     Hostname 192.168.1.8
     Port 22
