@@ -1,4 +1,4 @@
-alias wtfport="lsof -i -P -n | grep LISTEN"
+alias wtfport='lsof -i -P -n | grep LISTEN'
 
 # Basic
 if hash exa 2> /dev/null; then
@@ -10,11 +10,16 @@ alias ln='ln --symbolic --force'
 
 # Get list of open windows
 # Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h59ttqp/
-alias altt='dbus-send --session --type=method_call --print-reply --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)"  | grep -Po "\[.*\]"'
+alias altt='dbus-send --session \
+--type=method_call \
+--print-reply \
+--dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)"  | grep -Po "\[.*\]"'
 
-# Same as above but with window titles
+# Same as above but with window titles 
 # Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h596io8/
-alias alttt='dbus-send --print-reply --type=method_call --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)"|sed -n "/string/s/"\|\(","\)/\n/gp'|sed "/^ \|^\[\|^\]/d"'
+alias alttt='dbus-send --print-reply \
+--type=method_call \
+--dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)"|sed -n "/string/s/"\|\(","\)/\n/gp"|sed "/^ \|^\[\|^\]/d"'
 
 if hash bat 2> /dev/null; then
     alias cat='bat --style=plain --pager=never --theme="Nord"'
@@ -36,7 +41,7 @@ fi
 
 alias cpf='/bin/cp --interactive `fzf -i`'
 alias mvf='/bin/mv --interactive `fzf -i`'
-alias rm='/bin/rm --interactive 'w
+alias rm='/bin/rm --interactive'
 alias rmf='/bin/rm --interactive `fzf -i`'
 
 if hash docker 2> /dev/null; then
@@ -44,8 +49,8 @@ if hash docker 2> /dev/null; then
     # Referenced from https://medium.com/the-code-review/clean-out-your-docker-images-containers-and-volumes-with-single-commands-b8e38253c271
     alias docker-clean-unused='docker system prune --all --force --volumes'
     alias docker-clean-all='docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes'
-    alias dc='docker-compose '
-    alias dstart='docker start '
+    alias dc='docker-compose'
+    alias dstart='docker start'
     alias dstop='docker stop'
     alias dls='docker image ls'
     alias dimg='docker image rmi'
@@ -61,4 +66,4 @@ fi
 
 # cat files with the filename(s) as a header without installing any extra programs
 # Source: https://old.reddit.com/r/archlinux/comments/o2bfha/post_your_most_useful_self_written_command_line/h26msmz/
-alias tailcat='tail -n+0'
+alias tailcat='tail --lines=+0'
