@@ -42,8 +42,16 @@ export PYTHONPATH=$HOME/.python
 export XDG_CONFIG_HOME=$HOME/.config
 export XDG_CACHE_HOME=$HOME/.cache
 export XDG_DATA_HOME=$HOME/.local/share
-export DIFFPROG='delta --dark --line-numbers --side-by-side --no-gitconfig'
+
 export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/yubikey-agent/yubikey-agent.sock"
+
+if hash bcompare 2> /dev/null; then
+    export DIFFPROG='bcompare'
+else
+    if hash delta 2> /dev/null; then
+        export DIFFPROG='delta --dark --line-numbers --side-by-side --no-gitconfig'
+    fi
+fi
 
 if [ -f /opt/asdf-vm/asdf.sh ]; then
     export ASDF_DIR=/opt/asdf-vm
