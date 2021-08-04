@@ -53,10 +53,10 @@
 {{ else }}
 	# Sets the default editor to VS Code detailed here: https://dev.to/deadlybyte/make-vs-code-your-default-git-editor-j6d
 	editor = code --new-window --wait --disable-extensions
-{{ end -}}
+{{ end }}
 	excludesfile = ~/.gitignore
 	pager = delta
-{{- if (eq .difftool "Beyond Compare") }}
+{{- if (eq .difftool "bc4") }}
 # From https://www.scootersoftware.com/support.php?zz=kb_vcs#gitlinux
 [diff]
 	tool = bc4
