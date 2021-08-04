@@ -34,6 +34,9 @@ remove = true
     isovalent = {{ $isovalent }}
     personal = {{ $personal }}
     difftool = "bc4"
+{{- if eq .chezmoi.os "darwin" -}}
+    appstore = {{ promptBool "Logged into App Store?" }}
+{{ end }}
 [git]
     autoAdd = true
 {{ if (eq .difftool "bc4") }}
