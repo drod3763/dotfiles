@@ -56,7 +56,7 @@
 {{- end }}
 	excludesfile = ~/.gitignore
 	pager = delta
-{{- if (eq .difftool "bc4") }}
+{{- if lookPath "bcompare" }}
 [diff]
 	# From https://www.scootersoftware.com/support.php?zz=kb_vcs#gitlinux
 	tool = bc4

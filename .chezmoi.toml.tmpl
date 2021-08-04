@@ -20,8 +20,8 @@
 {{-   end -}}
 {{- end -}}
 
+{{- $difftool := "bc4" -}}{{/* using beyond compare for difftool */}}
 remove = true
-
 {{- if eq .chezmoi.os "windows" -}}
 [cd]
     command = "powershell"
@@ -33,22 +33,19 @@ remove = true
     transient = {{ $transient }}
     isovalent = {{ $isovalent }}
     personal = {{ $personal }}
-{{- if not $headless }}
-    difftool = "bc4"
-{{- end -}}    
 {{- if eq .chezmoi.os "darwin" -}}
     appstore = {{ promptBool "Logged into App Store? (y/n)" }}
 {{- end }}
 [git]
     autoAdd = true
-{{ if (eq .difftool "bc4") -}}
+{{ if lookPath "bcompare" -}}
 [diff]
     tool = "bc4"
 [merge]
     tool = "bc4"
-{{ else }}
+{{ else -}}
 [diff]
     tool = "delta"
 [merge]
     tool = "delta"
-{{ end }}
+{{ end -}}

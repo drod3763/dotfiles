@@ -35,6 +35,7 @@ casks=(
     1password
     alfred
     betterzip
+    beyond-compare
     duet
     eloston-chromium
     homebrew/cask-versions/firefox-developer-edition
@@ -88,17 +89,6 @@ casks+=(
     windscribe
 )
 {{ end }}]
-
-
-{{ if (eq .difftool "bc4") }}
-casks+=(
-    beyond-compare
-)
-{{ else }}
-casks+=(
-    meld
-)
-{{ end }}
 
 #brew tap ${taps[@]}
 brew install ${formulae[@]}
