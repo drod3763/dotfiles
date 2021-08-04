@@ -1,4 +1,4 @@
-{{- if .appstore -}}
+{{- if (and (eq .chezmoi.os "darwin") (.appstore)) -}}
 #!/bin/bash
 
 set -eufo pipefail
