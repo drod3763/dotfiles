@@ -89,7 +89,7 @@ casks+=(
 {{ end }}]
 
 
-{{ if .difftool "bc4" }}
+{{ if (eq .difftool "bc4") }}
 casks+=(
     beyond-compare
 )

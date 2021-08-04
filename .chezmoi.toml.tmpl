@@ -36,3 +36,14 @@ remove = true
     difftool = "bc4"
 [git]
     autoAdd = true
+{{ if (eq .difftool "bc4") }}
+[diff]
+    tool = "bc4"
+[merge]
+    tool = "bc4"
+{{ else }}
+[diff]
+    tool = "delta"
+[merge]
+    tool = "bc4"
+{{ end }}

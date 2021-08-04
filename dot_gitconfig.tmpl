@@ -50,10 +50,10 @@
 [core]
 {{- if (eq .chezmoi.os "darwin") }}
 	editor = komet
-{{ else }}
+{{- else }}
 	# Sets the default editor to VS Code detailed here: https://dev.to/deadlybyte/make-vs-code-your-default-git-editor-j6d
 	editor = code --new-window --wait --disable-extensions
-{{ end }}
+{{- end }}
 	excludesfile = ~/.gitignore
 	pager = delta
 {{- if (eq .difftool "bc4") }}
@@ -66,10 +66,10 @@
 	tool = bc4
 [mergetool "bc4"]
 	trustExitCode = true
-{{ else }}
+{{- else }}
 [interactive]
 	diffFilter = delta --color-only
-{{ end -}}
+{{- end -}}
 [delta]
     features = side-by-side line-numbers decorations
     syntax-theme = Dracula
