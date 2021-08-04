@@ -33,9 +33,11 @@ remove = true
     transient = {{ $transient }}
     isovalent = {{ $isovalent }}
     personal = {{ $personal }}
+{{- if not $headless }}
     difftool = "bc4"
+{{- end -}}    
 {{- if eq .chezmoi.os "darwin" -}}
-    appstore = {{ promptBool "Logged into App Store? y/n                                                                        " }}
+    appstore = {{ promptBool "Logged into App Store? (y/n)" }}
 {{- end }}
 [git]
     autoAdd = true
@@ -48,5 +50,5 @@ remove = true
 [diff]
     tool = "delta"
 [merge]
-    tool = "bc4"
+    tool = "delta"
 {{ end }}
