@@ -17,9 +17,6 @@
 {{-   if eq $hostname "cb-feeder" -}}
 {{-     $headless = true -}}
 {{-     $personal = true -}}
-{{-   else if eq $hostname "cb-media" -}}
-{{-     $headless = true -}}
-{{-     $personal = true -}}
 {{-   end -}}
 {{- end -}}
 
@@ -36,5 +33,6 @@ remove = true
     transient = {{ $transient }}
     isovalent = {{ $isovalent }}
     personal = {{ $personal }}
+    difftool = "bcompare"
 [git]
     autoAdd = true

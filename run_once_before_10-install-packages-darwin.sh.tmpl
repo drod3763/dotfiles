@@ -3,64 +3,74 @@
 
 set -eufo pipefail
 
-taps=(
-    wez/wezterm
-)
+#taps=(
+#)
 
 formulae=(
-	1password
     1password-cli
-    alfred
     asdf
     bat
-    betterzip
     curl
 	docker
-    duet
+    docker-compose
     dust
     exa
     fd
-    homebrew/cask-versions/firefox-developer-edition
     fzf
     gh
-    git-delta
-    google-chrome-canary
+    git-delta  
     httpie
+    mas
+    micro
+    mosh
+    ripgrep
+    tealdeer
+    thefuck
+    yubikey-agent
+    zellij
+    zoxide
+)
+
+casks=(
+    1password
+    alfred
+    betterzip
+    duet
+    eloston-chromium
+    homebrew/cask-versions/firefox-developer-edition
     intellij-idea
     kaleidoscope
+    komet
     krisp
     macs-fan-control
-    mas
-    mosh
     muzzle
     postman
-    ripgrep
+    slack
     snagit
     soulver
     soundsource
     sqlpro-studio
-    tealdeer
-    thefuck
     textexpander
     visual-studio-code
-    wez/wezterm/wezterm
-    yubikey-agent
-    zoxide
+    wezterm
 )
 
 {{ if .personal }}
 formulae+=(
+	cointop
+    imagemagick
+)
+
+casks+=(
     aerial
     airfoil
     balenaetcher
-	cointop
     default-folder-x
     disk-drill
     flume
     garagesale
     hazel
     iina
-    imagemagick
     istat-menus
     ivpn
     ledger-live
@@ -71,14 +81,24 @@ formulae+=(
     protonvpn
     ricoh-theta
     sensei
-    slack
     sonos
     switchresx
     vivaldi
     windscribe
 )
-{{ end }}
+{{ end }}]
 
-brew tap ${taps[@]}
+
+{{ if .difftool "Beyond Compare" }}
+casks+=(
+    beyond-compare
+)
+{{ else }}
+casks+=(
+    meld
+)
+
+#brew tap ${taps[@]}
 brew install ${formulae[@]}
-{{ end }}
+brew install --cask ${casks[@])
+{{ end }}       
