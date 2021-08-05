@@ -2,53 +2,37 @@ source $DOTFILES/functions/base_funcs
 source ~/.config/exports
 source ~/.config/aliases
 
+{{if lookPath "fuck" -}}
 # Config for thefuck
-if hash fuck 2> /dev/null; then
-  eval $(thefuck --alias)
-else
-  echo "'the fuck' is not installed"
-fi
+eval $(thefuck --alias)
+{{- end }}
 
-# op 
-# if type op &>/dev/null; then
-#    eval $(op signin my)
-# fi
-
+{{if lookPath "zoxide" -}}
 # zoxide
-if hash zoxide 2> /dev/null; then
-  eval "$(zoxide init bash)"
-else
-  echo "'zoxide' is not installed"
-fi
+eval "$(zoxide init bash)"
+{{- end }}
 
 {{- if eq .chezmoi.os "darwin" }}
-
+{{-     if lookPath "brew" -}}
 # PATH Modifications
 addpath $HOME/Homebrew/bin/
 addpath $HOME/Homebrew/sbin/
-addpath $HOME/Library/Python/3.8/bin
+
+# brew aliases
+alias brewup='brew update && brew upgrade && brew cu && brew cleanup'
+## See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies
+alias brewdep='brew deps --tree --installed'
+alias brewlf='brew deps --include-build --tree $(brew leaves)'
+{{-     end }}
 
 # iterm2 Shell Integration
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-# asdf-vm
-if hash asdf 2> /dev/null; then
-    $(brew --prefix asdf)/asdf.sh
-else
-    echo "'asdf' not installed"
-fi
+{{-     if lookPath "asdf" -}}
+# asdf-vm init
+$(brew --prefix asdf)/asdf.sh
 
-alias brewup='brew update && brew upgrade && brew cu && brew cleanup'
-alias zapfix="sudo launchctl load -w /Library/LaunchDaemons/com.zscaler.service.plist"
-alias sed='gsed '
-
-# See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies
-alias brewdep='brew deps --tree --installed'
-alias brewlf='brew deps --include-build --tree $(brew leaves)'
-
-# Python Setup
-addpath -f $PYTHON_HOME/bin # Needed to execute commands installed using pip install --user
-
+{{-         if lookPath "java" -}}
 function java_asdf_link() {
     macOS_java_dir=/Library/Java/JavaVirtualMachines
     asdf_java_dir=$HOME/.asdf/installs/java/
@@ -66,8 +50,15 @@ function java_asdf_link() {
         done
     fi
 }
+{{-         end }}
+{{-     end }}
 
-function kerb {
-	kinit --keychain drodriguez@BOOKER.LOCAL
-}
+{{-     if not .personal }}
+alias zapfix="sudo launchctl load -w /Library/LaunchDaemons/com.zscaler.service.plist"
+{{-     end }}
+
+{{-     if lookPath "gsed" -}}
+alias sed='gsed '
+{{-     end }}
+
 {{- end }}

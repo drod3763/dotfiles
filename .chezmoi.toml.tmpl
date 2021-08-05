@@ -20,7 +20,6 @@
 {{-   end -}}
 {{- end -}}
 
-{{- $difftool := "bc4" -}}{{/* using beyond compare for difftool */}}
 remove = true
 {{- if eq .chezmoi.os "windows" -}}
 [cd]
@@ -38,14 +37,7 @@ remove = true
 {{- end }}
 [git]
     autoAdd = true
-{{ if lookPath "bcompare" -}}
-[diff]
-    pager = "bc4"
-[merge]
-    pager = "bc4"
-{{ else -}}
 [diff]
     pager = "delta"
 [merge]
     pager = "delta"
-{{ end -}}

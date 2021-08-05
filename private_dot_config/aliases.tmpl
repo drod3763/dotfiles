@@ -1,14 +1,16 @@
 alias wtfport='lsof -i -P -n | grep LISTEN'
 
-# Basic
-{{- if lookPath "exa" -}}
+{{ if lookPath "exa" -}}
+# Prettier ls with exa
 alias ls='exa --grid  --color auto --icons --all --sort type'
 alias ll='exa --long --color always --icons --all --sort type'
 {{- end }}
+
+# Overwrite with symlinks by default
 alias ln='ln --symbolic --force'
-{{- if eq .chezmoi.os "linux" -}}
-{{-   if lookPath "dbus-send" -}}
-# Get list of open windows
+
+{{ if and (eq .chezmoi.os "linux") (lookPath "dbus-send") -}}
+# Get list of open windows in Gnome
 # Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h59ttqp/
 alias altt='dbus-send --session \
 --type=method_call \
@@ -20,10 +22,10 @@ alias altt='dbus-send --session \
 alias alttt='dbus-send --print-reply \
 --type=method_call \
 --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)"|sed -n "/string/s/"\|\(","\)/\n/gp"|sed "/^ \|^\[\|^\]/d"'
-{{-   end }}
 {{- end }}
 
-{{- if lookPath "bat" -}}
+{{ if lookPath "bat" -}}
+# Replace cat with bat
 alias cat='bat --style=plain --pager=never --theme="Nord"'
 alias catf='bat `fzf -i`'
 {{- end }}
@@ -32,31 +34,31 @@ alias catf='bat `fzf -i`'
     alias rm='trash'
 {{- end }}
 
-{{- if lookPath "rsync" -}}
-# Confirm unsafe file operations.
-if hash rsync 2> /dev/null; then
-    alias cp='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
-    alias mv='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
+# Confirm unsafe file operations
+{{ if lookPath "rsync" -}}
+alias cp='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
+alias mv='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
 {{- else }}
-    alias cp='/bin/cp --interactive '
-    alias mv='/bin/mv --interactive '
+alias cp='/bin/cp --interactive '
+alias mv='/bin/mv --interactive '
 {{- end }}
 
-{{- if lookPath "fzf" -}}
+{{ if lookPath "fzf" -}}
+# Copy with find using fzf
 alias cpf='/bin/cp --interactive `fzf -i`'
 alias mvf='/bin/mv --interactive `fzf -i`'
 alias rm='/bin/rm --interactive'
 alias rmf='/bin/rm --interactive `fzf -i`'
 {{- end }}
 
-{{- if lookPath "docker" -}}
+{{ if lookPath "docker" -}}
 # Docker
 # Referenced from https://medium.com/the-code-review/clean-out-your-docker-images-containers-and-volumes-with-single-commands-b8e38253c271
 alias docker-clean-unused='docker system prune --all --force --volumes'
 alias docker-clean-all='docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes'
-{{-   if lookPath "docker-compose" -}}
+{{      if lookPath "docker-compose" -}}
 alias dc='docker-compose'
-{{-   end -}}
+{{-     end }}
 alias dstart='docker start'
 alias dstop='docker stop'
 alias dls='docker image ls'
@@ -65,6 +67,7 @@ alias dconls='docker ps --all'
 alias ddcon='docker rm $(docker ps --all --filter status=exited --quiet)'
 {{- end }}
 
+# Remove bad ssh keys
 alias sshrm='ssh keygen -R'
 
 # cat files with the filename(s) as a header without installing any extra programs
