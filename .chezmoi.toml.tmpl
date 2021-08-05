@@ -32,7 +32,7 @@ remove = true
     transient = {{ $transient }}
     isovalent = {{ $isovalent }}
     personal = {{ $personal }}
-{{- if eq .chezmoi.os "darwin" -}}
+{{- if eq .chezmoi.os "darwin" }}
     appstore = {{ promptBool "Logged into App Store? (y/n)" }}
 {{- end }}
 [git]
