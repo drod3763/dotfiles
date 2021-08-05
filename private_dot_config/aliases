@@ -1,13 +1,13 @@
 alias wtfport='lsof -i -P -n | grep LISTEN'
 
 # Basic
-if hash exa 2> /dev/null; then
-    alias ls='exa --grid  --color auto --icons --all --sort type'
-    alias ll='exa --long --color always --icons --all --sort type'
-fi
-
+{{- if lookPath "exa" -}}
+alias ls='exa --grid  --color auto --icons --all --sort type'
+alias ll='exa --long --color always --icons --all --sort type'
+{{- end }}
 alias ln='ln --symbolic --force'
-
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if lookPath "dbus-send" -}}
 # Get list of open windows
 # Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h59ttqp/
 alias altt='dbus-send --session \
@@ -20,50 +20,53 @@ alias altt='dbus-send --session \
 alias alttt='dbus-send --print-reply \
 --type=method_call \
 --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)"|sed -n "/string/s/"\|\(","\)/\n/gp"|sed "/^ \|^\[\|^\]/d"'
+{{-   end }}
+{{- end }}
 
-if hash bat 2> /dev/null; then
-    alias cat='bat --style=plain --pager=never --theme="Nord"'
-    alias catf='bat `fzf -i`'
-fi
+{{- if lookPath "bat" -}}
+alias cat='bat --style=plain --pager=never --theme="Nord"'
+alias catf='bat `fzf -i`'
+{{- end }}
 
-if hash trash 2> /dev/null; then
+{{- if lookPath "trash" -}}
     alias rm='trash'
-fi
+{{- end }}
 
+{{- if lookPath "rsync" -}}
 # Confirm unsafe file operations.
 if hash rsync 2> /dev/null; then
     alias cp='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
     alias mv='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
-else
+{{- else }}
     alias cp='/bin/cp --interactive '
     alias mv='/bin/mv --interactive '
-fi
+{{- end }}
 
+{{- if lookPath "fzf" -}}
 alias cpf='/bin/cp --interactive `fzf -i`'
 alias mvf='/bin/mv --interactive `fzf -i`'
 alias rm='/bin/rm --interactive'
 alias rmf='/bin/rm --interactive `fzf -i`'
+{{- end }}
 
-if hash docker 2> /dev/null; then
-    # Docker
-    # Referenced from https://medium.com/the-code-review/clean-out-your-docker-images-containers-and-volumes-with-single-commands-b8e38253c271
-    alias docker-clean-unused='docker system prune --all --force --volumes'
-    alias docker-clean-all='docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes'
-    alias dc='docker-compose'
-    alias dstart='docker start'
-    alias dstop='docker stop'
-    alias dls='docker image ls'
-    alias dimg='docker image rmi'
-    alias dconls='docker ps --all'
-    alias ddcon='docker rm $(docker ps --all --filter status=exited --quiet)'
-fi
+{{- if lookPath "docker" -}}
+# Docker
+# Referenced from https://medium.com/the-code-review/clean-out-your-docker-images-containers-and-volumes-with-single-commands-b8e38253c271
+alias docker-clean-unused='docker system prune --all --force --volumes'
+alias docker-clean-all='docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes'
+{{-   if lookPath "docker-compose" -}}
+alias dc='docker-compose'
+{{-   end -}}
+alias dstart='docker start'
+alias dstop='docker stop'
+alias dls='docker image ls'
+alias dimg='docker image rmi'
+alias dconls='docker ps --all'
+alias ddcon='docker rm $(docker ps --all --filter status=exited --quiet)'
+{{- end }}
 
 alias sshrm='ssh keygen -R'
 
-if hash rsync 2> /dev/null; then
-    alias scp='rsync --verbose --progress --partial'
-fi
-
 # cat files with the filename(s) as a header without installing any extra programs
-# Source: https://old.reddit.com/r/archlinux/comments/o2bfha/post_your_most_useful_self_written_command_line/h26msmz/
+# Source: https://old.reddit.com/r/archlinux/comments/o2bfha/post_your_most_useful_self_written_command_line/h26msmz
 alias tailcat='tail --lines=+0'

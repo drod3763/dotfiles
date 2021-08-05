@@ -40,12 +40,12 @@ remove = true
     autoAdd = true
 {{ if lookPath "bcompare" -}}
 [diff]
-    tool = "bc4"
+    pager = "bc4"
 [merge]
-    tool = "bc4"
+    pager = "bc4"
 {{ else -}}
 [diff]
-    tool = "delta"
+    pager = "delta"
 [merge]
-    tool = "delta"
+    pager = "delta"
 {{ end -}}
