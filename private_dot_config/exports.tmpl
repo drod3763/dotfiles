@@ -4,21 +4,23 @@ export CLICOLOR=1
 export LSCOLORS=GxFxCxDxBxegedabagaced
 
 {{- "" }}
-{{ if and (lookPath "code") (lookPath "micro") -}}
+{{ if lookPath "micro" -}}
 export EDITOR='micro'
+{{    if lookPath "code" -}}
 export VISUAL='code --new-window --wait'
-{{- else if lookPath "micro" }}
-export EDITOR='micro'
+{{    else -}}
 export VISUAL='micro'
-{{- end }}
+{{-    end }}
+{{ else -}}
+export EDITOR='nano'
+export VISUAL=' nano'
+{{- end -}}
 
-{{- if lookPath "pwsh" -}}
-# Powershell Config
-export POWERSHELL_TELEMETRY_OPTOUT=1
-{{- end }}
+{{ if and (eq .chezmoi.os "darwin") -}}
+# Stops Catalina message about zsh
+export BASH_SILENCE_DEPRECATION_WARNING=1
 
-{{- if and (eq .chezmoi.os "darwin") -}}
-{{-     if lookPath "brew" -}}
+{{     if lookPath "brew" -}}
 # Homebrew Folder
 export HOMEBREW=$(brew --prefix)
 
@@ -26,18 +28,17 @@ export HOMEBREW=$(brew --prefix)
 export HOMEBREW_NO_ANALYTICS=1
 {{-     end }}
 
-# Stops Catalina message about zsh
-export BASH_SILENCE_DEPRECATION_WARNING=1
-
-{{-     if lookPath "yubikey-agent" -}}
+{{     if lookPath "yubikey-agent" -}}
 # Yubikey-Agent
 export SSH_AUTH_SOCK="$(brew --prefix)/var/run/yubikey-agent.sock"
 {{-     end }}
 
+{{-     if stat "$HOME/Library/Python/" -}}
 # Python Setup
 export PYTHON_HOMES=($HOME/Library/Python/*)
 export PYTHON_HOME=${PYTHON_HOMES[0]}
 export PYTHONPATH=$HOME/.python
+{{-     end }}
 {{- end }}
 
 {{- if eq .chezmoi.os "linux" }}
@@ -48,7 +49,6 @@ export XDG_DATA_HOME=$HOME/.local/share
 export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/yubikey-agent/yubikey-agent.sock"
 {{-     end }}
 
-{{- "" }}
 {{     if lookPath "bcompare" -}}
 export DIFFPROG='bcompare'
 {{-     else if lookPath "delta" -}}
@@ -56,11 +56,14 @@ export DIFFPROG='delta --dark --line-numbers --side-by-side --no-gitconfig'
 {{-     end }}
 
 {{     if lookPath "asdf" -}}
-if [ -f /opt/asdf-vm/asdf.sh ]; then
-    export ASDF_DIR=/opt/asdf-vm
-    export ASDF_CONFIG_FILE=$XDG_CONFIG_HOME/asdf/asdfrc
-    export ASDF_DATA_DIR=$XDG_DATA_HOME/asdf
-    source $ASDF_DIR/asdf.sh
-fi
+export ASDF_DIR=/opt/asdf-vm
+export ASDF_CONFIG_FILE=$XDG_CONFIG_HOME/asdf/asdfrc
+export ASDF_DATA_DIR=$XDG_DATA_HOME/asdf
+source $ASDF_DIR/asdf.sh
 {{-     end }}
+{{- end }}
+
+{{- if lookPath "pwsh" -}}
+# Powershell Config
+export POWERSHELL_TELEMETRY_OPTOUT=1
 {{- end }}

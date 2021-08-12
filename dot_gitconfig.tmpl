@@ -48,9 +48,9 @@
 	#delete local branch
 	dell = branch -d
 [core]
-{{- if (eq .chezmoi.os "darwin") }}
+{{- if and (eq .chezmoi.os "darwin") (lookPath "komet") }}
 	editor = komet
-{{- else }}
+{{- else if lookPath "code"}}
 	# Sets the default editor to VS Code detailed here: https://dev.to/deadlybyte/make-vs-code-your-default-git-editor-j6d
 	editor = code --new-window --wait --disable-extensions
 {{- end }}
@@ -73,11 +73,9 @@
     keepBackup = false
 [mergetool "bc4"]
 	trustExitCode = true
-{{- else }}
-{{-     if lookPath "delta" }}
+{{- else if lookPath "delta" }}
 [interactive]
 	diffFilter = delta --color-only
-{{-    end }}
 {{- end }}
 {{- if lookPath "delta" }}
 [delta]
@@ -95,6 +93,13 @@
     line-numbers-right-style = cyan
     line-numbers-minus-style = 124
     line-numbers-plus-style = 28
+{{- end }}
+{{ if lookPath "ksdiff" -}}
+[difftool "Kaleidoscope"]
+	cmd = ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"
+[mergetool "Kaleidoscope"]
+	cmd = ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" --snapshot \"$REMOTE\" --snapshot
+	trustExitCode = true
 {{- end }}
 [push]
 	default = current

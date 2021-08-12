@@ -2,6 +2,7 @@ source $DOTFILES/functions/base_funcs
 source ~/.config/exports
 source ~/.config/aliases
 
+{{ "" -}}
 {{if lookPath "fuck" -}}
 # Config for thefuck
 eval $(thefuck --alias)
@@ -12,27 +13,21 @@ eval $(thefuck --alias)
 eval "$(zoxide init bash)"
 {{- end }}
 
-{{- if eq .chezmoi.os "darwin" }}
-{{-     if lookPath "brew" -}}
-# PATH Modifications
+{{ if eq .chezmoi.os "darwin" -}}
+{{      if lookPath "brew" -}}
+# Homebrew PATH Modifications
 addpath $HOME/Homebrew/bin/
 addpath $HOME/Homebrew/sbin/
-
-# brew aliases
-alias brewup='brew update && brew upgrade && brew cu && brew cleanup'
-## See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies
-alias brewdep='brew deps --tree --installed'
-alias brewlf='brew deps --include-build --tree $(brew leaves)'
 {{-     end }}
 
 # iterm2 Shell Integration
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-{{-     if lookPath "asdf" -}}
+{{     if lookPath "asdf" -}}
 # asdf-vm init
-$(brew --prefix asdf)/asdf.sh
+source $(brew --prefix asdf)/libexec/asdf.sh
 
-{{-         if lookPath "java" -}}
+{{         if lookPath "java" -}}
 function java_asdf_link() {
     macOS_java_dir=/Library/Java/JavaVirtualMachines
     asdf_java_dir=$HOME/.asdf/installs/java/
@@ -53,12 +48,22 @@ function java_asdf_link() {
 {{-         end }}
 {{-     end }}
 
-{{-     if not .personal }}
-alias zapfix="sudo launchctl load -w /Library/LaunchDaemons/com.zscaler.service.plist"
+{{     if stat (joinPath .chezmoi.homeDir "Library/Caches/ms-playwright") -}}
+# Codesign Playwright Chromium for issue https://github.com/microsoft/playwright/issues/7937
+function signPW() {
+    cd $HOME/Library/Caches/ms-playwright/
+    # codesign for chromium in Macos
+    for d in chromium-*; do
+        echo Sign $HOME/Library/Caches/ms-playwright/${d}/chrome-mac/Chromium.app
+        sudo codesign --force --deep --sign - ./${d}/chrome-mac/Chromium.app
+    done
+    cd -
+}
 {{-     end }}
 
-{{-     if lookPath "gsed" -}}
-alias sed='gsed '
+{{     if lookPath "gsed" -}}
+# Use gsed instead of built-in
+addpath -f /usr/local/opt/gnu-sed/libexec/gnubin
 {{-     end }}
 
 {{- end }}

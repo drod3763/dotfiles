@@ -21,20 +21,21 @@
 {{- end -}}
 
 remove = true
-{{- if eq .chezmoi.os "windows" -}}
+{{ if eq .chezmoi.os "windows" -}}
 [cd]
     command = "powershell"
     args = ["-nologo"]
-{{ end }}
+{{ end -}}
 [data]
-    headless = {{ $headless }}
-    hostname = {{ $hostname | quote }}
-    transient = {{ $transient }}
-    isovalent = {{ $isovalent }}
-    personal = {{ $personal }}
-{{- if eq .chezmoi.os "darwin" }}
+    onepassuser = {{ promptString "Enter your 1Password Username:" | quote }}
+    {{ if eq .chezmoi.os "darwin" -}}
     appstore = {{ promptBool "Logged into App Store? (y/n)" }}
-{{- end }}
+    {{ end -}}
+    headless = {{ $headless }}
+    hostname = {{ $hostname | quote }} {{/* the pipe quote is necessary for strings otherwise its interpreted as a command */}}
+    isovalent = {{ $isovalent }}
+    transient = {{ $transient }}
+    personal = {{ $personal }}
 [git]
     autoAdd = true
 [diff]

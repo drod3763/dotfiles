@@ -3,23 +3,29 @@
 
 set -eufo pipefail
 
-#taps=(
-#)
+taps=(
+    homebrew/cask-versions
+    homebrew/cask-fonts
+    homebrew/cask-versions
+)
 
 formulae=(
     1password-cli
     asdf
     bat
     curl
-	docker
+    docker
     docker-compose
     dust
     exa
     fd
     fzf
     gh
-    git-delta  
+    git-delta
+    gnu-sed
+    gpg
     httpie
+    jq
     mas
     micro
     mosh
@@ -36,18 +42,22 @@ casks=(
     alfred
     betterzip
     beyond-compare
-    duet
+    dropbox
     eloston-chromium
-    homebrew/cask-versions/firefox-developer-edition
+    fantastical
+    firefox-developer-edition
+    font-jetbrains-mono-nerd-font
     intellij-idea
     iterm2
+    jump
     kaleidoscope
     komet
     krisp
+    luna-display
     macs-fan-control
     muzzle
+    obsidian
     postman
-    slack
     snagit
     soulver
     soundsource
@@ -59,7 +69,7 @@ casks=(
 
 {{ if .personal }}
 formulae+=(
-	cointop
+    cointop
     imagemagick
 )
 
@@ -69,6 +79,7 @@ casks+=(
     balenaetcher
     default-folder-x
     disk-drill
+    duet
     flume
     garagesale
     hazel
@@ -83,6 +94,7 @@ casks+=(
     protonvpn
     ricoh-theta
     sensei
+    slack
     sonos
     switchresx
     vivaldi
@@ -90,7 +102,16 @@ casks+=(
 )
 {{ end }}
 
-#brew tap ${taps[@]}
+# brew tap only takes up to two taps in one command. So doing a classic loop instead.
+for tap in ${taps[@]};
+do
+    brew tap $tap
+done
+
+# Install brew formulas
 brew install ${formulae[@]}
-brew install --cask ${casks[@])
+
+# Install brew casks. Need to do it this way because the jump formula conflicts with jump desktop. Will never understand why they did this.
+brew install --cask ${casks[@]}
+
 {{ end }}       

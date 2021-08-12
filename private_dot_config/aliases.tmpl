@@ -1,4 +1,24 @@
+# Easily see what ports are in use
 alias wtfport='lsof -i -P -n | grep LISTEN'
+
+# Overwrite with symlinks by default
+alias ln='ln --symbolic --force'
+
+# Remove bad ssh keys
+alias sshrm='ssh keygen -R'
+
+# cat files with the filename(s) as a header without installing any extra programs
+# Source: https://old.reddit.com/r/archlinux/comments/o2bfha/post_your_most_useful_self_written_command_line/h26msmz
+alias tailcat='tail --lines=+0'
+
+# Confirm unsafe file operations
+{{ if lookPath "rsync" -}}
+alias cp='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
+alias mv='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
+{{- else -}}
+alias cp='/bin/cp --interactive '
+alias mv='/bin/mv --interactive '
+{{- end }}
 
 {{ if lookPath "exa" -}}
 # Prettier ls with exa
@@ -6,49 +26,10 @@ alias ls='exa --grid  --color auto --icons --all --sort type'
 alias ll='exa --long --color always --icons --all --sort type'
 {{- end }}
 
-# Overwrite with symlinks by default
-alias ln='ln --symbolic --force'
-
-{{ if and (eq .chezmoi.os "linux") (lookPath "dbus-send") -}}
-# Get list of open windows in Gnome
-# Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h59ttqp/
-alias altt='dbus-send --session \
---type=method_call \
---print-reply \
---dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)"  | grep -Po "\[.*\]"'
-
-# Same as above but with window titles 
-# Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h596io8/
-alias alttt='dbus-send --print-reply \
---type=method_call \
---dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)"|sed -n "/string/s/"\|\(","\)/\n/gp"|sed "/^ \|^\[\|^\]/d"'
-{{- end }}
-
 {{ if lookPath "bat" -}}
 # Replace cat with bat
 alias cat='bat --style=plain --pager=never --theme="Nord"'
 alias catf='bat `fzf -i`'
-{{- end }}
-
-{{- if lookPath "trash" -}}
-    alias rm='trash'
-{{- end }}
-
-# Confirm unsafe file operations
-{{ if lookPath "rsync" -}}
-alias cp='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
-alias mv='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
-{{- else }}
-alias cp='/bin/cp --interactive '
-alias mv='/bin/mv --interactive '
-{{- end }}
-
-{{ if lookPath "fzf" -}}
-# Copy with find using fzf
-alias cpf='/bin/cp --interactive `fzf -i`'
-alias mvf='/bin/mv --interactive `fzf -i`'
-alias rm='/bin/rm --interactive'
-alias rmf='/bin/rm --interactive `fzf -i`'
 {{- end }}
 
 {{ if lookPath "docker" -}}
@@ -67,9 +48,48 @@ alias dconls='docker ps --all'
 alias ddcon='docker rm $(docker ps --all --filter status=exited --quiet)'
 {{- end }}
 
-# Remove bad ssh keys
-alias sshrm='ssh keygen -R'
+{{ if lookPath "fzf" -}}
+# Copy with find using fzf
+alias cpf='/bin/cp --interactive `fzf -i`'
+alias mvf='/bin/mv --interactive `fzf -i`'
+alias rm='/bin/rm --interactive'
+alias rmf='/bin/rm --interactive `fzf -i`'
+{{- end }}
 
-# cat files with the filename(s) as a header without installing any extra programs
-# Source: https://old.reddit.com/r/archlinux/comments/o2bfha/post_your_most_useful_self_written_command_line/h26msmz
-alias tailcat='tail --lines=+0'
+{{ if lookPath "trash" -}}
+    alias rm='trash'
+{{- end -}}
+
+{{ if not .personal -}}
+# Fix zscaler in work laptop
+alias zapfix="sudo launchctl load -w /Library/LaunchDaemons/com.zscaler.service.plist"
+{{- end }}
+
+{{ if and (eq .chezmoi.os "linux") (lookPath "dbus-send") -}}
+# Get list of open windows in Gnome
+# Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h59ttqp/
+alias altt='dbus-send --session \
+--type=method_call \
+--print-reply \
+--dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)"  | grep -Po "\[.*\]"'
+
+# Same as above but with window titles 
+# Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h596io8/
+alias alttt='dbus-send --print-reply \
+--type=method_call \
+--dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)"|sed -n "/string/s/"\|\(","\)/\n/gp"|sed "/^ \|^\[\|^\]/d"'
+{{- end -}}
+
+{{ if eq .chezmoi.os "darwin" -}}
+{{      if lookPath "brew" -}}
+# brew aliases
+alias brewup='brew update && brew upgrade && brew cu && brew cleanup'
+
+# See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies
+alias brewdep='brew deps --tree --installed'
+alias brewlf='brew deps --include-build --tree $(brew leaves)'
+{{-     end }}
+{{- end }}
+
+alias signpw="sudo codesign --force --deep \
+    --sign - ./node_modules/puppeteer/.local-chromium/mac-*/chrome-mac/Chromium.app"

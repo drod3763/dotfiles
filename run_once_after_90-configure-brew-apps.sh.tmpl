@@ -1,0 +1,25 @@
+{{- if (eq .chezmoi.os "darwin") -}}
+#!/bin/bash
+
+set -eufo pipefail
+
+{{ if lookPath "op" }}
+eval $(op signin my.1password.com {{ .onepassuser }})
+{{ end }}
+
+{{ if lookPath "gh" }}
+{{      if eq (output "gh" "auth" "status") "You are not logged into any GitHub hosts. Run gh auth login to authenticate." }}
+{{          $token := (output "op" "get" "item" "x36jcwiyojbtbg2dri4nscgr64" "--fields" "mbo macbook gh token") }}
+gh auth login --withToken {{ $token | quote }}
+{{      end }}
+{{ end }}
+
+{{ if lookPath "tldr" -}}
+tldr --update
+{{- end }}
+
+{{ if lookPath "yubikey-agent" -}}
+brew services start yubikey-agent
+{{- end }}
+
+{{ end }}
