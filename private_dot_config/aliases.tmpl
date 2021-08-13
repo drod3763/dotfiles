@@ -2,7 +2,11 @@
 alias wtfport='lsof -i -P -n | grep LISTEN'
 
 # Overwrite with symlinks by default
+{{ if eq .chezmoi.os "darwin" -}}
+alias ln='ln -sf'
+{{- else -}}
 alias ln='ln --symbolic --force'
+{{- end }}
 
 # Remove bad ssh keys
 alias sshrm='ssh keygen -R'
@@ -13,11 +17,16 @@ alias tailcat='tail --lines=+0'
 
 # Confirm unsafe file operations
 {{ if lookPath "rsync" -}}
-alias cp='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
-alias mv='rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
+alias cp='/usr/local/bin/rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
+alias mv='/usr/local/bin/rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
 {{- else -}}
-alias cp='/bin/cp --interactive '
-alias mv='/bin/mv --interactive '
+{{      if eq .chezmoi.os "darwin" -}}
+    alias cp='/bin/cp -i'
+    alias mv='/bin/mv -i'
+{{-     else }}
+    alias cp='/bin/cp --interactive'
+    alias mv='/bin/mv --interactive'
+{{-     end }}
 {{- end }}
 
 {{ if lookPath "exa" -}}
@@ -30,6 +39,9 @@ alias ll='exa --long --color always --icons --all --sort type'
 # Replace cat with bat
 alias cat='bat --style=plain --pager=never --theme="Nord"'
 alias catf='bat `fzf -i`'
+# Replace tac with bat
+alias tac='tac "$@" | bat --style=plain --pager=never --theme="Nord"'
+alias tacf='tac "$@" | bat `fzf -i`'
 {{- end }}
 
 {{ if lookPath "docker" -}}
@@ -50,10 +62,17 @@ alias ddcon='docker rm $(docker ps --all --filter status=exited --quiet)'
 
 {{ if lookPath "fzf" -}}
 # Copy with find using fzf
+{{      if eq .chezmoi.os "darwin" -}}
+alias cpf='/bin/cp -i `fzf -i`'
+alias mvf='/bin/mv -i `fzf -i`'
+alias rm='/bin/rm -i'
+alias rmf='/bin/rm -i `fzf -i`'
+{{-     else -}}
 alias cpf='/bin/cp --interactive `fzf -i`'
 alias mvf='/bin/mv --interactive `fzf -i`'
 alias rm='/bin/rm --interactive'
 alias rmf='/bin/rm --interactive `fzf -i`'
+{{-     end }}
 {{- end }}
 
 {{ if lookPath "trash" -}}
@@ -90,6 +109,3 @@ alias brewdep='brew deps --tree --installed'
 alias brewlf='brew deps --include-build --tree $(brew leaves)'
 {{-     end }}
 {{- end }}
-
-alias signpw="sudo codesign --force --deep \
-    --sign - ./node_modules/puppeteer/.local-chromium/mac-*/chrome-mac/Chromium.app"

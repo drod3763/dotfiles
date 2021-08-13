@@ -9,6 +9,7 @@ install.sh
 Makefile
 README.md
 vscode_settings.json
+*zsh_nocorrect*
 {{- if ne .chezmoi.os "linux" }}
 ~/.config/paru
 ~/.config/1Password

@@ -48,8 +48,8 @@
 	#delete local branch
 	dell = branch -d
 [core]
-{{- if and (eq .chezmoi.os "darwin") (lookPath "komet") }}
-	editor = komet
+{{- if and (eq .chezmoi.os "darwin") (stat "/Applications/Komet.app") }}
+	editor = /Applications/Komet.app/Contents/MacOS/Komet
 {{- else if lookPath "code"}}
 	# Sets the default editor to VS Code detailed here: https://dev.to/deadlybyte/make-vs-code-your-default-git-editor-j6d
 	editor = code --new-window --wait --disable-extensions

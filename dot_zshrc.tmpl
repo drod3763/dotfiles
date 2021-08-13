@@ -141,3 +141,10 @@ source ~/.config/common_setup
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+{{ if stat ".zsh_nocorrect" -}}
+# Sourced from https://gist.github.com/vitormil/4364864
+while read -r COMMAND; do
+    alias $COMMAND="nocorrect $COMMAND"
+done < ~/.zsh_nocorrect
+{{ end }}
