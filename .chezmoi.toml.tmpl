@@ -38,11 +38,18 @@ remove = true
     personal = {{ $personal }}
 [git]
     autoAdd = true
-{{ if lookPath "bcomp" -}}
+{{ if lookPath "bcompare" -}}
+{{     if eq .chezmoi.os "darwin" -}}
 [diff]
     command = "bcomp" {{/* if bcompare is used, the temporary file never shows up. Need to use bcomp */}}
 [merge]
     command = "bcomp"
+{{     else if eq .chezmoi.os "linux" -}}
+[diff]
+    command = "bcompare"
+[merge]
+    command = "bcompare"
+{{-     end }}
 {{ else if lookPath "delta" -}}
 [diff]
     pager = "delta"
