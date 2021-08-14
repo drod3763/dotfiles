@@ -38,7 +38,14 @@ remove = true
     personal = {{ $personal }}
 [git]
     autoAdd = true
+{{ if lookPath "bcomp" -}}
+[diff]
+    command = "bcomp" {{/* if bcompare is used, the temporary file never shows up. Need to use bcomp */}}
+[merge]
+    command = "bcomp"
+{{ else if lookPath "delta" -}}
 [diff]
     pager = "delta"
 [merge]
     pager = "delta"
+{{- end }}
