@@ -1,0 +1,8 @@
+{{- if (eq .chezmoi.os "darwin") -}}
+#!/bin/bash
+
+set -eufo pipefail
+
+curl -o ~/Library/Fonts/icons-in-terminal.ttf 'https://github.com/sebastiencs/icons-in-terminal/blob/master/build/icons-in-terminal.ttf'
+
+{{ end -}}
