@@ -102,7 +102,8 @@ alias alttt='dbus-send --print-reply \
 {{ if eq .chezmoi.os "darwin" -}}
 {{      if lookPath "brew" -}}
 # brew aliases
-alias brewup='brew update && brew upgrade && brew cu && brew cleanup'
+alias brewup='brew update && brew upgrade && brew upgrade --cask && brew cleanup'
+alias bcu='brew update && brew upgrade --cask --greedy && brew cleanup'
 
 # See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies
 alias brewdep='brew deps --tree --installed'
