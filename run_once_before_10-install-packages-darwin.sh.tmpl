@@ -7,6 +7,7 @@ taps=(
     homebrew/cask-versions
     homebrew/cask-fonts
     homebrew/cask-versions
+    versent/homebrew-taps
 )
 
 formulae=(
@@ -26,6 +27,7 @@ formulae=(
     gpg
     httpie
     jq
+    kubectl
     mas
     micro
     mosh
@@ -101,6 +103,15 @@ casks+=(
     vivaldi
     wezterm
     windscribe
+)
+{{ end }}
+
+{{ if not.personal }}
+formulae+=(
+    awscli
+    docker-credential-helper-ecr
+    helm
+    saml2aws
 )
 {{ end }}
 
