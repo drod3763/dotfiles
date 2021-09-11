@@ -58,6 +58,7 @@ alias dls='docker image ls'
 alias dimg='docker image rmi'
 alias dconls='docker ps --all'
 alias ddcon='docker rm $(docker ps --all --filter status=exited --quiet)'
+alias aws='docker run --rm -it amazon/aws-cli'
 {{- end }}
 
 {{ if lookPath "fzf" -}}
