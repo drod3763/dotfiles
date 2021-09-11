@@ -1,29 +1,28 @@
 {
   "workbench.editor.showTabs" : true,
   "prettier.requireConfig" : true,
-"vsicons.dontShowNewVersionMessage": true,
-"window.zoomLevel": 3,
+  "vsicons.dontShowNewVersionMessage": true,
+  "window.zoomLevel": 3,
   "mssql.connections" : [
     {
-      "user" : "{{put-username-here}}",
-      "password" : "{{put-password-here}}",
-      "server" : "{{put-server-name-here}}",
-      "database" : "{{put-database-name-here}}"
+      "user": "{{put-username-here}}",
+      "password": "{{put-password-here}}",
+      "server": "{{put-server-name-here}}",
+      "database": "{{put-database-name-here}}"
     }
   ],
   "editor.renderWhitespace" : "all",
   "editor.wordWrap" : "on",
   "auto-close-tag.SublimeText3Mode" : true,
   "terminal.integrated.env.linux" : {
-
   },
   "explorer.confirmDelete" : false,
   "html.format.wrapLineLength" : 0,
   "bracket-pair-colorizer-2.highlightActiveScope" : true,
   "files.hotExit": "onExitAndWindowClose",
-  "editor.fontSize" : 13,
+  "editor.fontSize" : 16,
   "terminal.integrated.rendererType" : "dom",
-  "editor.fontFamily" : "OperatorMonoSSmLig, Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontFamily" : "OperatorMonoSSmLig, 'JetBrainsMono Nerd Font Mono', monospace",
   "[javascript]" : {
     "editor.defaultFormatter" : "esbenp.prettier-vscode"
   },
@@ -46,14 +45,10 @@
   "javascript.updateImportsOnFileMove.enabled" : "always",
   "workbench.fontAliasing" : "auto",
   "editor.accessibilitySupport" : "off",
-  "terminal.integrated.cursorStyle" : "line",
-  "cSpell.enableFiletypes" : [
-    "javascript"
-  ],
+  "terminal.integrated.cursorStyle": "line",
   "sync.removeExtensions" : false,
   "bracket-pair-colorizer-2.showBracketsInGutter" : true,
-  "quokka.compactMessageOutput" : true,
-  "workbench.iconTheme" : "vscode-icons",
+  "quokka.compactMessageOutput": true,
   "workbench.sideBar.location" : "right",
   "editor.minimap.enabled" : false,
   "telemetry.enableCrashReporter" : false,
@@ -206,5 +201,76 @@
     "**/env/**": true,
     "**/venv/**": true,
     "env-*": true
-  }
+  },
+  "workbench.colorTheme": "Night Owl",
+  "extension-profiles.profiles": {
+    "JavaScript": {
+      "extensions": [
+        "nicoespeon.abracadabra",
+        "kevinkyang.auto-comment-blocks",
+        "aaron-bond.better-comments",
+        "vscode.configuration-editing",
+        "vscode.github",
+        "github.copilot",
+        "nicoespeon.hocus-pocus",
+        "liamhammett.inline-parameters",
+        "sburg.vscode-javascript-booster",
+        "ms-vscode.js-debug",
+        "ms-vscode.js-debug-companion",
+        "vscode.javascript",
+        "vscode.json",
+        "vscode.json-language-features",
+        "vscode.merge-conflict",
+        "vscode.debug-auto-launch",
+        "vscode.npm",
+        "esbenp.prettier-vscode",
+        "wallabyjs.quokka-vscode",
+        "tabnine.tabnine-vscode",
+        "wayou.vscode-todo-highlight",
+        "gruntfuggly.todo-tree",
+        "britesnow.vscode-toggle-quotes",
+        "chakrounanas.turbo-console-log",
+        "wallabyjs.wallaby-vscode"
+      ]
+    },
+    "Playwright": {
+      "extensions": [
+        "nicoespeon.abracadabra",
+        "kevinkyang.auto-comment-blocks",
+        "aaron-bond.better-comments",
+        "vscode.configuration-editing",
+        "vscode.github",
+        "github.copilot",
+        "nicoespeon.hocus-pocus",
+        "liamhammett.inline-parameters",
+        "sburg.vscode-javascript-booster",
+        "ms-vscode.js-debug",
+        "ms-vscode.js-debug-companion",
+        "vscode.javascript",
+        "vscode.json",
+        "vscode.json-language-features",
+        "vscode.merge-conflict",
+        "vscode.debug-auto-launch",
+        "vscode.npm",
+        "esbenp.prettier-vscode",
+        "wallabyjs.quokka-vscode",
+        "tabnine.tabnine-vscode",
+        "wayou.vscode-todo-highlight",
+        "gruntfuggly.todo-tree",
+        "britesnow.vscode-toggle-quotes",
+        "chakrounanas.turbo-console-log",
+        "wallabyjs.wallaby-vscode"
+      ]
+    }
+  },
+  "terminal.explorerKind": "external",
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "fontshortcuts.defaultTerminalFontSize": 14,
+  "quokka.automaticRestart": true,
+  "wallaby.codeLensFeature.runTest": true,
+  "wallaby.node": "~/.asdf/shims/node",
+  "editor.formatOnSave": true,
+  "prettier.resolveGlobalModules": true,
+  "prettier.useTabs": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }
