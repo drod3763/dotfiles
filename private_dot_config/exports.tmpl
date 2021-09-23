@@ -7,7 +7,7 @@ export LSCOLORS=GxFxCxDxBxegedabagaced
 {{ if lookPath "micro" -}}
 export EDITOR='micro'
 {{    if lookPath "code" -}}
-export VISUAL='code --new-window --wait'
+export VISUAL='code --new-window'
 {{    else -}}
 export VISUAL='micro'
 {{-    end }}
@@ -16,7 +16,7 @@ export EDITOR='nano'
 export VISUAL=' nano'
 {{- end -}}
 
-{{ if and (eq .chezmoi.os "darwin") -}}
+{{ if eq .chezmoi.os "darwin" -}}
 # Stops Catalina message about zsh
 export BASH_SILENCE_DEPRECATION_WARNING=1
 
@@ -31,13 +31,18 @@ export HOMEBREW_NO_ANALYTICS=1
 {{     if lookPath "yubikey-agent" -}}
 # Yubikey-Agent
 export SSH_AUTH_SOCK="$(brew --prefix)/var/run/yubikey-agent.sock"
-{{-     end }}
+{{-    end }}
 
 {{-     if stat "$HOME/Library/Python/" -}}
 # Python Setup
 export PYTHON_HOMES=($HOME/Library/Python/*)
 export PYTHON_HOME=${PYTHON_HOMES[0]}
 export PYTHONPATH=$HOME/.python
+{{-     end }}
+
+{{      if not .personal -}}
+export TILT_NAMESPACE=derick-rodriguez
+export AWS_SDK_LOAD_CONFIG=1
 {{-     end }}
 {{- end }}
 

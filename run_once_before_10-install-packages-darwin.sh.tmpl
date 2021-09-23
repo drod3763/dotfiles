@@ -7,16 +7,12 @@ taps=(
     homebrew/cask-versions
     homebrew/cask-fonts
     homebrew/cask-versions
-    versent/homebrew-taps
 )
 
 formulae=(
-    1password-cli
     asdf
     bat
     curl
-    docker
-    docker-compose
     dust
     exa
     fd
@@ -42,13 +38,19 @@ formulae=(
 
 casks=(
     1password
+    1password-cli
     airfoil
     alfred
     bartender
     betterzip
     beyond-compare
+    boop
+    datagrip
+    davmail
+    docker
     dropbox
     eloston-chromium
+    fantastical
     firefox-developer-edition
     font-jetbrains-mono-nerd-font
     intellij-idea
@@ -65,7 +67,6 @@ casks=(
     snagit
     soulver
     soundsource
-    sqlpro-studio
     textexpander
     visual-studio-code
 )
@@ -82,7 +83,6 @@ casks+=(
     default-folder-x
     disk-drill
     duet
-    fantastical
     flume
     garagesale
     hazel
@@ -90,7 +90,6 @@ casks+=(
     istat-menus
     ivpn
     ledger-live
-    luna-display
     mountain-duck
     pdf-expert
     permute
@@ -107,6 +106,10 @@ casks+=(
 {{ end }}
 
 {{ if not .personal }}
+taps+=(
+    versent/homebrew-taps
+)
+
 formulae+=(
     awscli
     docker-credential-helper-ecr
