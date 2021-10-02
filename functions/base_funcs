@@ -9,6 +9,7 @@ source $DOTFILES/functions/bash_path_funcs/listpath
 source $DOTFILES/functions/bash_path_funcs/uniqpath
 source $DOTFILES/functions/bash_path_funcs/edpath
 source $DOTFILES/functions/bash_path_funcs/realpath_filter
+source $DOTFILES/functions/dmginstall
 
 ### ARCHIVE EXTRACTION
 # usage: ex <file>

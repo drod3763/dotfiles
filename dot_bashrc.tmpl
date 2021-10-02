@@ -1,3 +1,10 @@
+{{ if lookPath "fig" -}}
+#### FIG ENV VARIABLES ####
+# Please make sure this block is at the start of this file.
+[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
+#### END FIG ENV VARIABLES ####
+{{- end }}
+
 # CD preferences
 shopt -s cdable_vars
 ## Automatically fix directory name typos when changing directory.
@@ -29,3 +36,10 @@ alias ..2='..; ..'
 alias ..3='..2; ..'
 alias ..4='..3; ..'
 alias ..5='..4; ..'
+
+{{ if lookPath "fig" -}}
+#### FIG ENV VARIABLES ####
+# Please make sure this block is at the end of this file.
+[ -s ~/.fig/fig.sh ] && source ~/.fig/fig.sh
+#### END FIG ENV VARIABLES ####
+{{ end -}}
