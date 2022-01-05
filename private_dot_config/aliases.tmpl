@@ -1,3 +1,6 @@
+# Run aliases with sudo
+sudo='sudo '
+
 # Easily see what ports are in use
 alias wtfport='lsof -i -P -n | grep LISTEN'
 
@@ -20,7 +23,7 @@ alias tailcat='tail --lines=+0'
 alias cp='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
 alias mv='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
 alias cpr='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive "$@"'
-alias mvr='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive "$@"'
+alias mvwr='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive "$@"'
 {{- else -}}
 {{      if eq .chezmoi.os "darwin" -}}
     alias cp='/bin/cp -i'
