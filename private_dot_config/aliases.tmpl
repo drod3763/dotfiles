@@ -19,6 +19,8 @@ alias tailcat='tail --lines=+0'
 {{ if lookPath "rsync" -}}
 alias cp='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
 alias mv='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
+alias cpr='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive "$@"'
+alias mvr='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive "$@"'
 {{- else -}}
 {{      if eq .chezmoi.os "darwin" -}}
     alias cp='/bin/cp -i'
