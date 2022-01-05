@@ -17,8 +17,8 @@ alias tailcat='tail --lines=+0'
 
 # Confirm unsafe file operations
 {{ if lookPath "rsync" -}}
-alias cp='/usr/local/bin/rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
-alias mv='/usr/local/bin/rsync --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
+alias cp='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 "$@"'
+alias mv='$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files "$@"'
 {{- else -}}
 {{      if eq .chezmoi.os "darwin" -}}
     alias cp='/bin/cp -i'
