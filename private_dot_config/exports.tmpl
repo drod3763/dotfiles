@@ -52,6 +52,7 @@ export XDG_CACHE_HOME=$HOME/.cache
 export XDG_DATA_HOME=$HOME/.local/share
 {{     if lookPath "yubikey-agent" -}}
 export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/yubikey-agent/yubikey-agent.sock"
+export FREETYPE_PROPERTIES="cff:no-stem-darkening=0"
 {{-     end }}
 
 {{     if lookPath "bcompare" -}}
