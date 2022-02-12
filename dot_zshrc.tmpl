@@ -1,164 +1,135 @@
-{{ if lookPath "fig" -}}
-#### FIG ENV VARIABLES ####
-# Please make sure this block is at the start of this file.
-[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
-#### END FIG ENV VARIABLES ####
-{{- end }}
+{{- /* Personal Zsh configuration file. It is strongly recommended to keep all
+shell customization and configuration (including exported environment
+variables such as PATH) in this file or in files sourced from it.
 
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
+Documentation: https://github.com/romkatv/zsh4humans/blob/v5/README.md.
 
-# Path to your oh-my-zsh installation.
-export ZSH=$HOME/.oh-my-zsh
+Periodic auto-update on Zsh startup: 'ask' or 'no'.
+You can manually run `z4h update` to update everything. */}}
+zstyle ':z4h:' auto-update      'no'
+zstyle ':z4h:' auto-update-days '28' {{/* Ask whether to auto-update this often; has no effect if auto-update is 'no'. */}}
+zstyle ':z4h:' prompt-at-bottom 'yes' {{/* Move prompt to the bottom when zsh starts and on Ctrl+L. */}}
 
-# Set name of the theme to load. Optionally, if you set this to "random"
-# it'll load a random theme each time that oh-my-zsh is loaded.
-# See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
-ZSH_THEME="powerlevel10k/powerlevel10k"
+{{- /* Keyboard type: 'mac' or 'pc'. */}}
+{{- if eq .chezmoi.os "darwin" }}
+zstyle ':z4h:bindkey' keyboard 'mac'
+{{- else }}
+zstyle ':z4h:bindkey' keyboard 'pc'
+{{ end -}}
 
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
+zstyle ':z4h:' term-shell-integration 'yes' {{/* Mark up shell's output with semantic information. */}}
 
-# Uncomment the following line to use hyphen-insensitive completion. Case
-# sensitive completion must be off. _ and - will be interchangeable.
-HYPHEN_INSENSITIVE="true"
+{{- /* Right-arrow key accepts one character ('partial-accept') from
+command autosuggestions or the whole thing ('accept')? */}}
+zstyle ':z4h:autosuggestions' forward-char 'accept'
+zstyle ':z4h:fzf-complete' recurse-dirs 'no' {{/* Recursively traverse directories when TAB-completing files. */}}
+zstyle ':z4h:direnv'         enable 'no' {{/* Enable direnv to automatically source .envrc files. */}}
+zstyle ':z4h:direnv:success' notify 'no' {{/* Show "loading" and "unloading" notifications from direnv. */}}
 
-# Uncomment the following line to disable bi-weekly auto-update checks.
-DISABLE_AUTO_UPDATE="true"
+{{- /* Enable ('yes') or disable ('no') automatic teleportation of z4h over
+SSH when connecting to these hosts.
+zstyle ':z4h:ssh:example-hostname1'   enable 'yes'
+zstyle ':z4h:ssh:*.example-hostname2' enable 'no'
+The default value if none of the overrides above match the hostname.
+zstyle ':z4h:ssh:*'                     enable 'no' 
 
-# Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
+# Send these files over to the remote host when connecting over SSH to the
+# enabled hosts.
+# zstyle ':z4h:ssh:*' send-extra-files '~/.nanorc' '~/.env.zsh'
 
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
+# Clone additional Git repositories from GitHub.
+#
+# This doesn't do anything apart from cloning the repository and keeping it
+# up-to-date. Cloned files can be used after `z4h init`. This is just an
+# example. If you don't plan to use Oh My Zsh, delete this line.
+# z4h install ohmyzsh/ohmyzsh || return
 
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+# Install or update core components (fzf, zsh-autosuggestions, etc.) and
+# initialize Zsh. After this point console I/O is unavailable until Zsh
+# is fully initialized. Everything that requires user interaction or can
+# perform network I/O must be done above. Everything else is best done below. */}}
+z4h init || return
+{{- /* Extend PATH. */}}
+path=(~/bin $path)
+{{- template "path.tmpl" . }}
+{{- /* Export environment variables. */}}
+export GPG_TTY=$TTY {{/* Use the same TTY for GPG as for the terminal. */}}
+{{- template "exports.tmpl" . }}
 
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
+{{- /* Source additional local files if they exist.
+z4h source ~/.env.zsh 
 
-# Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
+# Use additional Git repositories pulled in with `z4h install`.
+#
+# This is just an example that you should delete. It does nothing useful.
+# z4h source ohmyzsh/ohmyzsh/lib/diagnostics.zsh  # source an individual file
+# z4h load   ohmyzsh/ohmyzsh/plugins/emoji-clock  # load a plugin 
 
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+Define key bindings. */}}
+{{ template "bindkeys.tmpl" . }}
 
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# HIST_STAMPS="mm/dd/yyyy"
+{{- /* Autoload functions. */}}
+autoload -Uz zmv 
 
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
+{{- /* Define functions and completions. 
+function md() { [[ $# == 1 ]] && mkdir -p -- "$1" && cd -- "$1" }
+compdef _directories md */}}
+{{- template "functions.tmpl" . }}
 
-# ZSH_DISABLE_COMPFIX=true
+{{- /* Define aliases. */}}
 
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(
-  zsh-syntax-highlighting
-)
+{{- /* Define named directories: ~w <=> Windows home directory on WSL. 
+[[ -z $z4h_win_home ]] || hash -d w=$z4h_win_home */}}
 
-source $ZSH/oh-my-zsh.sh
+{{- /* Define aliases. 
+alias tree='tree -a -I .git' */}}
+{{ template "aliases.tmpl" . }}
 
-# User Config
+{{- /* Add flags to existing aliases. 
+alias ls="${aliases[ls]:-ls} -A"
 
-export DOTFILES= {{- .chezmoi.sourceDir }}
-
-# Setup history since its forgotten by default
+# Set shell options: http://zsh.sourceforge.net/Doc/Release/Options.html. */}}
+setopt glob_dots     # no special treatment for file names with a leading dot
+setopt no_auto_menu  # require an extra TAB press to open the completion menu
 HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
 SAVEHIST=5000
 HISTSIZE=2000
-setopt SHARE_HISTORY # share history across multiple zsh sessions
-setopt APPEND_HISTORY # append to history
-setopt INC_APPEND_HISTORY # adds commands as they are typed, not at shell exit
-setopt HIST_IGNORE_DUPS # do not store duplications
-setopt HIST_REDUCE_BLANKS # removes blank lines from history
-setopt EXTENDED_HISTORY # adds a bit more data to the history entries
-#setopt CORRECT_ALL # correct all commands
-setopt AUTO_CD # shell will automatically change directory if your forget to type CD
-setopt NO_CASE_GLOB # case insensitive globbing
-setopt HASH_LIST_ALL # update list of commands so you don't get corrections for real things
+{{- /* Options enabled by Z4H by default:
+    'always_to_end' - move to the end of the word after a completion      
+    'auto_cd' - shell will automatically change directory if you don't type CD
+    'auto_menu'             
+    'auto_param_slash'    
+    'auto_pushd'             
+    'c_bases'                
+    'extended_glob'          
+    'extended_history' - adds a bit more data to the history entries
+    'hist_expire_dups_first'
+    'hist_find_no_dups'      
+    'hist_ignore_dups' - do not store duplications
+    'hist_ignore_space'     
+    'hist_save_no_dups'      
+    'hist_verify'            
+    'interactive_comments'   
+    'multios'               
+    'no_aliases'             
+    'no_auto_remove_slash'
+    'no_beep'   
+    'no_bg_nice'             
+    'no_bg_nice'             
+    'no_flow_control'        
+    'no_list_types'          
+    'no_prompt_bang'         
+    'no_prompt_subst'        
+    'prompt_cr'              
+    'prompt_percent'         
+    'prompt_sp'              
+    'share_history' - share history across multiple zsh sessions
+    'typeset_silent'         
+*/}}
+setopt append_history # append to history
+setopt inc_append_history # adds commands as they are typed, not at shell exit
+setopt hist_reduce_blanks # removes blank lines from history
+setopt no_case_glob # case insensitive globbing
+setopt hash_list_all # update list of commands so you don't get corrections for real things
+{{- template "init.tmpl" . }}
 chpwd() { ll }
-
-{{- if eq .chezmoi.os "darwin" }}
-
-zstyle :compinstall filename '/Users/derick/.zshrc'
-# Homebrew Completions
-if type brew &>/dev/null; then
-  FPATH=$(brew --prefix)/share/zsh/site-functions:$FPATH
-
-  autoload -Uz compinit
-  compinit
-fi
-
-{{- end }}
-
-# Case insensitive completion
-# zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*'
-
-## case-insensitive (uppercase from lowercase) completion
-#zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
-## case-insensitive (all) completion
-#zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
-## case-insensitive,partial-word and then substring completion
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
-
-zstyle ':completion:*' menu select # select completions with arrow keys
-zstyle ':completion:*' group-name '' # group results by category
-zstyle ':completion:::::' completer _expand _complete _ignored _approximate # enable approximate matches for completion
-
-# partial completion suggestions
-zstyle ':completion:*' list-suffixes
-zstyle ':completion:*' expand prefix suffix
-
-# Bind delete key to delete and not insert ~
-bindkey '^[[3~' delete-char
-bindkey '^[3;5~' delete-char
-
-# binds Up and Down (adjust for your own escape sequences) to a history search, backwards and forwards, based upon what has already been entered at the prompt.
-bindkey "^[[A" history-beginning-search-backward
-bindkey "^[[B" history-beginning-search-forward
-
-autoload -Uz compinit && compinit
-
-# load bashcompinit for some old bash completions
-autoload bashcompinit && bashcompinit
-# [[ -r ~/Projects/autopkg_complete/autopkg ]] && source ~/Projects/autopkg_complete/autopkg
-
-# a custom zle widget to wrap history-incremental-search-backward and pass the $BUFFER variable which contains the contents of the zsh prompt typed so far. You can then continue typing in the minibuffer to further narrow your search.
-_history-incremental-search-backward () {
-    zle .history-incremental-search-backward $BUFFER
-}
-zle -N history-incremental-search-backward _history-incremental-search-backward
-
-alias reload='source ~/.zshrc'
-
-# Source common scripts
-source ~/.config/common_setup
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-{{ if stat ".zsh_nocorrect" -}}
-# Sourced from https://gist.github.com/vitormil/4364864
-while read -r COMMAND; do
-    alias $COMMAND="nocorrect $COMMAND"
-done < ~/.zsh_nocorrect
-{{ end -}}
-
-{{ if lookPath "fig" -}}
-#### FIG ENV VARIABLES ####
-# Please make sure this block is at the end of this file.
-[ -s ~/.fig/fig.sh ] && source ~/.fig/fig.sh
-#### END FIG ENV VARIABLES ####
-{{ end -}}

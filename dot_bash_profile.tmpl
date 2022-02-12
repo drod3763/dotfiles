@@ -1,10 +1,8 @@
-# Just use bashrc
-[[ -f ~/.bashrc ]] && source ~/.bashrc
+[[ -f ~/.bashrc ]] && . ~/.bashrc {{/* Just use bashrc */}}
 
 {{ if (eq .chezmoi.os "linux") }}
-# Start gnome keyring
 if [ -n "$DESKTOP_SESSION" ];then
-    eval $(gnome-keyring-daemon --start)
-    export SSH_AUTH_SOCK
+    eval $(gnome-keyring-daemon --start) {{/* Start gnome keyring */}}
+    export SSH_AUTH_SOCK {{/* Set ssh auth socket */}}
 fi
 {{- end }}

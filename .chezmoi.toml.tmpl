@@ -1,34 +1,58 @@
 {{/* boolean feature tags */}}
-{{- $headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
-{{- $transient := false -}}{{/* true if this machine is temporary, e.g. a cloud or VM instance */}}
-{{- $isovalent := false -}}{{/* true if this machine should have Isovalent secrets */}}
-{{- $personal := false -}}{{/* true if this machine should have personal secrets */}}
+{{- $headless := false }}{{/* true if this machine does not have a screen and keyboard */}}
+{{- $transient := false }}{{/* true if this machine is temporary, e.g. a cloud or VM instance */}}
+{{- $isovalent := false }}{{/* true if this machine should have Isovalent secrets */}}
+{{- $personal := false }}{{/* true if this machine should have personal secrets */}}
 {{- "" -}}
 
 {{/* detect GitHub codespaces and VSCode remote containers */}}
-{{- if or (env "CODESPACES") (env "REMOTE_CONTAINERS_IPC") -}}
-{{-   $headless = true -}}
-{{-   $transient = true -}}
-{{- end -}}
+{{- if or (env "CODESPACES") (env "REMOTE_CONTAINERS_IPC") }}
+{{-   $headless = true }}
+{{-   $transient = true }}
+{{- end }}
 
-{{- $hostname := .chezmoi.hostname -}}
+{{- $hostname := .chezmoi.hostname }}
 
-{{- if not $transient -}}
-{{-   if eq $hostname "cb-feeder" -}}
-{{-     $headless = true -}}
-{{-     $personal = true -}}
-{{-   end -}}
+{{- if not $transient }}
+{{-   if eq $hostname "cb-feeder" }}
+{{-     $headless = true }}
+{{-     $personal = true }}
+{{-   end }}
+{{- end }}
+
+{{- $onepassuser := "" }}
+{{- if (hasKey . "onepassuser") }}
+{{-   $onepassuser = .onepassuser }}
+{{- else }}
+{{-   $onepassuser = promptString "Enter your 1Password Username:" }}
+{{- end }}
+
+{{- $shell := "" }}
+{{- if (hasKey . "shell") }}
+{{-   $shell = .shell }}
+{{- else if eq .chezmoi.os "darwin" "linux" }}
+{{-         if eq (env "SHELL" | trunc -3) "zsh" }}
+{{-             $shell = "zsh" }}
+{{-         else if eq (env "SHELL" | trunc -4) "bash" -}}
+{{-             $shell = "bash" }}
+{{-         end }}
 {{- end -}}
 
 remove = true
-{{ if eq .chezmoi.os "windows" -}}
+{{- if eq .chezmoi.os "windows" }}
 [cd]
     command = "powershell"
     args = ["-nologo"]
-{{ end -}}
+{{- end }}
 [data]
-    onepassuser = {{ promptString "Enter your 1Password Username:" | quote }}
+    onepassuser = {{ $onepassuser | quote }}
     {{ if eq .chezmoi.os "darwin" -}}
+    {{- $appstore := "" -}}
+    {{- if (hasKey . "appstore") -}}
+    {{-   $appstore = .appstore -}}
+    {{- else -}}
+    {{-   $appstore = promptBool "Logged into App Store? (y/n)" -}}
+    {{- end -}}
     appstore = {{ promptBool "Logged into App Store? (y/n)" }}
     {{ end -}}
     headless = {{ $headless }}
@@ -36,6 +60,7 @@ remove = true
     isovalent = {{ $isovalent }}
     transient = {{ $transient }}
     personal = {{ $personal }}
+    shell = {{ $shell | quote }}
 [git]
     autoAdd = true
 {{ if lookPath "bcompare" -}}

@@ -1,45 +1,15 @@
-{{ if lookPath "fig" -}}
-#### FIG ENV VARIABLES ####
-# Please make sure this block is at the start of this file.
-[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
-#### END FIG ENV VARIABLES ####
-{{- end }}
-
-# CD preferences
-shopt -s cdable_vars
-## Automatically fix directory name typos when changing directory.
-shopt -s cdspell
-## Automatically expand directory globs and fix directory name typos whilst completing. Note, this works in conjuction with the cdspell option listed above.
-shopt -s direxpand dirspell
-## Enable the ** globstar recursive pattern in file and directory expansions.
-shopt -s globstar
-
-# History preferences
-shopt -s histappend
-shopt -s histreedit
-shopt -s histverify
-HISTCONTROL='ignoreboth':erasedups
-HISTIGNORE=?:??
-HISTFILESIZE=50000
-HISTSIZE=50000
-PROMPT_COMMAND="history -a;history -c;history -r; $PROMPT_COMMAND"
-
-export DOTFILES= {{- .chezmoi.sourceDir }}
-
-# Source common scripts 
-source ~/.config/common_setup
-
-alias reload='source ~/.bashrc'
-alias -- -='cd -'
-alias ..='cd ..'
-alias ..2='..; ..'
-alias ..3='..2; ..'
-alias ..4='..3; ..'
-alias ..5='..4; ..'
-
-{{ if lookPath "fig" -}}
-#### FIG ENV VARIABLES ####
-# Please make sure this block is at the end of this file.
-[ -s ~/.fig/fig.sh ] && source ~/.fig/fig.sh
-#### END FIG ENV VARIABLES ####
-{{ end -}}
+{{ template "exports.tmpl" . }}
+{{/* CD preferences */ -}}
+shopt -s cdable_vars 
+shopt -s cdspell {{/* Automatically fix directory name typos when changing directory*/}}
+shopt -s direxpand dirspell {{/* Expand directory names to their full path */}} 
+shopt -s globstar {{/* Allow ** in pathnames */}}
+{{/* History preferences */ -}}
+shopt -s histappend {{/* Append to history, do not overwrite */}}
+shopt -s histreedit {{/* Edit the history interactively */}}
+shopt -s histverify {{/* Verify the history interactively */}}
+HISTCONTROL='ignoreboth':erasedups {{/* Ignore duplicates and commands that begin with a space */}}
+HISTIGNORE=?:?? {{/* Ignore these commands */}}
+HISTFILESIZE=50000 {{/* History File Size */}}
+HISTSIZE=50000 {{/* History Size */}}
+PROMPT_COMMAND="history -a;history -c;history -r; $PROMPT_COMMAND" {{/* Color Support. Update prompt when history is updated */}}

@@ -1,0 +1,24 @@
+{{- if lookPath "fuck" }}
+eval $(thefuck --alias)
+{{- end }}
+
+{{- if lookPath "zoxide" }}
+eval "$(zoxide init zsh)"
+{{- end }}
+
+{{- if eq .chezmoi.os "darwin" }}
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh" {{/* iterm2 Shell Integration */}}
+
+{{-     if stat (joinPath .chezmoi.homeDir "Library/Caches/ms-playwright") }}
+# Codesign Playwright Chromium for issue https://github.com/microsoft/playwright/issues/7937
+function signPW() {
+    cd $HOME/Library/Caches/ms-playwright/
+    # codesign for chromium in Macos
+    for d in chromium-*; do
+        echo Sign $HOME/Library/Caches/ms-playwright/${d}/chrome-mac/Chromium.app
+        sudo codesign --force --deep --sign - ./${d}/chrome-mac/Chromium.app
+    done
+    cd -
+}
+{{-     end }}
+{{- end }}
