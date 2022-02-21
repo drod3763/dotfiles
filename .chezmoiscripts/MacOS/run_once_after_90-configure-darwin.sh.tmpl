@@ -1,4 +1,4 @@
-{{ if (eq .chezmoi.os "darwin") -}}
+{{- if (eq .chezmoi.os "darwin") -}}
 #!/bin/bash
 
 # ~/.macos — https://mths.be/macos
@@ -175,4 +175,4 @@ killall Dock
 
 # launchctl unload -w /System/Library/LaunchAgents/com.apple.notificationcenterui.plist 2> /dev/null
 
-{{ end -}}
+{{- end -}}

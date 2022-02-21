@@ -1,5 +1,4 @@
-{{- if (eq .chezmoi.os "darwin") -}}
-{{-    if (.appstore) -}}
+{{- if and (eq .chezmoi.os "darwin") (.appstore) -}}
 #!/bin/bash
 
 set -eufo pipefail
@@ -17,12 +16,11 @@ ids=(
     904280696  {{/* Things */}}
 )
 
-{{       if .personal }}
+{{-     if .personal }}
 ids+=(
     1382386877 {{/* Gladys */}}
 )
-{{       end }}
+{{-     end }}
 
 mas install ${ids[@]}
-{{-    end }}
-{{ end }}
+{{- end -}}

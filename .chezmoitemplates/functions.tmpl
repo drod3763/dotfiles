@@ -11,8 +11,8 @@ z4h source --compile $DOTFILES/functions/bash_path_funcs/edpath
 z4h source --compile $DOTFILES/functions/bash_path_funcs/realpath_filter
 z4h source --compile $DOTFILES/functions/dmginstall */}}
 
-### ARCHIVE EXTRACTION
-# usage: ex <file>
+{{- /* Extract any archive. Usage: ex <file> */}}
+{{- if and (lookPath "unrar") (lookPath "7z") }}
 ex ()
 {
   if [ -f $1 ] ; then
@@ -37,40 +37,45 @@ ex ()
     echo "'$1' is not a valid file"
   fi
 }
+{{- end }}
 
-# Docker
-function dockerbuild() {
+{{- /* Docker Helpers */}}
+{{- if lookPath "docker" }}
+function dkrbuild() {
   docker build -t ${1} .
 }
-
-function dockerrun() {
+function dkrrun() {
 	docker run -it --name ${1} ${2}
 }
-
-function dockerrunmnt() {
+function dkrrunmount() {
 	docker run -it --name ${1} --mount type=bind,source=${3},target=${4} ${2}
 }
+{{- end }}
 
-# Update pip packages
+{{- /* Update pip packages */}}
+{{- if lookPath "pip" }}
 function pipu() {
 	pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U --user
 }
-
 # export -f pipu
+{{- end }}
 
-# Create a new directory and enter it
+{{- /* Create a new directory and change (cd) into it. */}}
 function mkd() { 
     mkdir -p "$@" && cd "$_";
 }
 
+{{- /* Calculate the sha256 hash of a file. */}}
 function sha {
 	openssl dgst -sha256 ${1} | cut -d ' ' -f2 # | tr -d '[:space:]'
 }
 
+{{- /* Calculate the md5 hash of a file. */}}
 function md5 {
 	openssl dgst -md5 ${1} | cut -d ' ' -f2 # | tr -d '[:space:]'
 }
 
+{{- /* Compare two Strings. Used for hash comparisons mostly. */}}
 function comp {
     STRING1=${1}
     STRING2=${2}
@@ -82,27 +87,26 @@ function comp {
 	fi
 }
 
+{{- /* Compare two SHA1 Hashes using Comp. TODO, implement a better way here. */}}
 shacomp() {
 	comp "$(sha "${1}")" "$(sha "${2}")"
 }
 
-# Base 64 encode any file
+{{- /* Base 64 encode any file. */}}
 function b64enc {
 	openssl base64 -in "${1}" > "${1}.b64"
 }
 
-# Stands for "last downloaded file"
-# http://blog.jpalardy.com/posts/get-your-last-downloaded-file/
+{{- /* Stands for "last downloaded file. Source: http://blog.jpalardy.com/posts/get-your-last-downloaded-file/ */}}
 ldf() {  
   local file=~/Downloads/$(\ls -1t ~/Downloads/ | head -n1)
   read -p "confirm: $file "
   mv "$file" .
 }
 
-# This creates a directory under $HOME/.throw-away, changes (cd) into it 
-# and launches a shell there. When the shell exits, the directory is deleted 
-# with all its content.
-# http://blog.jpalardy.com/posts/garbage-collected-directories/
+{{- /* This creates a directory under $HOME/.throw-away, changes (cd) into it and launches a shell there. When the 
+shell exits, the directory is deleted with all its content. 
+Source: http://blog.jpalardy.com/posts/garbage-collected-directories/ */}}
 tad() {
   local ts=$(date +%s)
   local d="$HOME/.throw-away/$ts"
@@ -111,21 +115,21 @@ tad() {
   rm -r $d
 }
 
-# list all users
-function lusers () {
+{{- /* List all users */}}
+function listusers () {
 	dscl . list /Users | grep -v ^_.*
 }
 
-# use ImageMagick convert
-# the order is important. the density argument applies to input.pdf and resize and rotate to output.pdf
-# https://gist.github.com/andyrbell/25c8632e15d17c83a54602f6acde2724
-# May need ghostscript installed on mac (brew install gs)
+{{- /* Use ImageMagick convert to fake a scanned pdf. The order is important. the density argument applies to input.pdf 
+and resize and rotate to output.pdf. Source: https://gist.github.com/andyrbell/25c8632e15d17c83a54602f6acde2724
+Note: You may need ghostscript installed on mac (brew install gs) */}}
+{{- if lookPath "convert"}}
 function fakeScan() {
 	convert -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
 }
+{{- end }}
 
-# Stolen from the nextdns guys https://nextdns.io/install. 
-# Will use this to tailer my dotfiles per machine.....
+{{- /* Stolen from the nextdns guys https://nextdns.io/install. Can use this to tailer my scripts per machine..... */}}
 function detect_os() {
     if [ "$FORCE_OS" ]; then
         echo "$FORCE_OS"; return 0
@@ -187,8 +191,7 @@ function detect_os() {
     return 1
 }
 
-# Source: https://blog.jpalardy.com/posts/cd-until-git-directory/
-# cd .. until a .git directory is found
+{{- /* cd .. until a .git directory is found. Source: https://blog.jpalardy.com/posts/cd-until-git-directory/ */}}
 cd_() {
   local p=$PWD
   while [ $p != "/" ]; do
@@ -200,11 +203,8 @@ cd_() {
   done
 }
 
-# won't cd unless a .git directory is found
-# can be used multiple times if multiple .git parents are expected
-
-# wrap `cd`, add behaviors
-cd() {
+{{- /* Won't cd unless a .git directory is found. Can be used multiple times if multiple .git parents are expected */}}
+cd() { {{/* wrap `cd_`, add behaviors */}}
   local dest="${@:-"$HOME"}"
   if [ "$dest" = "_" ]; then
     cd_ "$dest"
@@ -215,3 +215,18 @@ cd() {
   fi
   builtin cd "$dest"
 }
+
+{{- /* FIXED??? 
+Codesign Playwright Chromium for issue https://github.com/microsoft/playwright/issues/7937
+{{- if and (eq .chezmoi.os "darwin") (stat (joinPath .chezmoi.homeDir "Library/Caches/ms-playwright")) }}
+function signPW() {
+    cd $HOME/Library/Caches/ms-playwright/
+    # codesign for chromium in Macos
+    for d in chromium-*; do
+        echo Sign $HOME/Library/Caches/ms-playwright/${d}/chrome-mac/Chromium.app
+        sudo codesign --force --deep --sign - ./${d}/chrome-mac/Chromium.app
+    done
+    cd -
+}
+{{- end }}
+*/}}

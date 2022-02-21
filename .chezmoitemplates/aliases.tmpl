@@ -4,12 +4,24 @@ alias sshrm='ssh keygen -R' {{/* Remove host keys */}}
 
 {{- if eq .shell "bash" }}
 alias reload='source ~/.bashrc'
+{{-     if eq .chezmoi.os "darwin" }}
+alias restart='exec bash -l'
+{{-     else }}
+alias restart='exec bash'
+{{-     end }}
 alias -- -='cd -'
 alias ..='cd ..'
 alias ..2='..; ..'
 alias ..3='..2; ..'
 alias ..4='..3; ..'
 alias ..5='..4; ..'
+{{- else}}
+alias reload='source ~/.zshrc'
+{{-     if eq .chezmoi.os "darwin" }}
+alias restart='exec zsh -l'
+{{-     else }}
+alias restart='exec zsh'
+{{-     end }}
 {{- end }}
 
 {{- /* Overwrite with symlinks by default */}}
@@ -113,9 +125,11 @@ alias alttt='dbus-send --print-reply \
 {{-     if lookPath "brew" }}
 alias brewup='brew update && brew upgrade && brew upgrade --cask && brew cleanup'
 alias bcu='brew update && brew upgrade --cask --greedy && brew cleanup'
-
 {{- /* See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies */}}
 alias brewdep='brew deps --tree --installed'
 alias brewlf='brew deps --include-build --tree $(brew leaves)'
+{{-     end }}
+{{-     if lookPath "tailscale"}}
+alias tsfix='sudo ./tailscaled install-system-daemon'
 {{-     end }}
 {{- end }}

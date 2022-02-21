@@ -1,8 +1,8 @@
-{{- if (eq .chezmoi.os "darwin") -}}
+{{- if and (eq .chezmoi.os "darwin") (not (stat (expandenv "$HOME/Library/Fonts/icons-in-terminal.ttf"))) -}}
 #!/bin/bash
 
 set -eufo pipefail
 
 curl -o ~/Library/Fonts/icons-in-terminal.ttf 'https://github.com/sebastiencs/icons-in-terminal/blob/master/build/icons-in-terminal.ttf'
 
-{{ end -}}
+{{- end -}}

@@ -1,4 +1,4 @@
-{{- if eq .shell "bash" }}
+{{- if eq .shell "bash"}}
 {{-     if eq .chezmoi.os "darwin" }}
 {{-         if lookPath "brew" }}
 addpath $HOME/Homebrew/bin/
@@ -9,12 +9,11 @@ addpath -f /usr/local/opt/gnu-sed/libexec/gnubin {{/* Use gsed instead of built-
 {{-         end }}
 {{-     end }}
 {{- end }}
-
 {{- if eq .shell "zsh" }}
-{{-      if lookPath "brew" }}
+{{-     if lookPath "brew" }}
 path=($HOME/Homebrew/bin/ $HOME/Homebrew/sbin/ $path)
 {{-     end }}
-{{-      if lookPath "gsed" }}
+{{-     if lookPath "gsed" }}
 path=(/usr/local/opt/gnu-sed/libexec/gnubin $path)
 {{-     end }}
 {{- end }}

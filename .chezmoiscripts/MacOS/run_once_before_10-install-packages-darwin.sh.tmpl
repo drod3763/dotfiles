@@ -10,9 +10,9 @@ taps=(
 )
 
 formulae=(
-    asdf
     bat
     curl
+    direnv
     dust
     exa
     fd
@@ -27,6 +27,7 @@ formulae=(
     mas
     micro
     mosh
+    p7zip
     ripgrep
     rsync
     tealdeer
@@ -47,14 +48,12 @@ casks=(
     boop
     copyq
     datagrip
-    davmail
     docker
     dropbox
     eloston-chromium
     fantastical
     firefox-developer-edition
     font-jetbrains-mono-nerd-font
-    intellij-idea
     iterm2
     jump
     kaleidoscope
@@ -65,6 +64,7 @@ casks=(
     muzzle
     obsidian
     postman
+    rar
     snagit
     soulver
     soundsource
@@ -72,7 +72,7 @@ casks=(
     visual-studio-code
 )
 
-{{ if .personal }}
+{{- if .personal }}
 formulae+=(
     cointop
     imagemagick
@@ -104,9 +104,9 @@ casks+=(
     wezterm
     windscribe
 )
-{{ end }}
+{{- end }}
 
-{{ if not .personal }}
+{{ if not .personal -}}
 taps+=(
     versent/homebrew-taps
 )
@@ -117,7 +117,7 @@ formulae+=(
     helm
     saml2aws
 )
-{{ end }}
+{{- end }}
 
 # brew tap only takes up to two taps in one command. So doing a classic loop instead.
 for tap in ${taps[@]};
@@ -131,4 +131,4 @@ brew install ${formulae[@]}
 # Install brew casks. Need to do it this way because the jump formula conflicts with jump desktop. Will never understand why they did this.
 brew install --cask ${casks[@]}
 
-{{ end }}       
+{{- end }}
