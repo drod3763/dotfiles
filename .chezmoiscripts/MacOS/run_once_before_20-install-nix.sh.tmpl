@@ -1,8 +1,0 @@
-{{- if and (eq .chezmoi.os "darwin") (not (stat "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh")) -}}
-#!/bin/bash
-
-set -eufo pipefail
-
-sh <(curl -L https://nixos.org/nix/install)
-
-{{- end -}}

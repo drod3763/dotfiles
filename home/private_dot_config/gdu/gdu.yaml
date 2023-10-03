@@ -1,0 +1,3 @@
+sorting:
+    by: name // size, name, itemCount, mtime
+    order: desc

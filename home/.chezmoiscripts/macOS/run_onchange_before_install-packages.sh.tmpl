@@ -1,0 +1,159 @@
+#!/bin/bash
+
+set -eufo pipefail
+
+{{ $taps := list
+    "homebrew/bundle"
+    "homebrew/cask-drivers"
+    "homebrew/cask-fonts"
+    "homebrew/cask-versions"
+    "homebrew/command-not-found"
+    "homebrew/services"
+    "develerik/tools" -}}
+
+{{ $brews := list
+    "age"
+    "age-plugin-yubikey"
+    "bat"
+    "bat-extras"
+    "chezmoi"
+    "curl"
+    "eza"
+    "fd"
+    "fzf"
+    "gdu"
+    "git"
+    "git-credential-1password"
+    "git-delta"
+    "gnu-sed"
+    "gnupg"
+    "httpie"
+    "jq"
+    "launch"
+    "less"
+    "libheif"
+    "mas"
+    "micro"
+    "mosh"
+    "p7zip"
+    "rem"
+    "ripgrep"
+    "rsync"
+    "shellcheck"
+    "tailscale"
+    "tealdeer"
+    "thefuck"
+    "trash"
+    "volta"
+    "whalebrew"
+    "xdg-ninja"
+    "yubikey-agent"
+    "zellij"
+    "zoxide" -}}
+
+{{ $casks := list
+    "1password"
+    "1password-cli"
+    "airfoil"
+    "alfred"
+    "bartender"
+    "betterzip"
+    "boop"
+    "brave-browser"
+    "docker"
+    "dropbox"
+    "firefox-developer-edition"
+    "iterm2"
+    "itsycal"
+    "jetbrains-toolbox"
+    "kaleidoscope"
+    "komet"
+    "macs-fan-control"
+    "muzzle"
+    "soundsource"
+    "spotify"
+    "synergy"
+    "swish"
+    "visual-studio-code" -}}
+
+{{- if .personal }}
+{{  $brews = concat $brews (list
+    "gh"
+    "imagemagick"
+    "mkcert") -}}
+
+{{  $casks = concat $casks (list
+    "aerial"
+    "balenaetcher"
+    "beyond-compare"
+    "default-folder-x"
+    "disk-drill"
+    "duet"
+    "flume"
+    "garagesale"
+    "hazel"
+    "iina"
+    "istat-menus"
+    "ivpn"
+    "jump"
+    "ledger-live"
+    "mountain-duck"
+    "obsidian"
+    "parsec"
+    "permute"
+    "ricoh-theta"
+    "sensei"
+    "sonos"
+    "soulver"
+    "switchresx"
+    "textexpander"
+    "vivaldi"
+    "wezterm"
+    "windscribe") -}}
+{{ end -}}
+
+{{ if not .personal -}}
+{{  $brews = concat $brews (list
+    "awscli"
+    "docker-credential-helper-ecr"
+    "helm"
+    "kubectx"
+    "kubernetes-cli"
+    "lastpass-cli"
+    "saml2aws"
+    "tilt") -}}
+{{ end -}}
+
+{{  $casks = concat $casks (list
+    "lastpass") -}}
+
+{{ $mas := dict
+    "1Password" ", id: 443987910"
+    "CARROT Weather" ", id: 993487541"
+    "Charmstone" ", id: 1563735522"
+    "Easy CSV Editor" ", id: 1171346381"
+    "JSON Editor" ", id: 567740330"
+    "OpenIn" ", id: 1643649331"
+    "PLIST Editor" ", id: 1157491961"
+    "PopClip" ", id: 445189367" -}}
+
+{{ $args := dict
+    "docker-credential-helper-ecr" ", link: false"
+    "kubernetes-cli" ", link: false"
+    "yubikey-agent" ", restart_service: true"
+    "saml2aws" "" -}}
+
+brew bundle --no-lock --file=/dev/stdin <<EOF
+{{ range ($taps | sortAlpha | uniq) -}}
+tap "{{ . }}"
+{{ end -}}
+{{ range ($brews | sortAlpha | uniq) -}}
+brew "{{ . }}"{{get $args . }}
+{{ end -}}
+{{ range ($casks | sortAlpha | uniq) -}}
+cask "{{ . }}"
+{{ end -}}
+{{ range (keys $mas | sortAlpha | uniq) -}}
+mas "{{ . }}"{{get $mas  . }}
+{{ end -}}
+EOF

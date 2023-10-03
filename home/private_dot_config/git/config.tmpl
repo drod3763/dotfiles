@@ -1,0 +1,147 @@
+{{- $editor := "" -}}
+{{- $diffTool := "" -}}
+{{- $diffCmd := "" -}}
+{{- $mergeCmd := "" -}}
+{{- $pager := "" -}}
+
+{{- if and (eq .chezmoi.os "darwin") (stat "/Applications/Komet.app") -}}
+{{- 	$editor = "/Applications/Komet.app/Contents/MacOS/Komet" -}}
+{{- else if and (eq .chezmoi.os "linux") (stat "/var/lib/flatpak/app/re.sonny.Commit") }}
+{{- 	$editor = "flatpak run --file-forwarding re.sonny.Commit @@" -}}
+{{- else if lookPath "micro"}}
+{{- 	$editor = "micro" -}}
+{{- else if lookPath "nano"}}
+{{- 	$editor = "nano" -}}
+{{- end -}}
+
+{{- if lookPath "delta"}}
+{{- 	$pager = "delta" -}}
+{{- end -}}
+
+{{- if and (eq .chezmoi.os "darwin") (stat "/Applications/Kaleidoscope.app/Contents/MacOS/ksdiff") -}}
+{{- 	$diffTool = "Kaleidoscope" -}}
+{{- 	$diffCmd = "ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"" -}}
+{{- 	$mergeCmd = "ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" --snapshot \"$REMOTE\" --snapshot" -}}
+{{- else if and (eq .chezmoi.os "linux") (lookPath "bcompare") }}
+{{/* From https://www.scootersoftware.com/support.php?zz=kb_vcs#gitlinux */}}
+{{- 	$diffTool = "bc" -}}
+{{- end -}}
+
+[user]
+	name = Derick Rodriguez
+	email = {{- (index (onepassword "x36jcwiyojbtbg2dri4nscgr64").fields 8).value }}
+[alias]
+	# Sourced via https://news.ycombinator.com/item?id=24175811
+	hs = "log --date=format-local:'%Y-%m-%d %H:%M:%S' --pretty=format:'%cd %<(20,trunc)%an %C(auto)%h%Creset%C(auto)%d%Creset %s'"
+	hst = "!git lg --all --graph --reflog"
+	# Sourced via https://coderwall.com/p/euwpig/a-better-git-log
+	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+	# Aliases below sourced via https://www.durdn.com/blog/2012/11/22/must-have-git-aliases-advanced-examples/
+	# List commits in short form, with colors and branch/tag annotations.
+	ls = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate
+	# List commits showing changed files
+	ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
+	# List commits showing changed files with no colors for piping
+	lnc = log --pretty=format:"%h\\ %s\\ [%cn]"
+	# List oneline commits showing dates
+	lds = log --pretty=format:"%C(yellow)%h\\ %ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=short
+	# List oneline commits showing relative dates
+	ld = log --pretty=format:"%C(yellow)%h\\ %ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=relative
+	# Default look for short git log
+	le = log --oneline --decorate
+	# See all the commits related to a file, with the diff of the changes
+	fl = log -u
+	# Show modified files in last commit
+	dl = "!git ll -1"
+	# Show a diff last commit
+	dlc = diff --cached HEAD^
+	# Next three show content (full diff) of a commit given a revision
+	dr  = "!f() { git diff "$1"^.."$1"; }; f"
+	lc  = "!f() { git ll "$1"^.."$1"; }; f"
+	diffr  = "!f() { git diff "$1"^.."$1"; }; f"
+	# Find a file path in codebase
+	f = "!git ls-files | grep -i"
+	# Search/grep your entire codebase for a string
+	gr = grep -Ii
+	# Grep from root folder
+	gra = "!f() { A=$(pwd) && TOPLEVEL=$(git rev-parse --show-toplevel) && cd $TOPLEVEL && git grep --full-name -In $1 | xargs -I{} echo $TOPLEVEL/{} && cd $A; }; f"
+	# List all your Aliases
+	la = "!git config -l | grep alias | cut -c 7-"
+	# Prepend done to a branch name
+	done = "!f() { git branch | grep "$1" | cut -c 3- | grep -v done | xargs -I{} git branch -m {} done-{}; }; f"
+	#clean = !git branch --merged master | grep -v -e 'master' -e '\*' | xargs -n 1 git branch -d && git remote prune origin
+	cob = checkout -b
+	#delete remote branch
+	delr = push origin --delete
+	#delete local branch
+	dell = branch -d
+[core]
+	editor = {{ $editor }}
+	pager = {{ $pager }}
+[checkout]
+	workers = -1
+[credential]
+	helper = !git-credential-1password
+{{	if not .personal -}}
+[credential "https://{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").fields 20).value }}@dev.azure.com/"]
+    username = {{ (index (onepassword "h23kua4dl5e4zkswjhvhmkuq2u").fields 0).value }}
+{{-	end }}
+{{- if eq $pager "delta" }}
+[delta]
+    features = side-by-side collared-trogon zebra-dark
+{{- end }}
+[diff]
+	algorithm = histogram
+	renames = copies
+{{- if not (empty $diffTool) }}
+	tool = {{ $diffTool }}
+[difftool {{ $diffTool | quote }}]
+{{- 	if not (empty $diffCmd) }}
+	cmd = {{ $diffCmd }}
+{{- 	end }}
+	prompt = false
+	trustExitCode = true
+{{- end }}
+[fetch]
+	prune = true
+	pruneTags = true
+[help]
+	{{/* Autocorrect commands. Set to 10 tenths of a second or 1 second */ -}}
+	autocorrect = 5
+{{- if eq $pager "delta" }}
+[include]
+	path = "$XDG_CONFIG_HOME"/delta/themes.gitconfig
+{{- end }}
+[init]
+	defaultBranch = "main"
+{{- if eq $pager "delta" }}
+[interactive]
+	diffFilter = delta --color-only
+{{- end }}
+{{- if lookPath "batman" }}
+[man.viewer]
+	cmd = "batman"
+{{- end }}
+[merge]
+	conflictStyle = "zdiff3"
+{{- if not (empty $diffTool) }}
+	tool = {{ $diffTool }}
+[mergetool {{ $diffTool | quote }}]
+{{-		if not (empty $mergeCmd) }}
+	cmd = {{ $mergeCmd }}
+{{- 	end }}
+	trustExitCode = true
+{{- end }}
+[push]
+	default = current
+	followTags = true
+	useForceIfIncludes = true
+[pull]
+	rebase = true
+[rebase]
+	autosquash = true
+	autostash = true
+[rerere]
+	{{/* Remembers git merge conflict resolution for automation.
+	Source - https://levelup.gitconnected.com/the-git-rerere-command-automate-solutions-to-fix-merge-conflicts-d501a9ab9007 */ -}}
+	enabled = true

@@ -1,0 +1,15 @@
+{
+    "autoclose": true,
+    "colorcolumn": 80,
+    "colorscheme": "default",
+    "comment": true,
+    "diff": true,
+    "ftoptions": true,
+    "linter": true,
+    "mkparents": true,
+    "rmtrailingws": true,
+    "saveundo": true,
+    "softwrap": true,
+    "status": true,
+    "tabsize": 4
+}

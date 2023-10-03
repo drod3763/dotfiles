@@ -1,0 +1,8 @@
+{
+    "theme": "dark",
+    "showShortcuts": true,
+    "editor.fontSize": 16.0,
+    "editor.formatOnSave": true,
+    "terminal.fontSize": 14.0,
+    "fus.sendAllowed": false
+}

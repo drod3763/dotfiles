@@ -1,0 +1,13 @@
+alter_history = True
+debug = False
+exclude_rules = [   ]
+excluded_search_path_prefixes = []
+history_limit = 9999
+no_colors = False
+num_close_matches = 5
+priority = {'sudo': 100, 'no_command': 9999}
+require_confirmation = True
+rules = ['thefuck.const.DEFAULT_RULES']
+slow_commands = []
+wait_command = 10
+wait_slow_command = 20

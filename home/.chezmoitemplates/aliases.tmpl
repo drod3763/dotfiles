@@ -1,0 +1,156 @@
+{{ $iFlag := (ternary "-i" "--interactive" ( eq .chezmoi.os "darwin")) -}}
+{{ $lnFlag := (ternary "-sf" "--symbolic --force" ( eq .chezmoi.os "darwin")) -}}
+{{ $loginFlag := (ternary "-l" "" ( eq .chezmoi.os "darwin")) -}}
+
+{{/* ln - force overwrite when creating symlinks by default
+       sudo - run aliases with sudo
+       reload - reload bash/zsh
+       restart - restart bash/zsh
+       tailcat - cat files with the filename(s) as a header without installing any extra programs. Source: https://old.reddit.com/r/archlinux/comments/o2bfha/post_your_most_useful_self_written_command_line/h26msmz
+       wtfport - easily see what ports are in use */ -}}
+
+{{ $aliases := dict
+    "clear" "z4h-clear-screen-soft-bottom"
+    "ln" (list "ln" $lnFlag | join " ")
+    "restart" (list "exec" .shell $loginFlag | join " " | trim)
+    "sudo" "sudo "
+    "reload" (list "source ~/." .shell "rc" | join "")
+    "tailcat" "tail --lines=+0"
+    "wtfport" "lsof -i -P -n | grep LISTEN" -}}
+
+{{/* --/../..2/..3/..4/..5 - move up the appropriate number of directories */ -}}
+{{ if eq .shell "bash" -}}
+{{      $aliases := merge $aliases (dict
+            "-- -" "cd -"
+            ".." "cd .."
+            "..2" "..; .."
+            "..3" "..2; .."
+            "..4" "..3; .."
+            "..5" "..4; ..") -}}
+{{ end -}}
+
+{{ if lookPath "bat" -}}
+{{      $aliases := merge $aliases (dict
+        "cat" "bat --style=plain --pager=never --theme=\"Nord\""
+            "catf" "bat $(fzf -i)"
+            "tac" "tac \"$@\" | bat --style=plain --pager=never --theme=\"Nord\""
+            "tacf" "tac \"$@\" | bat $(fzf -i)") -}}
+{{ end -}}
+
+{{ if lookPath "docker" -}}
+{{/* dcu - remove unused docker volumes
+       dca - remove all docker volumes
+       dstart - start docker
+       dstop - stop docker
+       dls - list all docker images
+       dirm - alias of docker image rm
+       dcls - list all running docker containers
+       ddcon - remove all stopped containers
+       Referenced from https://medium.com/the-code-review/clean-out-your-docker-images-containers-and-volumes-with-single-commands-b8e38253c271 */ -}}
+{{      $aliases := merge $aliases (dict
+            "dcu" "docker system prune --all --force --volumes"
+            "dca" "docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes"
+            "dstart" "docker start"
+            "dstop" "docker stop"
+            "dls" "docker image ls"
+            "dirm" "docker image rm"
+            "dcls" "docker ps --all"
+            "ddcon" "docker rm $(docker ps --all --filter status=exited --quiet)") -}}
+{{      if lookPath "docker-compose" -}}
+{{          $aliases := merge $aliases (dict
+                "dc" "docker-compose") -}}
+{{      end -}}
+{{  end -}}
+
+{{/* ls/ll - colorize eza output */ -}}
+{{  if lookPath "eza" -}}
+{{      $aliases := merge $aliases (dict
+            "ls" "eza --grid  --color auto --icons --all --sort type"
+            "ll" "exa --long --color always --icons --all --sort type") -}}
+{{  end -}}
+
+{{/* Copy with find using fzf */ -}}
+{{  if lookPath "fzf" -}}
+{{      $aliases := merge $aliases (dict
+            "cpf" (list "/bin/cp" $iFlag "$(fzf -i)" | join " ")
+            "mvf" (list "/bin/mv" $iFlag "$(fzf -i)" | join " ")
+            "rm"  (list "/bin/rm" $iFlag | join " ")
+            "rmf" (list "/bin/.rm" $iFlag "$(fzf -i)" | join " ")) -}}
+{{  end -}}
+
+{{/* cp/cpr/mv/mvwr - copy and move using rsync with progress */ -}}
+{{  if lookPath "rsync" -}}
+{{      $aliases := merge $aliases (dict
+            "cp" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 \"$@\""
+            "cpr" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\""
+            "mv" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files \"$@\""
+            "mvwr" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\"") -}}
+{{  else -}}
+{{/* cp/mv - confirm unsafe file operations */ -}}
+{{      $aliases := merge $aliases (dict
+            "cp" (list "/bin/cp" $iFlag | join " ")
+            "mv" (list "/bin/mv" $iFlag | join " ")) -}}
+{{  end -}}
+
+{{/* sshrm - remove host keys */ -}}
+{{  if lookPath "ssh" -}}
+{{      $aliases := merge $aliases (dict
+            "sshrm" "ssh keygen -R") -}}
+{{  end -}}
+
+{{ if eq .shell "zsh" -}}
+{{      $aliases := merge $aliases (dict
+            "clear" "z4h-clear-screen-soft-bottom") -}}
+{{ end -}}
+
+{{  if eq .chezmoi.os "darwin" -}}
+{{/* See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies */ -}}
+{{      if lookPath "brew" -}}
+{{          $aliases := merge $aliases (dict
+                "brewdep" "brew deps --tree --installed"
+                "brewlf" "brew deps --include-build --tree $(brew leaves)"
+                "brewup" "brew update && brew upgrade && brew upgrade --cask && brew cleanup"
+                "bcu" "brew update && brew upgrade --cask --greedy && brew cleanup") -}}
+{{      end -}}
+
+{{      if lookPath "tailscale" -}}
+{{          $aliases := merge $aliases (dict
+                "tsfix" "sudo ./tailscaled install-system-daemon") -}}
+{{      end -}}
+
+{{/* trash - use trash cli in finder mode on macOS so files can be restored */ -}}
+{{      if lookPath "trash" -}}
+{{          $aliases := merge $aliases (dict
+                "trash" "trash -F") -}}
+{{      end -}}
+
+{{/* zapfix - fix zscaler in work laptop */ -}}
+{{      if not .personal -}}
+{{          $aliases := merge $aliases (dict
+                "zapfix" "sudo launchctl load -w /Library/LaunchDaemons/com.zscaler.service.plist") -}}
+{{      end -}}
+{{      if lookPath "saml2aws" -}}
+{{          $aliases := merge $aliases (dict
+                "s2a" "AWS_SDK_LOAD_CONFIG=0 saml2aws") -}}
+{{      end -}}
+{{  end -}}
+
+{{  if eq .chezmoi.os "linux" }}
+{{/* pdiff - adds environment vars needed to run bcompare with sudo when running pacdiff */}}
+{{      if lookPath "bcompare" }}
+{{          $aliases := merge $aliases (dict
+                "pdiff" "QT_GRAPHICSSYSTEM=native DIFFPROG=bcompare pacdiff") -}}
+{{      end -}}
+
+{{      if lookPath "dbus-send" }}
+{{/* altt - get list of open windows in Gnome. Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h596io8/
+     alttt - get list of open windows in Gnome with window titles. Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h59ttqp/ */ -}}
+{{          $aliases := merge $aliases (dict
+                "altt" "dbus-send --session --type=method_call --print-reply --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)\" | grep -Po \"\\[.*\\]\""
+                "alttt" "dbus-send --print-reply --type=method_call --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)\"|sed -n \"/string/s/\"\\|\\(\",\"\\)/\\n/gp\"|sed \"/^ \\|^\\[\\|^\\]/d\"") -}}
+{{      end -}}
+{{  end -}}
+
+{{ range (keys $aliases | sortAlpha | uniq) -}}
+alias {{ . }}='{{get $aliases  . }}'
+{{ end -}}

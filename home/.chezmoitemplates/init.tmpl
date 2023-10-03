@@ -1,0 +1,43 @@
+{{- if lookPath "fuck" -}}
+eval $(thefuck --alias)
+{{- end }}
+
+{{- if lookPath "batpipe"}}
+eval "$(batpipe)"
+{{- end }}
+
+{{- if eq .shell "zsh" }}
+{{-     if eq .chezmoi.os "darwin" }}
+{{-         if stat (expandenv "$HOME/.iterm2_shell_integration.zsh") }}
+{{-             if stat (joinPath (env "_Z4H_TMUX_CMD") "../../../z4h.zsh" | clean) }}
+z4h source --compile "${HOME}/.iterm2_shell_integration.zsh" {{/* iterm2 Shell Integration */}}
+{{-             else }}
+. "${HOME}/.iterm2_shell_integration.zsh" {{/* iterm2 Shell Integration */}}
+{{-             end }}
+{{-         end }}
+{{- end }}
+
+{{-     if lookPath "direnv"}}
+eval "$(direnv hook zsh)"
+{{-     end }}
+
+{{-     if lookPath "zoxide" }}
+eval "$(zoxide init zsh)"
+{{-     end }}
+{{- end }}
+
+{{- if eq .shell "bash" }}
+{{-     if eq .chezmoi.os "darwin" }}
+{{-         if stat (expandenv "${HOME}/.iterm2_shell_integration.bash") }}
+. "${HOME}/.iterm2_shell_integration.bash" {{/* iterm2 Shell Integration */}}
+{{-         end }}
+{{-     end }}
+
+{{-     if lookPath "direnv"}}
+eval "$(direnv hook bash)"
+{{-     end }}
+
+{{-     if lookPath "zoxide" }}
+eval "$(zoxide init bash)"
+{{-     end }}
+{{- end }}

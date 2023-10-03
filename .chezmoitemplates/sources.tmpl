@@ -1,7 +1,0 @@
-{{- if stat "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" }}
-{{-     if stat (joinPath (env "_Z4H_TMUX_CMD") "../../../z4h.zsh" | clean) }}
-z4h source --compile '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-{{-     else }}
-. '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-{{-     end }}
-{{- end }}

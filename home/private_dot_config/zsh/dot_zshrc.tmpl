@@ -1,0 +1,162 @@
+{{- /* Personal Zsh configuration file. It is strongly recommended to keep all
+shell customization and configuration (including exported environment
+variables such as PATH) in this file or in files sourced from it.
+
+Documentation: https://github.com/romkatv/zsh4humans/blob/v5/README.md.
+
+Periodic auto-update on Zsh startup: 'ask' or 'no'.
+You can manually run `z4h update` to update everything. */ -}}
+# Zsh4Humans configuration
+zstyle ':z4h:' auto-update      'no'
+zstyle ':z4h:' auto-update-days '28' {{/* Ask whether to auto-update this often; has no effect if auto-update is 'no'. */}}
+zstyle ':z4h:' prompt-at-bottom 'yes' {{/* Move prompt to the bottom when zsh starts and on Ctrl+L. */}}
+
+{{- /* Keyboard type: 'mac' or 'pc'. */}}
+{{- if eq .chezmoi.os "darwin" }}
+zstyle ':z4h:bindkey' keyboard 'mac'
+{{- else }}
+zstyle ':z4h:bindkey' keyboard 'pc'
+{{- end }}
+{{- /* Make transient prompt work consistently when closing an SSH connection */}}
+z4h bindkey z4h-eof Ctrl+D
+setopt ignore_eof
+
+{{- /* Fix terminal titles */}}
+zstyle ':z4h:term-title:ssh'   preexec '%n@${${${Z4H_SSH##*:}//\%/%%}:-%m}: ${1//\%/%%}'
+zstyle ':z4h:term-title:ssh'   precmd  '%n@${${${Z4H_SSH##*:}//\%/%%}:-%m}: %~'
+zstyle ':z4h:term-title:local' preexec '${1//\%/%%}'
+zstyle ':z4h:term-title:local' precmd  '%~'
+
+{{- /* Mark up shell's output with semantic information. */}}
+zstyle ':z4h:' term-shell-integration 'yes'
+
+{{- /* Right-arrow key accepts one character ('partial-accept') from
+command autosuggestions or the whole thing ('accept')? */}}
+zstyle ':z4h:autosuggestions' forward-char 'partial-accept'
+zstyle ':z4h:autosuggestions' end-of-line  partial-accept
+zstyle ':z4h:fzf-complete' recurse-dirs 'yes' {{/* Recursively traverse directories when TAB-completing files. */}}
+zstyle ':z4h:fzf-complete' fzf-bindings tab:repeat {{/* Rebind Tab in fzf from up to repeat: */}}
+zstyle ':z4h:direnv'         enable 'no' {{/* Enable direnv to automatically source .envrc files. */}}
+zstyle ':z4h:direnv:success' notify 'no' {{/* Show "loading" and "unloading" notifications from direnv. */}}
+
+{{- /* Enable ('yes') or disable ('no') automatic teleportation of z4h over
+SSH when connecting to these hosts.
+zstyle ':z4h:ssh:example-hostname1'   enable 'yes'
+zstyle ':z4h:ssh:*.example-hostname2' enable 'no'
+The default value if none of the overrides above match the hostname.
+zstyle ':z4h:ssh:*'                     enable 'no'
+
+# Send these files over to the remote host when connecting over SSH to the
+# enabled hosts.
+# zstyle ':z4h:ssh:*' send-extra-files '~/.nanorc' '~/.env.zsh'
+
+# Clone additional Git repositories from GitHub.
+#
+# This doesn't do anything apart from cloning the repository and keeping it
+# up-to-date. Cloned files can be used after `z4h init`. This is just an
+# example. If you don't plan to use Oh My Zsh, delete this line.
+# z4h install ohmyzsh/ohmyzsh || return
+
+# Install or update core components (fzf, zsh-autosuggestions, etc.) and
+# initialize Zsh. After this point console I/O is unavailable until Zsh
+# is fully initialized. Everything that requires user interaction or can
+# perform network I/O must be done above. Everything else is best done below. */}}
+z4h init || return
+
+# Extend PATH.
+{{ template "path.tmpl" . }}
+
+# Export environment variables.
+{{- $user_cache_dir := (ternary "${HOME}/Library/Caches" "${HOME}/.cache" ( eq .chezmoi.os "darwin"))}}
+{{- $user_data_dir := (ternary "${HOME}/Library/Application Support" "${HOME}/.local/share" ( eq .chezmoi.os "darwin"))}}
+{{- $user_runtime_dir := (ternary "${HOME}/Library/Caches/TemporaryItems" "/run/user/${UID}" ( eq .chezmoi.os "darwin"))}}
+{{- $user_log_dir := (ternary "${HOME}/Library/Logs" "${HOME}/.local/state" ( eq .chezmoi.os "darwin"))}}
+export GPG_TTY="$TTY" {{/* Use the same TTY for GPG as for the terminal. */}}
+export XDG_CACHE_HOME={{ $user_cache_dir }}
+export XDG_CONFIG_HOME="${HOME}/.config"
+export XDG_DATA_HOME={{ $user_data_dir }}
+export XDG_SHARE_HOME="${HOME}/.local/share"
+export XDG_RUNTIME_DIR={{ $user_runtime_dir }}
+export XDG_STATE_HOME={{ $user_log_dir }}
+{{- template "exports.tmpl" . }}
+
+{{- /* Source additional local files if they exist.
+z4h source ~/.env.zsh */}}
+
+{{- /* Use additional Git repositories pulled in with `z4h install`.
+
+ This is just an example that you should delete. It does nothing useful.
+ z4h source ohmyzsh/ohmyzsh/lib/diagnostics.zsh  # source an individual file
+ z4h load   ohmyzsh/ohmyzsh/plugins/emoji-clock  # load a plugin */}}
+
+# Key Bindings
+{{- /* Define key bindings. */}}
+{{ template "bindkeys.tmpl" . }}
+
+# Autoload functions.
+autoload -Uz zmv
+
+# Functions
+{{- /* Define functions and completions.
+function md() { [[ $# == 1 ]] && mkdir -p -- "$1" && cd -- "$1" }
+compdef _directories md */}}
+{{- template "functions.tmpl" . }}
+
+# Aliases
+{{- /* Define aliases. */}}
+
+{{- /* Define named directories: ~w <=> Windows home directory on WSL.
+[[ -z $z4h_win_home ]] || hash -d w=$z4h_win_home */}}
+
+{{- /* Define aliases.
+alias tree='tree -a -I .git' */}}
+{{ template "aliases.tmpl" . }}
+
+{{- /* Add flags to existing aliases.
+alias ls="${aliases[ls]:-ls} -A" */}}
+
+# Options
+{{- /* # Set shell options: http://zsh.sourceforge.net/Doc/Release/Options.html. */}}
+setopt glob_dots     # no special treatment for file names with a leading dot
+setopt no_auto_menu  # require an extra TAB press to open the completion menu
+{{- /* Options enabled by Z4H by default:
+    'always_to_end' - move to the end of the word after a completion
+    'auto_cd' - shell will automatically change directory if you don't type CD
+    'auto_menu'
+    'auto_param_slash'
+    'auto_pushd'
+    'c_bases'
+    'extended_glob'
+    'extended_history' - adds a bit more data to the history entries
+    'hist_expire_dups_first'
+    'hist_find_no_dups'
+    'hist_ignore_dups' - do not store duplications
+    'hist_ignore_space'
+    'hist_save_no_dups'
+    'hist_verify'
+    'interactive_comments'
+    'multios'
+    'no_aliases'
+    'no_auto_remove_slash'
+    'no_beep'
+    'no_bg_nice'
+    'no_bg_nice'
+    'no_flow_control'
+    'no_list_types'
+    'no_prompt_bang'
+    'no_prompt_subst'
+    'prompt_cr'
+    'prompt_percent'
+    'prompt_sp'
+    'share_history' - share history across multiple zsh sessions
+    'typeset_silent'
+*/}}
+setopt append_history # append to history
+setopt inc_append_history # adds commands as they are typed, not at shell exit
+setopt hist_reduce_blanks # removes blank lines from history
+setopt no_case_glob # case insensitive globbing
+setopt hash_list_all # update list of commands so you don't get corrections for real things
+chpwd() { ll }
+
+# Initialize Software
+{{ template "init.tmpl" . }}

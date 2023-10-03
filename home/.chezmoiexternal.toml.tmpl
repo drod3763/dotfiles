@@ -1,0 +1,21 @@
+{{ if and (stat "/Applications/OpenIn.localized") (not (stat ("/Applications/OpenIn Helper.app"))) -}}
+["Downloads/Helpers/OpenIn Helper 4.0.4.dmg"]
+    type = "file"
+    url = "https://loshadki.app/openin-helper4/OpenIn%20Helper%204.0.4.dmg"
+    refreshPeriod = "720h"
+{{ end -}}
+{{ if not (stat "/Applications/Luna Display.app") -}}
+["Downloads/Helpers/LunaDisplay-5.3.2.4766.dmg"]
+    type = "file"
+    url = "https://downloads.astropad.com/luna/mac/latest"
+    refreshPeriod = "720h"
+{{ end -}}
+[".config/delta/themes.gitconfig"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/dandavison/delta/master/themes.gitconfig"
+    refreshPeriod = "720h"
+["Library/Fonts/"]
+    type = "archive"
+    exact = true
+    url = {{- (index (onepassword "sfqa4gvnfffalon4fkersaxaoa").urls 1).href | quote }}
+    include = ['**/*.otf']

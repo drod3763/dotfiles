@@ -1,0 +1,30 @@
+{{ $paths := list
+        "~/bin" -}}
+
+{{ if lookPath "volta" -}}
+{{      $paths = concat $paths (list
+        "$VOLTA_HOME/bin" ) -}}
+{{ end -}}
+
+{{ if eq .chezmoi.os "darwin" -}}
+{{      if lookPath "brew" -}}
+{{          $paths = concat $paths (list
+            "$HOMEBREW_PREFIX/bin/"
+            "$HOMEBREW_PREFIX/sbin/" ) -}}
+{{      end -}}
+{{      if lookPath "gsed" -}}
+{{          $paths = concat $paths (list
+            "/usr/local/opt/gnu-sed/libexec/gnubin" ) -}}
+{{      end -}}
+{{ end -}}
+
+
+{{ if eq .shell "bash" -}}
+{{      range ($paths | sortAlpha | uniq) -}}
+            addpath "{{ . }}"
+{{      end -}}
+{{ end -}}
+
+{{ if eq .shell "zsh" -}}
+path=({{$paths | sortAlpha | uniq | join " "}} $path)
+{{ end -}}

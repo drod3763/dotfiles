@@ -1,0 +1,173 @@
+{{ $exports := dict
+    "DATAGRIP_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/datagrip"
+    "DOTFILES" .chezmoi.sourceDir
+    "GPG_TTY" "$TTY"
+    "INPUTRC" "${XDG_CONFIG_HOME}/readline/inputrc"
+    "LESSHISTFILE" "${XDG_CACHE_HOME}/less/history"
+    "TERMINFO" "${XDG_DATA_HOME}/terminfo"
+    "TERMINFO_DIRS" "${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
+    "WEBIDE_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/webstorm" -}}
+
+{{ if lookPath "aws" -}}
+{{      $exports = merge $exports (dict
+            "AWS_SHARED_CREDENTIALS_FILE" "${XDG_CONFIG_HOME}/aws/credentials"
+            "AWS_CONFIG_FILE" "${XDG_CONFIG_HOME}/aws/config") -}}
+{{ end -}}
+
+{{ if eq .shell "bash" -}}
+{{      $exports = merge $exports (dict
+            "CLICOLOR" 1
+            "HISTFILE" (list "${XDG_STATE_HOME}/" .shell "/history" | join "")
+            "LSCOLORS" "GxFxCxDxBxegedabagaced") -}}
+{{ end -}}
+
+{{ if eq .shell "bat" -}}
+{{      $exports := merge $exports (dict
+            "PAGER" "bat --color=always") -}}
+{{ end -}}
+
+{{ if and (lookPath "batdiff") (lookPath "delta") -}}
+{{      $exports = merge $exports (dict
+            "BATDIFF_USE_DELTA" "true") -}}
+{{ end -}}
+
+{{ if lookPath "code" -}}
+{{      $exports = merge $exports (dict
+            "VISUAL" "code --new-window") -}}
+{{ end -}}
+
+{{ if lookPath "docker" -}}
+{{      $exports := merge $exports (dict
+            "DOCKER_CONFIG" "${XDG_CONFIG_HOME}/docker"
+            "MACHINE_STORAGE_PATH" "${XDG_DATA_HOME}/docker-machine") -}}
+{{ end -}}
+
+{{ if lookPath "gpg" -}}
+{{      $exports := merge $exports (dict
+            "GNUPGHOME" "${XDG_DATA_HOME}/gnupg") -}}
+{{ end -}}
+
+{{ if lookPath "java" -}}
+{{      $exports := merge $exports (dict
+            "_JAVA_OPTIONS" "-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
+            "GRADLE_USER_HOME" "${XDG_DATA_HOME}/gradle") -}}
+{{ end -}}
+
+{{ if lookPath "micro" -}}
+{{      $exports := merge $exports (dict
+            "EDITOR" "micro") -}}
+{{ else if lookPath "nano" -}}
+{{      $exports := merge $exports (dict
+            "EDITOR" "nano") -}}
+{{ else -}}
+{{      $exports := merge $exports (dict
+            "EDITOR" "vi") -}}
+{{ end -}}
+
+{{ if lookPath "npm" -}}
+{{      $exports := merge $exports (dict
+            "NPM_CONFIG_USERCONFIG" "${XDG_CONFIG_HOME}/npm/npmrc") -}}
+{{ end -}}
+
+{{ if lookPath "nuget" -}}
+{{      $exports := merge $exports (dict
+            "NUGET_PACKAGES" "${XDG_CACHE_HOME}/NuGetPackages") -}}
+{{ end -}}
+
+{{ if lookPath "pwsh" -}}
+{{      $exports := merge $exports (dict
+            "POWERSHELL_TELEMETRY_OPTOUT" 1) -}}
+{{ end -}}
+
+{{ if lookPath "rg" -}}
+{{      $exports := merge $exports (dict
+            "RIPGREP_CONFIG_PATH" "${XDG_CONFIG_HOME}/ripgrep/config") -}}
+{{ end -}}
+
+{{ if lookPath "ruby" -}}
+{{      $exports := merge $exports (dict
+            "GEM_HOME" "${XDG_DATA_HOME}/gem"
+            "GEM_SPEC_CACHE" "${XDG_CACHE_HOME}/gem") -}}
+{{ end -}}
+
+{{ if lookPath "tldr" -}}
+{{      $exports := merge $exports (dict
+            "TEALDEER_CONFIG_DIR" (list .chezmoi.homeDir "/.config/tealdeer" | join "")) -}}
+{{ end -}}
+
+{{ if lookPath "vim" -}}
+{{/*      $exports := merge $exports (dict
+            "GVIMINIT" "let $MYGVIMRC=\"${XDG_CONFIG_HOME}/vim/gvimrc\" | source \"$MYGVIMRC\""
+            "VIMINIT" "let $MYVIMRC=\"${XDG_CONFIG_HOME}/vim/vimrc\" | source \"$MYVIMRC\"")  */}}
+{{ end -}}
+
+{{ if lookPath "volta" -}}
+{{      $exports := merge $exports (dict
+            "VOLTA_HOME" "${XDG_DATA_HOME}/volta") -}}
+{{ end -}}
+
+{{ if eq .chezmoi.os "darwin" -}}
+{{/* Stops Catalina message about zsh */ -}}
+{{      $exports := merge $exports (dict
+            "BASH_SILENCE_DEPRECATION_WARNING" 1) -}}
+
+{{      if lookPath "brew" -}}
+{{/* HOMEBREW_NO_ANALYTICS - Stops Homebrew Telemetry */ -}}
+{{      $exports := merge $exports (dict
+            "HOMEBREW_NO_ANALYTICS" 1) -}}
+{{      end -}}
+
+{{      if lookPath "whalebrew" -}}
+{{          $exports := merge $exports (dict
+                "WHALEBREW_CONFIG_DIR" "${XDG_CONFIG_HOME}/whalebrew") -}}
+{{ end -}}
+
+{{      if lookPath "yubikey-agent" -}}
+{{      $exports := merge $exports (dict
+            "SSH_AUTH_SOCK" "${HOMEBREW_PREFIX}/var/run/yubikey-agent.sock") -}}
+{{      end -}}
+
+{{      if lookPath "z" -}}
+{{      $exports := merge $exports (dict
+            "_ZO_DATA_DIR" "${XDG_DATA_HOME}") -}}
+{{      end -}}
+
+{{      if stat "${HOME}/Library/Python/" -}}
+{{      $exports := merge $exports (dict
+            "PYTHONPYCACHEPREFIX" "${XDG_CACHE_HOME}/python"
+            "PYTHON_HOMES" "(${HOME}/Library/Python/*)"
+            "PYTHON_HOME" "${PYTHON_HOMES}[0]"
+            "PYTHONPATH" "${HOME}/.python"
+            "PYTHONUSERBASE" "${XDG_DATA_HOME}/python") -}}
+{{      end -}}
+
+{{      if not .personal -}}
+{{/* AWS Arcus setup and IDEs used for C# and Ruby development */ -}}
+{{      $exports := merge $exports (dict
+            "AWS_PROFILE" "arcus_dev"
+            "AWS_SDK_LOAD_CONFIG" 1
+            "RIDER_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/rider"
+            "RUBYMINE_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/rubymine"
+            "TILT_NAMESPACE" "derick-rodriguez") -}}
+{{      end -}}
+{{  end -}}
+
+{{ if eq .chezmoi.os "linux" -}}
+{{      if lookPath "yubikey-agent" -}}
+{{          $exports := merge $exports (dict
+                "FREETYPE_PROPERTIES" "cff:no-stem-darkening=0"
+                "SSH_AUTH_SOCK" "${XDG_RUNTIME_DIR}/yubikey-agent/yubikey-agent.sock") -}}
+{{      end -}}
+
+{{      if lookPath "bcompare" -}}
+{{          $exports := merge $exports (dict
+                "DIFFPROG" "bcompare") -}}
+{{      else if lookPath "delta" -}}
+{{          $exports := merge $exports (dict
+                "DIFFPROG" "delta --dark --line-numbers --side-by-side --no-gitconfig") -}}
+{{      end -}}
+{{ end -}}
+
+{{ range (keys $exports | sortAlpha | uniq) -}}
+export {{ . }}={{get $exports  . | quote }}
+{{ end -}}

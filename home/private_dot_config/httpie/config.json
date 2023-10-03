@@ -1,0 +1,7 @@
+{
+    "default_options": [
+        "--follow"
+        "--timeout=60"
+    ],
+    "plugins_dir": "."
+}

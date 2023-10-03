@@ -1,0 +1,11 @@
+prefix=${XDG_DATA_HOME}/npm
+cache=${XDG_CACHE_HOME}/npm
+tmp=${XDG_RUNTIME_DIR}/npm
+init-module=${XDG_CONFIG_HOME}/npm/config/npm-init.js
+; begin auth token
+//{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").urls 14).href -}}/registry/:username=n
+//{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").urls 14).href -}}/registry/:_password={{- b64enc (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").fields 19).value }}
+//{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").urls 14).href -}}/registry/:email={{- (onepassword "wuo6jezj45c2bdzyttgfvxygzu").additional_information }}
+//{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").urls 14).href -}}/:username={{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").fields 20).value }}
+//{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").urls 14).href -}}/:_password={{- b64enc (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").fields 19).value }}
+//{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").urls 14).href -}}/:email={{- (onepassword "wuo6jezj45c2bdzyttgfvxygzu").additional_information }}

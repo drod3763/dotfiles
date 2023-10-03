@@ -1,0 +1,232 @@
+{{/* z4h source --compile $DOTFILES/functions/bash_path_funcs/colon2line
+z4h source --compile $DOTFILES/functions/bash_path_funcs/space2line
+z4h source --compile $DOTFILES/functions/bash_path_funcs/Usage
+z4h source --compile $DOTFILES/functions/bash_path_funcs/options
+z4h source --compile $DOTFILES/functions/bash_path_funcs/makepath
+z4h source --compile $DOTFILES/functions/bash_path_funcs/addpath
+z4h source --compile $DOTFILES/functions/bash_path_funcs/delpath
+z4h source --compile $DOTFILES/functions/bash_path_funcs/listpath
+z4h source --compile $DOTFILES/functions/bash_path_funcs/uniqpath
+z4h source --compile $DOTFILES/functions/bash_path_funcs/edpath
+z4h source --compile $DOTFILES/functions/bash_path_funcs/realpath_filter
+z4h source --compile $DOTFILES/functions/dmginstall */ -}}
+
+{{/* Extract any archive. Usage: ex <file> */ -}}
+{{- if and (lookPath "unrar") (lookPath "7z") }}
+ex()
+{
+  if [ -f $1 ] ; then
+    case $1 in
+      *.tar.bz2)   tar xjf $1   ;;
+      *.tar.gz)    tar xzf $1   ;;
+      *.bz2)       bunzip2 $1   ;;
+      *.rar)       unrar x $1   ;;
+      *.gz)        gunzip $1    ;;
+      *.tar)       tar xf $1    ;;
+      *.tbz2)      tar xjf $1   ;;
+      *.tgz)       tar xzf $1   ;;
+      *.zip)       unzip $1     ;;
+      *.Z)         uncompress $1;;
+      *.7z)        7z x $1      ;;
+      *.deb)       ar x $1      ;;
+      *.tar.xz)    tar xf $1    ;;
+      *.tar.zst)   unzstd $1    ;;
+      *)           echo "'$1' cannot be extracted via ex()" ;;
+    esac
+  else
+    echo "'$1' is not a valid file"
+  fi
+}
+{{- end }}
+
+{{- /* Docker Helpers */}}
+{{- if lookPath "docker" }}
+function dkrbuild() {
+  docker build -t ${1} .
+}
+function dkrrun() {
+	docker run -it --name ${1} ${2}
+}
+function dkrrunmount() {
+	docker run -it --name ${1} --mount type=bind,source=${3},target=${4} ${2}
+}
+{{- end }}
+
+{{- /* Update pip packages */}}
+{{- if lookPath "pip" }}
+function pipu() {
+	pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U --user
+}
+# export -f pipu
+{{- end }}
+
+{{- /* Create a new directory and change (cd) into it. */}}
+function mkd() {
+    mkdir -p "$@" && cd "$_";
+}
+
+{{- /* Calculate the sha256 hash of a file. */}}
+function sha {
+	openssl dgst -sha256 ${1} | cut -d ' ' -f2 # | tr -d '[:space:]'
+}
+
+{{- /* Calculate the md5 hash of a file. */}}
+function md5 {
+	openssl dgst -md5 ${1} | cut -d ' ' -f2 # | tr -d '[:space:]'
+}
+
+{{- /* Compare two Strings. Used for hash comparisons mostly. */}}
+function comp {
+    STRING1=${1}
+    STRING2=${2}
+
+	if [ "$STRING1" = "$STRING2" ] ; then
+		echo "match"
+	else
+		echo "no match"
+	fi
+}
+
+{{- /* Compare two SHA1 Hashes using Comp. TODO, implement a better way here. */}}
+shacomp() {
+	comp "$(sha "${1}")" "$(sha "${2}")"
+}
+
+{{- /* Base 64 encode any file. */}}
+function b64enc {
+	openssl base64 -in "${1}" > "${1}.b64"
+}
+
+{{- /* Stands for "last downloaded file. Source: http://blog.jpalardy.com/posts/get-your-last-downloaded-file/ */}}
+ldf() {
+  local file=~/Downloads/$(\ls -1t ~/Downloads/ | head -n1)
+  read -p "confirm: $file "
+  mv "$file" .
+}
+
+{{- /* This creates a directory under $HOME/.throw-away, changes (cd) into it and launches a shell there. When the
+shell exits, the directory is deleted with all its content.
+Source: http://blog.jpalardy.com/posts/garbage-collected-directories/ */}}
+tad() {
+  local ts=$(date +%s)
+  local d="$HOME/.throw-away/$ts"
+  mkdir -p $d
+  (cd $d; bash)
+  rm -r $d
+}
+
+{{- /* List all users */}}
+function listusers () {
+	dscl . list /Users | grep -v ^_.*
+}
+
+{{- /* Use ImageMagick convert to fake a scanned pdf. The order is important. the density argument applies to input.pdf
+and resize and rotate to output.pdf. Source: https://gist.github.com/andyrbell/25c8632e15d17c83a54602f6acde2724
+Note: You may need ghostscript installed on mac (brew install gs) */}}
+{{- if lookPath "convert"}}
+function fakeScan() {
+	convert -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
+}
+{{- end }}
+
+{{- /* Stolen from the nextdns guys https://nextdns.io/install. Can use this to tailer my scripts per machine..... */}}
+function detect_os() {
+    if [ "$FORCE_OS" ]; then
+        echo "$FORCE_OS"; return 0
+    fi
+    case $(uname -s) in
+    Linux)
+        case $(uname -o) in
+        GNU/Linux)
+            if grep -q -e '^EdgeRouter' -e '^UniFiSecurityGateway' /etc/version 2> /dev/null; then
+                echo "edgeos"; return 0
+            fi
+            if uname -u 2>/dev/null | grep -q '^synology'; then
+                echo "synology"; return 0
+            fi
+            # shellcheck disable=SC1091
+            dist=$(. /etc/os-release; echo "$ID")
+            case $dist in
+            debian|ubuntu|elementary|raspbian|centos|fedora|rhel|arch|manjaro|openwrt|clear-linux-os|linuxmint|opensuse-tumbleweed|opensuse|solus|pop)
+                echo "$dist"; return 0
+                ;;
+            esac
+            ;;
+        ASUSWRT-Merlin*)
+            echo "asuswrt-merlin"; return 0
+            ;;
+        DD-WRT)
+            echo "ddwrt"; return 0
+        esac
+        ;;
+    Darwin)
+        echo "darwin"; return 0
+        ;;
+    FreeBSD)
+        if [ -f /etc/platform ]; then
+            case $(cat /etc/platform) in
+            pfSense)
+                echo "pfsense"; return 0
+                ;;
+            esac
+        fi
+        if [ -x /usr/local/sbin/opnsense-version ]; then
+            case $(/usr/local/sbin/opnsense-version -N) in
+            OPNsense)
+                echo "opnsense"; return 0
+                ;;
+            esac
+        fi
+        echo "freebsd"; return 0
+        ;;
+    NetBSD)
+        echo "netbsd"; return 0
+        ;;
+    OpenBSD)
+        echo "openbsd"; return 0
+        ;;
+    *)
+    esac
+    log_error "Unsupported OS: $(uname -s)"
+    return 1
+}
+
+{{- /* cd .. until a .git directory is found. Source: https://blog.jpalardy.com/posts/cd-until-git-directory/ */}}
+cd_() {
+  local p=$PWD
+  while [ $p != "/" ]; do
+    if [ -d "$p/.git" ]; then
+      cd "$p"
+      break
+    fi
+    p=${p:h}
+  done
+}
+
+{{- /* Won't cd unless a .git directory is found. Can be used multiple times if multiple .git parents are expected */}}
+cd() { {{/* wrap `cd_`, add behaviors */}}
+  local dest="${@:-"$HOME"}"
+  if [ "$dest" = "_" ]; then
+    cd_ "$dest"
+    return
+  fi
+  if [ -f "$dest" ]; then
+    dest=${dest:h}
+  fi
+  builtin cd "$dest"
+}
+
+{{- /* FIXED???
+Codesign Playwright Chromium for issue https://github.com/microsoft/playwright/issues/7937
+{{- if and (eq .chezmoi.os "darwin") (stat (joinPath .chezmoi.homeDir "Library/Caches/ms-playwright")) }}
+function signPW() {
+    cd $HOME/Library/Caches/ms-playwright/
+    # codesign for chromium in Macos
+    for d in chromium-*; do
+        echo Sign $HOME/Library/Caches/ms-playwright/${d}/chrome-mac/Chromium.app
+        sudo codesign --force --deep --sign - ./${d}/chrome-mac/Chromium.app
+    done
+    cd -
+}
+{{- end }}
+*/}}
