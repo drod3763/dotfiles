@@ -4,7 +4,6 @@ set -eufo pipefail
 
 {{ $taps := list
     "homebrew/bundle"
-    "homebrew/cask-drivers"
     "homebrew/cask-fonts"
     "homebrew/cask-versions"
     "homebrew/command-not-found"
@@ -63,6 +62,11 @@ set -eufo pipefail
     "docker"
     "dropbox"
     "firefox-developer-edition"
+    "font-new-york"
+    "font-sf-compact"
+    "font-sf-mono"
+    "font-sf-mono-for-powerline"
+    "font-sf-pro"
     "iterm2"
     "itsycal"
     "jetbrains-toolbox"
@@ -72,7 +76,7 @@ set -eufo pipefail
     "muzzle"
     "soundsource"
     "spotify"
-    "synergy"
+    "suspicious-package"
     "swish"
     "visual-studio-code" -}}
 
@@ -116,6 +120,7 @@ set -eufo pipefail
 {{  $brews = concat $brews (list
     "awscli"
     "docker-credential-helper-ecr"
+    "dotnet@6"
     "helm"
     "kubectx"
     "kubernetes-cli"
@@ -128,7 +133,7 @@ set -eufo pipefail
     "lastpass") -}}
 
 {{ $mas := dict
-    "1Password" ", id: 443987910"
+
     "CARROT Weather" ", id: 993487541"
     "Charmstone" ", id: 1563735522"
     "Easy CSV Editor" ", id: 1171346381"

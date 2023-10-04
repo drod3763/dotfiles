@@ -31,10 +31,15 @@
 
 {{ if lookPath "bat" -}}
 {{      $aliases := merge $aliases (dict
-        "cat" "bat --style=plain --pager=never --theme=\"Nord\""
+              "cat" "bat --style=plain --pager=never --theme=\"Nord\""
             "catf" "bat $(fzf -i)"
             "tac" "tac \"$@\" | bat --style=plain --pager=never --theme=\"Nord\""
             "tacf" "tac \"$@\" | bat $(fzf -i)") -}}
+{{ end -}}
+
+{{ if lookPath "batman" -}}
+{{      $aliases := merge $aliases (dict
+              "man" "batman") -}}
 {{ end -}}
 
 {{ if lookPath "docker" -}}
@@ -66,7 +71,7 @@
 {{  if lookPath "eza" -}}
 {{      $aliases := merge $aliases (dict
             "ls" "eza --grid  --color auto --icons --all --sort type"
-            "ll" "exa --long --color always --icons --all --sort type") -}}
+            "ll" "eza --long --color always --icons --all --sort type") -}}
 {{  end -}}
 
 {{/* Copy with find using fzf */ -}}

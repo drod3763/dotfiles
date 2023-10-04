@@ -62,7 +62,7 @@
 
 encryption = "age"
 progress = true
-sourceDir = {{ ternary "~/Library/Application Support/chezmoi" "~/.local/share/chezmoi" ( eq .chezmoi.os "darwin" ) | quote }}
+sourceDir = "~/.local/share/chezmoi"
 remove = true
 [age]
     identity = '{{ .chezmoi.sourceDir }}/age-recipients'
@@ -90,10 +90,4 @@ transient = {{ $transient }}
     command = 'bcompare' {{/* if bcompare is used, the temporary file never shows up. Need to use bcomp */}}
 [merge]
     command = 'bcompare'
-{{- end -}}
-{{- if and (eq .chezmoi.os "darwin") (lookPath "ksdiff") }}
-[diff]
-    command = 'ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"'
-[merge]
-    command = 'ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"'
 {{- end -}}

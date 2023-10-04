@@ -18,13 +18,18 @@
 {{      end -}}
 {{ end -}}
 
-
 {{ if eq .shell "bash" -}}
 {{      range ($paths | sortAlpha | uniq) -}}
             addpath "{{ . }}"
+{{      end -}}
+{{      if stat "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"}}
+addpath "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
 {{      end -}}
 {{ end -}}
 
 {{ if eq .shell "zsh" -}}
 path=({{$paths | sortAlpha | uniq | join " "}} $path)
+{{      if stat "$HOME/Library/Application Support/JetBrains/Toolbox/scripts"}}
+path=($path "$HOME/Library/Application Support/JetBrains/Toolbox/scripts")
+{{      end -}}
 {{ end -}}

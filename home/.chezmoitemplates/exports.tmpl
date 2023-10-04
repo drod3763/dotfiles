@@ -33,7 +33,7 @@
 
 {{ if lookPath "code" -}}
 {{      $exports = merge $exports (dict
-            "VISUAL" "code --new-window") -}}
+            "VISUAL" "code -nw") -}}
 {{ end -}}
 
 {{ if lookPath "docker" -}}
@@ -67,6 +67,11 @@
 {{ if lookPath "npm" -}}
 {{      $exports := merge $exports (dict
             "NPM_CONFIG_USERCONFIG" "${XDG_CONFIG_HOME}/npm/npmrc") -}}
+{{ end -}}
+
+{{ if stat "/opt/homebrew/Cellar/dotnet@6/6.0.114/libexec/dotnet" -}}
+{{      $exports := merge $exports (dict
+            "DOTNET_CLI_HOME" "${XDG_CONFIG_HOME}/dotnet") -}}
 {{ end -}}
 
 {{ if lookPath "nuget" -}}
