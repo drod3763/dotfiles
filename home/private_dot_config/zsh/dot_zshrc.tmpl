@@ -63,9 +63,6 @@ zstyle ':z4h:ssh:*'                     enable 'no'
 # perform network I/O must be done above. Everything else is best done below. */}}
 z4h init || return
 
-# Extend PATH.
-{{ template "path.tmpl" . }}
-
 # Export environment variables.
 {{- $user_cache_dir := (ternary "${HOME}/Library/Caches" "${HOME}/.cache" ( eq .chezmoi.os "darwin"))}}
 {{- $user_data_dir := (ternary "${HOME}/Library/Application Support" "${HOME}/.local/share" ( eq .chezmoi.os "darwin"))}}
@@ -79,6 +76,9 @@ export XDG_SHARE_HOME="${HOME}/.local/share"
 export XDG_RUNTIME_DIR={{ $user_runtime_dir }}
 export XDG_STATE_HOME={{ $user_log_dir }}
 {{- template "exports.tmpl" . }}
+
+# Extend PATH.
+{{ template "path.tmpl" . }}
 
 {{- /* Source additional local files if they exist.
 z4h source ~/.env.zsh */}}

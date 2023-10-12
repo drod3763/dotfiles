@@ -64,11 +64,6 @@
             "EDITOR" "vi") -}}
 {{ end -}}
 
-{{ if lookPath "npm" -}}
-{{      $exports := merge $exports (dict
-            "NPM_CONFIG_USERCONFIG" "${XDG_CONFIG_HOME}/npm/npmrc") -}}
-{{ end -}}
-
 {{ if stat "/opt/homebrew/Cellar/dotnet@6/6.0.114/libexec/dotnet" -}}
 {{      $exports := merge $exports (dict
             "DOTNET_CLI_HOME" "${XDG_CONFIG_HOME}/dotnet") -}}
@@ -108,6 +103,7 @@
 
 {{ if lookPath "volta" -}}
 {{      $exports := merge $exports (dict
+            "NPM_CONFIG_USERCONFIG" "${XDG_CONFIG_HOME}/npm/npmrc"
             "VOLTA_HOME" "${XDG_DATA_HOME}/volta") -}}
 {{ end -}}
 

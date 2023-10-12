@@ -3,7 +3,7 @@
 
 {{ if lookPath "volta" -}}
 {{      $paths = concat $paths (list
-        "$VOLTA_HOME/bin" ) -}}
+        "$VOLTA_HOME/bin/" ) -}}
 {{ end -}}
 
 {{ if eq .chezmoi.os "darwin" -}}
