@@ -69,12 +69,12 @@ z4h init || return
 {{- $user_runtime_dir := (ternary "${HOME}/Library/Caches/TemporaryItems" "/run/user/${UID}" ( eq .chezmoi.os "darwin"))}}
 {{- $user_log_dir := (ternary "${HOME}/Library/Logs" "${HOME}/.local/state" ( eq .chezmoi.os "darwin"))}}
 export GPG_TTY="$TTY" {{/* Use the same TTY for GPG as for the terminal. */}}
-export XDG_CACHE_HOME={{ $user_cache_dir }}
+export XDG_CACHE_HOME={{ $user_cache_dir | quote }}
 export XDG_CONFIG_HOME="${HOME}/.config"
-export XDG_DATA_HOME={{ $user_data_dir }}
+export XDG_DATA_HOME={{ $user_data_dir | quote }}
 export XDG_SHARE_HOME="${HOME}/.local/share"
-export XDG_RUNTIME_DIR={{ $user_runtime_dir }}
-export XDG_STATE_HOME={{ $user_log_dir }}
+export XDG_RUNTIME_DIR={{ $user_runtime_dir | quote }}
+export XDG_STATE_HOME={{ $user_log_dir | quote }}
 {{- template "exports.tmpl" . }}
 
 # Extend PATH.
