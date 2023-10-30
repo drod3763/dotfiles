@@ -49,6 +49,10 @@
 {{-     $hostname = $computerName -}}
 {{- end -}}
 
+{{- if not (eq $hostname "P6H9DQX16L") -}}
+{{-     $personal = true -}}
+{{- end -}}
+
 {{- $shell := "" -}}
 {{- if (hasKey . "shell") -}}
 {{-     $shell = .shell -}}
@@ -84,10 +88,4 @@ personal = {{ $personal }}
 shell = {{ $shell | quote }}
 transient = {{ $transient }}
 [git]
-    autoAdd = true
-{{- if and (eq .chezmoi.os "linux") (lookPath "bcompare") -}}
-[diff]
-    command = 'bcompare' {{/* if bcompare is used, the temporary file never shows up. Need to use bcomp */}}
-[merge]
-    command = 'bcompare'
-{{- end -}}
+autoAdd = true
