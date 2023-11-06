@@ -21,25 +21,20 @@
 {{/* --/../..2/..3/..4/..5 - move up the appropriate number of directories */ -}}
 {{ if eq .shell "bash" -}}
 {{      $aliases := merge $aliases (dict
-            "-- -" "cd -"
-            ".." "cd .."
-            "..2" "..; .."
-            "..3" "..2; .."
-            "..4" "..3; .."
-            "..5" "..4; ..") -}}
+              "-- -" "cd -"
+              ".." "cd .."
+              "..2" "..; .."
+              "..3" "..2; .."
+              "..4" "..3; .."
+              "..5" "..4; ..") -}}
 {{ end -}}
 
 {{ if lookPath "bat" -}}
 {{      $aliases := merge $aliases (dict
-              "cat" "bat --style=plain --pager=never --theme=\"Nord\""
-            "catf" "bat $(fzf -i)"
-            "tac" "tac \"$@\" | bat --style=plain --pager=never --theme=\"Nord\""
-            "tacf" "tac \"$@\" | bat $(fzf -i)") -}}
-{{ end -}}
-
-{{ if lookPath "batman" -}}
-{{      $aliases := merge $aliases (dict
-              "man" "batman") -}}
+              "cat" "bat --style=plain --pager=never"
+              "catf" "bat $(fzf -i)"
+              "tac" "tac \"$@\" | bat --style=plain --pager=never"
+              "tacf" "tac \"$@\" | bat $(fzf -i)") -}}
 {{ end -}}
 
 {{ if lookPath "docker" -}}
