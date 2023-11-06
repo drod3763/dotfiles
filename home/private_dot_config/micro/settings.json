@@ -1,7 +1,7 @@
 {
     "autoclose": true,
     "colorcolumn": 80,
-    "colorscheme": "default",
+    "colorscheme": "catppuccin-frappe",
     "comment": true,
     "diff": true,
     "ftoptions": true,

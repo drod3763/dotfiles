@@ -55,7 +55,8 @@
 
 {{ if lookPath "micro" -}}
 {{      $exports := merge $exports (dict
-            "EDITOR" "micro") -}}
+            "EDITOR" "micro"
+            "MICRO_TRUECOLOR" "1") -}}
 {{ else if lookPath "nano" -}}
 {{      $exports := merge $exports (dict
             "EDITOR" "nano") -}}
