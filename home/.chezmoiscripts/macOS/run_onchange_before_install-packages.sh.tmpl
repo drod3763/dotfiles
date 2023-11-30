@@ -123,6 +123,7 @@ set -eufo pipefail
 {{  $brews = concat $brews (list
     "awscli"
     "docker-credential-helper-ecr"
+    "docker-machine-parallels"
     "dotnet@6"
     "helm"
     "kubectx"
@@ -130,6 +131,9 @@ set -eufo pipefail
     "lastpass-cli"
     "saml2aws"
     "tilt") -}}
+
+{{  $casks = concat $casks (list
+    "parallels") -}}
 {{ end -}}
 
 {{  $casks = concat $casks (list
