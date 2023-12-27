@@ -16,6 +16,7 @@ set -eufo pipefail
     "bat-extras"
     "chezmoi"
     "curl"
+    "dive"
     "duti"
     "eza"
     "fd"
@@ -35,6 +36,7 @@ set -eufo pipefail
     "micro"
     "mosh"
     "php"
+    "procs"
     "p7zip"
     "rem"
     "ripgrep"
@@ -61,6 +63,7 @@ set -eufo pipefail
     "beyond-compare"
     "boop"
     "brave-browser"
+    "commandq"
     "dash"
     "docker"
     "dropbox"
@@ -83,6 +86,21 @@ set -eufo pipefail
     "swish"
     "visual-studio-code" -}}
 
+{{ $mas := dict
+    "1Password for Safari" ", id: 1569813296"
+    "Amphetamine" ", id: 937984704"
+    "CARROT Weather" ", id: 993487541"
+    "Charmstone" ", id: 1563735522"
+    "Easy CSV Editor" ", id: 1171346381"
+    "Glance" ", id: 1513574319"
+    "JSON Editor" ", id: 567740330"
+    "MenuMate" ", id: 518594271"
+    "OpenIn" ", id: 1643649331"
+    "PLIST Editor" ", id: 1157491961"
+    "PopClip" ", id: 445189367"
+    "Service Station" ", id: 1503136033"
+    "Xcode" ", id: 497799835" -}}
+
 {{- if .personal }}
 {{  $brews = concat $brews (list
     "gh"
@@ -93,6 +111,7 @@ set -eufo pipefail
     "aerial"
     "balenaetcher"
     "default-folder-x"
+    "devonthink"
     "devtoys"
     "disk-drill"
     "duet"
@@ -117,6 +136,21 @@ set -eufo pipefail
     "vivaldi"
     "wezterm"
     "windscribe") -}}
+
+{{ $mas_personal := dict
+    "Affinity Photo" ", id: 824183456"
+    "Brother iPrint&Scan" ", id: 1193539993"
+    "Brother P-touch Editor" ", id: 1453365242"
+    "Gladys" ", id: 1382386877"
+    "Paprika Recipe Manager 3" ", id: 1303222628"
+    "Serial" ", id: 877615577"
+    "Things" ", id: 904280696"
+    "ToothFairy" ", id: 1191449274"
+    "WiFi Explorer" ", id: 494803304"
+    "WiFi Signal" ", id: 525912054"
+    "WireGuard" ", id: 1451685025" -}}
+
+{{  $mas = merge $mas $mas_personal}}
 {{ end -}}
 
 {{ if not .personal -}}
@@ -138,15 +172,6 @@ set -eufo pipefail
 
 {{  $casks = concat $casks (list
     "lastpass") -}}
-
-{{ $mas := dict
-    "CARROT Weather" ", id: 993487541"
-    "Charmstone" ", id: 1563735522"
-    "Easy CSV Editor" ", id: 1171346381"
-    "JSON Editor" ", id: 567740330"
-    "OpenIn" ", id: 1643649331"
-    "PLIST Editor" ", id: 1157491961"
-    "PopClip" ", id: 445189367" -}}
 
 {{ $args := dict
     "docker-credential-helper-ecr" ", link: false"
