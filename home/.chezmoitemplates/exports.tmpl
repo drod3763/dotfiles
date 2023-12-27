@@ -118,6 +118,10 @@
 {{/* HOMEBREW_NO_ANALYTICS - Stops Homebrew Telemetry */ -}}
 {{      $exports := merge $exports (dict
             "HOMEBREW_NO_ANALYTICS" 1) -}}
+{{          if .personal -}}
+{{              $exports := merge $exports (dict
+                    "HOMEBREW" "${HOME}/Homebrew") -}}
+{{          end -}}
 {{      end -}}
 
 {{      if lookPath "whalebrew" -}}
