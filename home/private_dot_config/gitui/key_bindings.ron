@@ -1,0 +1,12 @@
+(
+    // See all possible keys to overwrite in code: https://github.com/extrawurst/gitui/blob/master/src/keys/key_list.rs#L83
+    // Vim style config: https://github.com/extrawurst/gitui/blob/master/vim_style_key_config.ron
+    move_left: Some(( code: Char('h'), modifiers: ( bits: 0,),)),
+    move_right: Some(( code: Char('l'), modifiers: ( bits: 0,),)),
+    move_up: Some(( code: Char('k'), modifiers: ( bits: 0,),)),
+    move_down: Some(( code: Char('j'), modifiers: ( bits: 0,),)),
+
+    stash_open: Some(( code: Char('l'), modifiers: ( bits: 0,),)),
+
+    open_help: Some(( code: F(1), modifiers: ( bits: 0,),)),
+)
