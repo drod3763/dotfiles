@@ -120,7 +120,8 @@
             "HOMEBREW_NO_ANALYTICS" 1) -}}
 {{          if .personal -}}
 {{              $exports := merge $exports (dict
-                    "HOMEBREW" "${HOME}/Homebrew") -}}
+                    "HOMEBREW" "${HOME}/Homebrew"
+                    "HOMEBREW_PREFIX" "${HOME}/Homebrew") -}}
 {{          end -}}
 {{      end -}}
 
