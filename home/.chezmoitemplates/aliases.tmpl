@@ -2,25 +2,24 @@
 {{ $lnFlag := (ternary "-sf" "--symbolic --force" ( eq .chezmoi.os "darwin")) -}}
 {{ $loginFlag := (ternary "-l" "" ( eq .chezmoi.os "darwin")) -}}
 
-{{/* ln - force overwrite when creating symlinks by default
+{{/*   ln - force overwrite when creating symlinks by default
        sudo - run aliases with sudo
        reload - reload bash/zsh
        restart - restart bash/zsh
        tailcat - cat files with the filename(s) as a header without installing any extra programs. Source: https://old.reddit.com/r/archlinux/comments/o2bfha/post_your_most_useful_self_written_command_line/h26msmz
        wtfport - easily see what ports are in use */ -}}
-
 {{ $aliases := dict
-    "clear" "z4h-clear-screen-soft-bottom"
-    "ln" (list "ln" $lnFlag | join " ")
-    "restart" (list "exec" .shell $loginFlag | join " " | trim)
-    "sudo" "sudo "
-    "reload" (list "source ~/." .shell "rc" | join "")
-    "tailcat" "tail --lines=+0"
-    "wtfport" "lsof -i -P -n | grep LISTEN" -}}
+       "clear" "z4h-clear-screen-soft-bottom"
+       "ln" (list "ln" $lnFlag | join " ")
+       "restart" (list "exec" .shell $loginFlag | join " " | trim)
+       "sudo" "sudo "
+       "reload" (list "source ~/." .shell "rc" | join "")
+       "tailcat" "tail --lines=+0"
+       "wtfport" "lsof -i -P -n | grep LISTEN" -}}
 
 {{/* --/../..2/..3/..4/..5 - move up the appropriate number of directories */ -}}
 {{ if eq .shell "bash" -}}
-{{      $aliases := merge $aliases (dict
+{{     $aliases := merge $aliases (dict
               "-- -" "cd -"
               ".." "cd .."
               "..2" "..; .."
@@ -30,7 +29,7 @@
 {{ end -}}
 
 {{ if lookPath "bat" -}}
-{{      $aliases := merge $aliases (dict
+{{     $aliases := merge $aliases (dict
               "cat" "bat --style=plain --pager=never"
               "catf" "bat $(fzf -i)"
               "tac" "tac \"$@\" | bat --style=plain --pager=never"
@@ -38,36 +37,39 @@
 {{ end -}}
 
 {{ if lookPath "docker" -}}
-{{/* dcu - remove unused docker volumes
-       dca - remove all docker volumes
-       dstart - start docker
-       dstop - stop docker
-       dls - list all docker images
-       dirm - alias of docker image rm
-       dcls - list all running docker containers
-       ddcon - remove all stopped containers
+{{/*   dcu - remove unused docker volumes
+       dclean - remove all unused docker images, containers, and volumes
+       dknuke - completely remove all docker images, containers and volumes
+       dkstart - start docker
+       dkstop - stop docker
+       dkls - list all docker images
+       dkirm - alias of docker image rm
+       dkps - list all running docker containers
+       dkrmcon - remove all stopped containers
        Referenced from https://medium.com/the-code-review/clean-out-your-docker-images-containers-and-volumes-with-single-commands-b8e38253c271 */ -}}
-{{      $aliases := merge $aliases (dict
-            "dcu" "docker system prune --all --force --volumes"
-            "dca" "docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes"
-            "dstart" "docker start"
-            "dstop" "docker stop"
-            "dls" "docker image ls"
-            "dirm" "docker image rm"
-            "dcls" "docker ps --all"
-            "ddcon" "docker rm $(docker ps --all --filter status=exited --quiet)") -}}
-{{      if lookPath "docker-compose" -}}
-{{          $aliases := merge $aliases (dict
-                "dc" "docker-compose") -}}
-{{      end -}}
-{{  end -}}
+{{     $aliases := merge $aliases (dict
+              "dk" "docker"
+              "dkclean" "docker system prune --all --force --volumes"
+              "dknuke" "docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes"
+              "dkstart" "docker start"
+              "dkstop" "docker stop"
+              "dkils" "docker image ls"
+              "dkirm" "docker image rm"
+              "dkps" "docker ps --all"
+              "dkrmcon" "docker rm $(docker ps --all --filter status=exited --quiet)") -}}
+
+{{     if lookPath "docker-compose" -}}
+{{            $aliases := merge $aliases (dict
+                     "dkc" "docker-compose") -}}
+{{     end -}}
+{{ end -}}
 
 {{/* ls/ll - colorize eza output */ -}}
-{{  if lookPath "eza" -}}
-{{      $aliases := merge $aliases (dict
-            "ls" "eza --grid  --color auto --icons --all --sort type"
-            "ll" "eza --long --color always --icons --all --sort type") -}}
-{{  end -}}
+{{ if lookPath "eza" -}}
+{{     $aliases := merge $aliases (dict
+              "ls" "eza --grid  --color auto --icons --all --sort type"
+              "ll" "eza --long --color always --icons --all --sort type") -}}
+{{ end -}}
 
 {{/* Copy with find using fzf */ -}}
 {{  if lookPath "fzf" -}}
@@ -107,8 +109,7 @@
 {{/* See brew dependencies as explained here: https://stackoverflow.com/questions/41029842/easy-way-to-have-homebrew-list-all-package-dependencies */ -}}
 {{      if lookPath "brew" -}}
 {{          $aliases := merge $aliases (dict
-                "brewdep" "brew deps --tree --installed"
-                "brewlf" "brew deps --include-build --tree $(brew leaves)"
+                "bls" "brew leaves --installed-on-request"
                 "brewup" "brew update && brew upgrade && brew upgrade --cask && brew cleanup"
                 "bcu" "brew update && brew upgrade --cask --greedy && brew cleanup") -}}
 {{      end -}}
@@ -142,13 +143,13 @@
                 "pdiff" "QT_GRAPHICSSYSTEM=native DIFFPROG=bcompare pacdiff") -}}
 {{      end -}}
 
-{{      if lookPath "dbus-send" }}
-{{/* altt - get list of open windows in Gnome. Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h596io8/
-     alttt - get list of open windows in Gnome with window titles. Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h59ttqp/ */ -}}
-{{          $aliases := merge $aliases (dict
-                "altt" "dbus-send --session --type=method_call --print-reply --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)\" | grep -Po \"\\[.*\\]\""
-                "alttt" "dbus-send --print-reply --type=method_call --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)\"|sed -n \"/string/s/\"\\|\\(\",\"\\)/\\n/gp\"|sed \"/^ \\|^\\[\\|^\\]/d\"") -}}
-{{      end -}}
+{{/*   altt - get list of open windows in Gnome. Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h596io8/
+       alttt - get list of open windows in Gnome with window titles. Source: https://old.reddit.com/r/gnome/comments/okl9l2/how_to_get_the_list_of_window_in_cli_which_has/h59ttqp/ */ -}}
+{{     if lookPath "dbus-send" }}
+{{            $aliases := merge $aliases (dict
+                     "altt" "dbus-send --session --type=method_call --print-reply --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)\" | grep -Po \"\\[.*\\]\""
+                     "alttt" "dbus-send --print-reply --type=method_call --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)\"|sed -n \"/string/s/\"\\|\\(\",\"\\)/\\n/gp\"|sed \"/^ \\|^\\[\\|^\\]/d\"") -}}
+{{     end -}}
 {{  end -}}
 
 {{ range (keys $aliases | sortAlpha | uniq) -}}

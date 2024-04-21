@@ -3,55 +3,56 @@
     "*.tar.gz"
     "1password_settings.json"
     "functions"
+    "key.txt.age"
     "install.sh"
     "Makefile"
     "README.md"
     "vscode_settings.json" -}}
 
 {{- if ne .chezmoi.os "darwin" }}
-{{- $ignore = concat $ignore (list
-    ".AzureToolsForIntelliJ"
-    ".CFUserTextEncoding"
-    ".DS_Store"
-    ".IdentityService"
-    ".Trash"
-    ".chezmoiscripts/darwin/**") -}}
+    {{- $ignore = concat $ignore (list
+        ".AzureToolsForIntelliJ"
+        ".CFUserTextEncoding"
+        ".DS_Store"
+        ".IdentityService"
+        ".Trash"
+        ".chezmoiscripts/darwin/**") -}}
 {{- end }}
 
 {{- if ne .chezmoi.os "linux" }}
-{{- $ignore = concat $ignore (list
-".chezmoiscripts/linux/**"
-".config/paru"
-".config/1Password"
-".config/kitty"
-"1password_settings.json") -}}
+    {{- $ignore = concat $ignore (list
+        ".chezmoiscripts/linux/**"
+        ".config/paru"
+        ".config/1Password"
+        ".config/kitty"
+        "1password_settings.json") -}}
 {{- end }}
 
 {{- if and (eq .chezmoi.os "darwin" "linux") (ne .shell "zsh") -}}
-{{- $ignore = concat $ignore (list
-".p10k.zsh"
-".zshenv"
-".zshrc") -}}
+    {{- $ignore = concat $ignore (list
+        ".p10k.zsh"
+        ".zshenv"
+        ".zshrc") -}}
 {{- else if ne .shell "bash" }}
-{{- $ignore = concat $ignore (list
-".bashrc"
-".bash_profile") -}}
+    {{- $ignore = concat $ignore (list
+        ".bashrc"
+        ".bash_profile") -}}
 {{- end }}
 
 {{- if ne .chezmoi.os "windows" }}
-{{- $ignore = concat $ignore (list
-".chezmoiscripts/windows/**"
-"Documents") -}}
+    {{- $ignore = concat $ignore (list
+        ".chezmoiscripts/windows/**"
+        "Documents") -}}
 {{- else }}
-{{- $ignore = concat $ignore (list
-".gitignore"
-".inputrc"
-".ssh/authorized_keys"
-".ssh/id_rsa"
-".ssh/id_rsa.pub"
-".tmux.conf"
-".vim"
-".vimrc") -}}
+    {{- $ignore = concat $ignore (list
+        ".gitignore"
+        ".inputrc"
+        ".ssh/authorized_keys"
+        ".ssh/id_rsa"
+        ".ssh/id_rsa.pub"
+        ".tmux.conf"
+        ".vim"
+        ".vimrc") -}}
 {{- end -}}
 
 {{- range ($ignore | sortAlpha | uniq) -}}

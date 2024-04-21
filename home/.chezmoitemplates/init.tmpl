@@ -21,6 +21,10 @@ z4h source --compile "${HOME}/.iterm2_shell_integration.zsh" {{/* iterm2 Shell I
 eval "$(direnv hook zsh)"
 {{-     end }}
 
+{{- if lookPath "mise" }}
+eval "$(~/.local/bin/mise activate zsh)"
+{{- end }}
+
 {{-     if lookPath "zoxide" }}
 eval "$(zoxide init zsh)"
 {{-     end }}

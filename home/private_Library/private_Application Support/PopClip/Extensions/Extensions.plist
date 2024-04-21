@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Installed Extensions</key>
+	<array>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.copy-as-markdown</string>
+			<key>Extension Name</key>
+			<string>Copy as Markdown</string>
+			<key>Package Name</key>
+			<string>CopyAsMarkdown.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.hyphenate</string>
+			<key>Extension Name</key>
+			<string>Hyphenate</string>
+			<key>Package Name</key>
+			<string>Hyphenate.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.pasteplain</string>
+			<key>Extension Name</key>
+			<string>Paste =</string>
+			<key>Package Name</key>
+			<string>PasteAndMatch.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.sort</string>
+			<key>Extension Name</key>
+			<string>Sort</string>
+			<key>Package Name</key>
+			<string>Sort.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.underscore</string>
+			<key>Extension Name</key>
+			<string>Underscore</string>
+			<key>Package Name</key>
+			<string>Underscore.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.remove-spaces</string>
+			<key>Extension Name</key>
+			<string>Remove Spaces</string>
+			<key>Package Name</key>
+			<string>RemoveSpaces.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.charcount</string>
+			<key>Extension Name</key>
+			<string>Character Count</string>
+			<key>Package Name</key>
+			<string>CharCount.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.comma-list</string>
+			<key>Extension Name</key>
+			<string>Comma List</string>
+			<key>Package Name</key>
+			<string>CommaList.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.kagi</string>
+			<key>Extension Name</key>
+			<string>Kagi</string>
+			<key>Package Name</key>
+			<string>Kagi.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.pasteandenter</string>
+			<key>Extension Name</key>
+			<string>Paste + ↵</string>
+			<key>Package Name</key>
+			<string>PasteAndEnter.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.markdown-to-rtf</string>
+			<key>Extension Name</key>
+			<string>Markdown to RTF</string>
+			<key>Package Name</key>
+			<string>MarkdownToRTF.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.reverse</string>
+			<key>Extension Name</key>
+			<string>Reverse</string>
+			<key>Package Name</key>
+			<string>Reverse.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.select-all</string>
+			<key>Extension Name</key>
+			<string>Select All</string>
+			<key>Package Name</key>
+			<string>SelectAll.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.wordcount</string>
+			<key>Extension Name</key>
+			<string>Word Count</string>
+			<key>Package Name</key>
+			<string>WordCount.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.readwise</string>
+			<key>Extension Name</key>
+			<string>Readwise</string>
+			<key>Package Name</key>
+			<string>Readwise.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.quotes</string>
+			<key>Extension Name</key>
+			<string>Quotes</string>
+			<key>Package Name</key>
+			<string>Quotes.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.brackets</string>
+			<key>Extension Name</key>
+			<string>Brackets</string>
+			<key>Package Name</key>
+			<string>Brackets.popclipext</string>
+		</dict>
+	</array>
+	<key>Version</key>
+	<integer>1</integer>
+</dict>
+</plist>

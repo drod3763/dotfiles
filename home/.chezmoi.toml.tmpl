@@ -69,8 +69,8 @@ progress = true
 sourceDir = "~/.local/share/chezmoi"
 remove = true
 [age]
-    identity = '{{ .chezmoi.sourceDir }}/age-recipients'
-    recipients = ['age1yubikey1q2mqcvrgzhwq9ehqvm4ze4vtpe497t3n0k354gh6a2uqtc8zpavcvyn6afr', 'age1yubikey1q0xjnjvh3uzuml0sxnsajxelauw0y5cm9cvsrfqucqktln3rdjqrgtq6p8x']
+    identity = "{{ .chezmoi.sourceDir }}/identities"
+    recipients = [ "age1yubikey1q2jq4j9cr9gfhe9n03stdzk4985utr07qrq5sekx9jxfy3zygw2qzfnyzh3", "age1yubikey1qddtwxn3zg9t6c2ku3ekxx8278mye45e0evuahy6v3p4sn5zvn6s2ge39gf" ]
 {{- if eq .chezmoi.os "windows" -}}
 [cd]
     command = 'powershell'
@@ -89,3 +89,7 @@ shell = {{ $shell | quote }}
 transient = {{ $transient }}
 [git]
 autoAdd = true
+[[textconv]]
+pattern = "**/*.plist"
+command = "plutil"
+args = ["-convert", "xml1", "-o", "-", "-"]

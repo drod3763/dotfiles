@@ -11,32 +11,28 @@ set -eufo pipefail
 
 {{ $brews := list
     "age"
-    "age-plugin-yubikey"
     "bat"
     "bat-extras"
     "chezmoi"
-    "curl"
-    "duti"
     "eza"
     "fd"
-    "folderify"
+    "ffmpeg"
+    "fx"
     "fzf"
-    "gdu"
     "git"
     "git-delta"
     "gnu-sed"
     "gnupg"
     "httpie"
-    "jq"
-    "launch"
     "less"
     "libheif"
     "mas"
     "micro"
+    "mise"
     "mosh"
-    "php"
+    "neovim"
     "p7zip"
-    "rem"
+    "rage"
     "ripgrep"
     "rsync"
     "shellcheck"
@@ -44,78 +40,67 @@ set -eufo pipefail
     "tealdeer"
     "thefuck"
     "trash"
-    "volta"
+    "up"
     "whalebrew"
     "xdg-ninja"
+    "ykman"
+    "yt-dlp"
     "zellij"
     "zoxide" -}}
 
 {{ $casks := list
     "1password"
     "1password-cli"
-    "airfoil"
     "alfred"
-    "arc"
     "bartender"
     "betterzip"
     "beyond-compare"
     "boop"
     "brave-browser"
-    "dash"
+    "default-folder-x"
     "docker"
     "dropbox"
     "firefox-developer-edition"
+    "font-monaspace"
     "font-new-york"
     "font-sf-compact"
     "font-sf-mono"
     "font-sf-mono-for-powerline"
     "font-sf-pro"
+    "font-sn-pro"
+    "hazel"
+    "heynote"
+    "iina"
     "iterm2"
     "itsycal"
-    "jetbrains-toolbox"
-    "karabiner-elements"
     "komet"
     "macs-fan-control"
-    "muzzle"
+    "mountain-duck"
+    "popclip"
+    "rio"
     "soundsource"
     "spotify"
+    "superkey"
     "suspicious-package"
     "swish"
-    "visual-studio-code" -}}
+    "visual-studio-code"
+    "zed" -}}
 
 {{- if .personal }}
 {{  $brews = concat $brews (list
-    "gh"
     "imagemagick"
     "mkcert") -}}
 
 {{  $casks = concat $casks (list
-    "aerial"
-    "balenaetcher"
-    "default-folder-x"
-    "devtoys"
-    "disk-drill"
-    "duet"
-    "flume"
-    "garagesale"
-    "hazel"
-    "iina"
     "istat-menus"
     "ivpn"
     "jump"
     "ledger-live"
-    "mountain-duck"
     "obsidian"
     "parsec"
-    "permute"
     "ricoh-theta"
     "sensei"
-    "sonos"
     "soulver"
-    "switchresx"
-    "textexpander"
-    "vivaldi"
-    "wezterm"
     "windscribe") -}}
 {{ end -}}
 
@@ -124,8 +109,9 @@ set -eufo pipefail
     "awscli"
     "docker-credential-helper-ecr"
     "docker-machine-parallels"
-    "dotnet@6"
+    "dotnet"
     "helm"
+    "openjdk@11"
     "kubectx"
     "kubernetes-cli"
     "lastpass-cli"
@@ -133,20 +119,16 @@ set -eufo pipefail
     "tilt") -}}
 
 {{  $casks = concat $casks (list
+    "lastpass"
     "parallels") -}}
 {{ end -}}
 
-{{  $casks = concat $casks (list
-    "lastpass") -}}
-
 {{ $mas := dict
     "CARROT Weather" ", id: 993487541"
-    "Charmstone" ", id: 1563735522"
     "Easy CSV Editor" ", id: 1171346381"
     "JSON Editor" ", id: 567740330"
     "OpenIn" ", id: 1643649331"
-    "PLIST Editor" ", id: 1157491961"
-    "PopClip" ", id: 445189367" -}}
+    "PLIST Editor" ", id: 1157491961" -}}
 
 {{ $args := dict
     "docker-credential-helper-ecr" ", link: false"

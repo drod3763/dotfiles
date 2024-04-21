@@ -66,9 +66,11 @@
             "EDITOR" "vi") -}}
 {{ end -}}
 
-{{ if stat "/opt/homebrew/Cellar/dotnet@6/6.0.114/libexec/dotnet" -}}
+{{ if lookPath "dotnet" -}}
 {{      $exports := merge $exports (dict
-            "DOTNET_CLI_HOME" "${XDG_CONFIG_HOME}/dotnet") -}}
+            "DOTNET_CLI_HOME" "${XDG_CONFIG_HOME}/dotnet"
+            "DOTNET_CLI_TELEMETRY_OPTOUT" "true"
+            "DOTNET_ROOT" "/opt/homebrew/opt/dotnet/libexec") -}}
 {{ end -}}
 
 {{ if lookPath "nuget" -}}
@@ -95,12 +97,6 @@
 {{ if lookPath "tldr" -}}
 {{      $exports := merge $exports (dict
             "TEALDEER_CONFIG_DIR" (list .chezmoi.homeDir "/.config/tealdeer" | join "")) -}}
-{{ end -}}
-
-{{ if lookPath "vim" -}}
-{{/*      $exports := merge $exports (dict
-            "GVIMINIT" "let $MYGVIMRC=\"${XDG_CONFIG_HOME}/vim/gvimrc\" | source \"$MYGVIMRC\""
-            "VIMINIT" "let $MYVIMRC=\"${XDG_CONFIG_HOME}/vim/vimrc\" | source \"$MYVIMRC\"")  */}}
 {{ end -}}
 
 {{ if lookPath "volta" -}}
