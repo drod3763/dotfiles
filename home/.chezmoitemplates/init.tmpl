@@ -22,7 +22,7 @@ eval "$(direnv hook zsh)"
 {{-     end }}
 
 {{- if lookPath "mise" }}
-eval "$(~/.local/bin/mise activate zsh)"
+eval "$(mise activate zsh)"
 {{- end }}
 
 {{-     if lookPath "zoxide" }}
