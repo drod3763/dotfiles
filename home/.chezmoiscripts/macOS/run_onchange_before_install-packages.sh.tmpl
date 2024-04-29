@@ -10,46 +10,7 @@ set -eufo pipefail
     "homebrew/services" -}}
 
 {{ $brews := list
-    "age"
-    "bat"
-    "bat-extras"
-    "chezmoi"
-    "eza"
-    "fd"
-    "ffmpeg"
-    "fx"
-    "fzf"
-    "git"
-    "git-delta"
-    "gnu-sed"
-    "gnupg"
-    "httpie"
-    "less"
-    "libheif"
-    "mas"
-    "mcfly"
-    "micro"
-    "mise"
-    "mosh"
-    "neovim"
-    "p7zip"
-    "procs"
-    "rage"
-    "ripgrep"
-    "rsync"
-    "sd"
-    "shellcheck"
-    "tailscale"
-    "tealdeer"
-    "thefuck"
-    "trash"
-    "up"
-    "whalebrew"
-    "xdg-ninja"
-    "ykman"
-    "yt-dlp"
-    "zellij"
-    "zoxide" -}}
+    "whalebrew" -}}
 
 {{ $casks := list
     "1password"
@@ -57,7 +18,6 @@ set -eufo pipefail
     "alfred"
     "bartender"
     "betterzip"
-    "beyond-compare"
     "boop"
     "brave-browser"
     "default-folder-x"
@@ -78,7 +38,6 @@ set -eufo pipefail
     "itsycal"
     "komet"
     "macs-fan-control"
-    "mountain-duck"
     "popclip"
     "rio"
     "soundsource"
@@ -90,17 +49,12 @@ set -eufo pipefail
     "zed" -}}
 
 {{- if .personal }}
-{{  $brews = concat $brews (list
-    "imagemagick"
-    "mkcert") -}}
-
 {{  $casks = concat $casks (list
     "istat-menus"
     "ivpn"
     "jump"
     "ledger-live"
     "obsidian"
-    "parsec"
     "ricoh-theta"
     "sensei"
     "soulver"
@@ -110,9 +64,11 @@ set -eufo pipefail
 {{ if not .personal -}}
 {{  $brews = concat $brews (list
     "awscli"
+    "beyond-compare"
     "docker-credential-helper-ecr"
     "docker-machine-parallels"
     "dotnet"
+    "ffmpeg"
     "helm"
     "openjdk@11"
     "kubectx"
@@ -139,7 +95,7 @@ set -eufo pipefail
     "yubikey-agent" ", restart_service: true"
     "saml2aws" "" -}}
 
-brew bundle --no-lock --file=/dev/stdin <<EOF
+brew bundle --no-lock --force --zap --file=/dev/stdin <<EOF
 {{ range ($taps | sortAlpha | uniq) -}}
 tap "{{ . }}"
 {{ end -}}
