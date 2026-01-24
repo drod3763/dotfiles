@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "kamadorueda.alejandra",
+        "tamasfe.even-better-toml",
+        "ms-vscode.powershell",
+        "timonwong.shellcheck",
+        "dunstontc.vscode-go-syntax"
+    ]
+}
