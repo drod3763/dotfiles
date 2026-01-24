@@ -33,7 +33,10 @@
             "BATDIFF_USE_DELTA" "true") -}}
 {{ end -}}
 
-{{ if lookPath "code" -}}
+{{ if lookPath "zed" -}}
+{{      $exports = merge $exports (dict
+            "VISUAL" "zed --wait") -}}
+{{ else if lookPath "code" -}}
 {{      $exports = merge $exports (dict
             "VISUAL" "code -nw") -}}
 {{ end -}}
