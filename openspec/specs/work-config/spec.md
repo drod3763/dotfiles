@@ -1,5 +1,8 @@
-## ADDED Requirements
+# work-config Specification
 
+## Purpose
+TBD - created by archiving change update-work-config. Update Purpose after archive.
+## Requirements
 ### Requirement: Work Machine Package Management
 The work machine configuration SHALL include all developer tools, AI assistants, and productivity applications required for work development workflows.
 
@@ -10,21 +13,19 @@ The work machine configuration SHALL include all developer tools, AI assistants,
 
 #### Scenario: Work-specific AI tooling
 - **WHEN** the work machine package script runs
-- **THEN** AI coding assistants (Claude, Cursor, OpenCode, Codex, Gemini CLI, Antigravity, Pipemind) SHALL be installed
+- **THEN** AI coding assistants (Cursor, OpenCode, Antigravity, Pipemind) SHALL be installed
 - **AND** these tools SHALL NOT be installed on personal machines
 
 #### Scenario: Work-specific cloud and DevOps tooling
 - **WHEN** the work machine package script runs
-- **THEN** cloud CLI tools (Azure CLI, Okta AWS CLI, Pulumi, SOPS) SHALL be installed
+- **THEN** cloud CLI tools (Azure CLI, Okta AWS CLI, Pulumi) SHALL be installed
 - **AND** Kubernetes tooling (helm, kubectx, kubectl, tilt) SHALL be installed
 - **AND** Docker Desktop and related tools SHALL be installed
 
 #### Scenario: Work-specific JavaScript/Node tooling
 - **WHEN** the work machine package script runs
-- **THEN** JavaScript runtimes and tools (Bun, Deno, Volta) SHALL be installed
+- **THEN** JavaScript runtimes and tools (Bun) SHALL be installed
 - **AND** these complement the common Node.js toolchain
-
-## MODIFIED Requirements
 
 ### Requirement: Common CLI Utilities
 The dotfiles SHALL install a standard set of CLI utilities on all machines, with work-specific additions for development workflows.
@@ -32,12 +33,11 @@ The dotfiles SHALL install a standard set of CLI utilities on all machines, with
 #### Scenario: Common CLI tools on all machines
 - **WHEN** chezmoi is applied on any machine
 - **THEN** core CLI utilities SHALL be installed: age, bat, chezmoi, eza, fd, ffmpeg, fzf, git, ripgrep, etc.
-- **AND** general-purpose tools SHALL be installed: gh, go, jq, yq, glow, helix, pandoc, pipx, uv, yazi, treefmt
+- **AND** general-purpose tools SHALL be installed: gh, go, jq, yq, glow, pandoc, pipx, uv, yazi, treefmt, opencode
 
 #### Scenario: Terminal emulator preference
 - **WHEN** chezmoi is applied
 - **THEN** ghostty SHALL be installed as the primary terminal emulator
-- **AND** legacy terminals (iterm2, rio) MAY be removed from the configuration
 
 ### Requirement: Work Machine Application Suite
 The work machine SHALL include productivity and development applications specific to work workflows.
@@ -54,4 +54,5 @@ The work machine SHALL include productivity and development applications specifi
 
 #### Scenario: Hardware integration
 - **WHEN** the work machine has connected peripherals
-- **THEN** hardware management apps SHALL be installed: Chrysalis (keyboard), Elgato Stream Deck, Logitech Options, Mac Mouse Fix, YubiKey Manager
+- **THEN** hardware management apps SHALL be installed: Chrysalis (keyboard), Elgato Stream Deck, Mac Mouse Fix, YubiKey Manager
+

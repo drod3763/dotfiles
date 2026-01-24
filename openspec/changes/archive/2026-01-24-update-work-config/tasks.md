@@ -106,7 +106,7 @@
 - [x] 6.4 Run `chezmoi diff` to verify template changes
 - [x] 6.5 Run `chezmoi apply --dry-run` to test
 - [x] 6.6 Run `chezmoi doctor` to check for issues
-- [ ] 6.7 Verify on work machine with `brew bundle check`
+- [x] 6.7 Verify on work machine with `brew bundle check`
 
 ## 7. Cleanup
 
