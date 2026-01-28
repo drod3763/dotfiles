@@ -48,11 +48,17 @@ if ! command -v op >/dev/null 2>&1; then
   echo "1Password CLI installed." >&2
 fi
 
-# Initialize 1Password CLI if not already signed in
-if ! op account get >/dev/null 2>&1; then
-  echo "Please sign in to 1Password CLI when prompted:" >&2
-  eval "$(op signin)"
-  echo "1Password CLI signed in." >&2
+# Set up 1Password CLI service account
+if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+  echo "Enter 1Password service account token (or press Enter to skip):" >&2
+  read -s -r op_token
+  echo "" >&2
+  if [ -n "$op_token" ]; then
+    export OP_SERVICE_ACCOUNT_TOKEN="$op_token"
+    echo "1Password service account token set." >&2
+  else
+    echo "Skipping 1Password service account setup." >&2
+  fi
 fi
 
 # Install chezmoi if not present
