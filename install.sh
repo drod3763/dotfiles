@@ -10,6 +10,15 @@ if [ "$(uname)" = "Darwin" ] && ! xcode-select -p >/dev/null 2>&1; then
   read -r
 fi
 
+# Wait for Xcode Command Line Tools to be available
+if [ "$(uname)" = "Darwin" ] && ! command -v git >/dev/null 2>&1; then
+  echo "Waiting for Xcode Command Line Tools to complete..." >&2
+  while ! command -v git >/dev/null 2>&1; do
+    sleep 2
+  done
+  echo "Xcode Command Line Tools are now available." >&2
+fi
+
 # Configure Git with placeholder values if not configured
 if [ ! "$(git config --global user.name)" ] || [ ! "$(git config --global user.email)" ]; then
   echo "Setting placeholder Git configuration (will be replaced by chezmoi)..." >&2
