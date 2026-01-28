@@ -26,8 +26,10 @@
     url = "https://downloads.astropad.com/luna/mac/latest"
     refreshPeriod = "720h"
 {{ end -}}
+{{ if lookPath "op" -}}
 ["Library/Fonts/"]
     type = "archive"
     exact = true
     url = {{- (index (onepassword "sfqa4gvnfffalon4fkersaxaoa").urls 1).href | quote }}
     include = ['**/*.otf']
+{{ end -}}
