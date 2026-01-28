@@ -49,11 +49,12 @@ fi
 
 # Get script directory - handle both downloaded and curl execution
 if [ -f "$0" ]; then
-  # Script run from file
+  # Script run from file - use local directory
   script_dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 else
-  # Script run from stdin (curl | sh), use current directory
-  script_dir="$(pwd)"
+  # Script run from stdin (curl | sh) - use GitHub repo
+  script_dir="https://github.com/drod3763/dotfiles"
 fi
+
 # exec: replace current process with chezmoi init
 exec "$chezmoi" init --apply "--source=$script_dir"
