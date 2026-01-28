@@ -27,6 +27,11 @@ if [ ! "$(git config --global user.name)" ] || [ ! "$(git config --global user.e
   echo "Git configuration set with placeholder values." >&2
 fi
 
+# Debug: Show Git version and location
+echo "Git debugging info:" >&2
+echo "Which git: $(which git)" >&2
+echo "Git version: $(git --version)" >&2
+
 if [ ! "$(command -v chezmoi)" ]; then
   bin_dir="$HOME/.local/bin"
   chezmoi="$bin_dir/chezmoi"
