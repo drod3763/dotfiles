@@ -48,9 +48,12 @@ if ! command -v op >/dev/null 2>&1; then
   echo "1Password CLI installed." >&2
 fi
 
-# Note: 1Password CLI installation is included above
-# User will need to run 'op signin' manually after setup for full functionality
-echo "Note: Run 'op signin' after setup to enable 1Password integration" >&2
+# Initialize 1Password CLI if not already signed in
+if ! op account get >/dev/null 2>&1; then
+  echo "Please sign in to 1Password CLI when prompted:" >&2
+  eval "$(op signin)"
+  echo "1Password CLI signed in." >&2
+fi
 
 # Install chezmoi if not present
 if [ ! "$(command -v chezmoi)" ]; then
