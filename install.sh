@@ -48,6 +48,13 @@ if ! command -v op >/dev/null 2>&1; then
   echo "1Password CLI installed." >&2
 fi
 
+# Initialize 1Password CLI if not already signed in
+if ! op account get >/dev/null 2>&1; then
+  echo "Please sign in to 1Password CLI when prompted:" >&2
+  op signin
+  echo "1Password CLI signed in." >&2
+fi
+
 # Install chezmoi if not present
 if [ ! "$(command -v chezmoi)" ]; then
   bin_dir="$HOME/.local/bin"
