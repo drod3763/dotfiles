@@ -51,10 +51,8 @@ fi
 if [ -f "$0" ]; then
   # Script run from file - use local directory
   script_dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
+  exec "$chezmoi" init --apply "--source=$script_dir"
 else
-  # Script run from stdin (curl | sh) - use GitHub repo
-  script_dir="https://github.com/drod3763/dotfiles"
+  # Script run from stdin (curl | sh) - use GitHub username
+  exec "$chezmoi" init --apply drod3763
 fi
-
-# exec: replace current process with chezmoi init
-exec "$chezmoi" init --apply "--source=$script_dir"
