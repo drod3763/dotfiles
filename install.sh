@@ -2,6 +2,25 @@
 
 set -e # -e: exit on error
 
+# Check and install Xcode Command Line Tools on macOS
+if [ "$(uname)" = "Darwin" ] && ! xcode-select -p >/dev/null 2>&1; then
+  echo "Installing Xcode Command Line Tools..." >&2
+  xcode-select --install
+  echo "Please complete the Xcode installation, then press Enter to continue..."
+  read -r
+fi
+
+# Configure Git if not configured
+if [ ! "$(git config --global user.name)" ] || [ ! "$(git config --global user.email)" ]; then
+  echo "Git user.name and user.email not configured." >&2
+  echo "Please set them now:" >&2
+  read -p "Enter your Git user name: " git_name
+  read -p "Enter your Git user email: " git_email
+  git config --global user.name "$git_name"
+  git config --global user.email "$git_email"
+  echo "Git configuration updated." >&2
+fi
+
 if [ ! "$(command -v chezmoi)" ]; then
   bin_dir="$HOME/.local/bin"
   chezmoi="$bin_dir/chezmoi"
