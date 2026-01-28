@@ -71,6 +71,8 @@ remove = true
 [age]
     identity = "{{ .chezmoi.sourceDir }}/identities"
     recipients = [ "age1yubikey1q2jq4j9cr9gfhe9n03stdzk4985utr07qrq5sekx9jxfy3zygw2qzfnyzh3", "age1yubikey1qddtwxn3zg9t6c2ku3ekxx8278mye45e0evuahy6v3p4sn5zvn6s2ge39gf" ]
+[onepassword]
+    mode = "service"
 {{- if eq .chezmoi.os "windows" -}}
 [cd]
     command = 'powershell'
