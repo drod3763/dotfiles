@@ -10,15 +10,12 @@ if [ "$(uname)" = "Darwin" ] && ! xcode-select -p >/dev/null 2>&1; then
   read -r
 fi
 
-# Configure Git if not configured
+# Configure Git with placeholder values if not configured
 if [ ! "$(git config --global user.name)" ] || [ ! "$(git config --global user.email)" ]; then
-  echo "Git user.name and user.email not configured." >&2
-  echo "Please set them now:" >&2
-  read -p "Enter your Git user name: " git_name
-  read -p "Enter your Git user email: " git_email
-  git config --global user.name "$git_name"
-  git config --global user.email "$git_email"
-  echo "Git configuration updated." >&2
+  echo "Setting placeholder Git configuration (will be replaced by chezmoi)..." >&2
+  git config --global user.name "Temporary User"
+  git config --global user.email "temp@example.com"
+  echo "Git configuration set with placeholder values." >&2
 fi
 
 if [ ! "$(command -v chezmoi)" ]; then
