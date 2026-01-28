@@ -27,11 +27,28 @@ if [ ! "$(git config --global user.name)" ] || [ ! "$(git config --global user.e
   echo "Git configuration set with placeholder values." >&2
 fi
 
-# Debug: Show Git version and location
-echo "Git debugging info:" >&2
-echo "Which git: $(which git)" >&2
-echo "Git version: $(git --version)" >&2
+# Install Homebrew if not present
+if [ "$(uname)" = "Darwin" ] && ! command -v brew >/dev/null 2>&1; then
+  echo "Installing Homebrew..." >&2
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  
+  # Add Homebrew to PATH for this session
+  if [ "$(uname -m)" = "arm64" ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+  echo "Homebrew installed and added to PATH." >&2
+fi
 
+# Install 1Password CLI if not present
+if ! command -v op >/dev/null 2>&1; then
+  echo "Installing 1Password CLI..." >&2
+  brew install --cask 1password-cli
+  echo "1Password CLI installed." >&2
+fi
+
+# Install chezmoi if not present
 if [ ! "$(command -v chezmoi)" ]; then
   bin_dir="$HOME/.local/bin"
   chezmoi="$bin_dir/chezmoi"
