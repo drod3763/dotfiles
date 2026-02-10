@@ -29,7 +29,7 @@
 
 [user]
 	name = Derick Rodriguez
-	email = {{- (index (onepassword "x36jcwiyojbtbg2dri4nscgr64").fields 8).value }}
+email = {{- (index (onepassword "x36jcwiyojbtbg2dri4nscgr64" "ylehyg24v4ktnhshngeyvl4fye").fields 8).value }}
 [alias]
 	# Sourced via https://news.ycombinator.com/item?id=24175811
 	hs = "log --date=format-local:'%Y-%m-%d %H:%M:%S' --pretty=format:'%cd %<(20,trunc)%an %C(auto)%h%Creset%C(auto)%d%Creset %s'"
@@ -83,8 +83,8 @@
 [credential]
 	helper = !git-credential-1password
 {{	if not .personal -}}
-[credential "https://{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu").fields 20).value }}@dev.azure.com/"]
-    username = {{ (index (onepassword "h23kua4dl5e4zkswjhvhmkuq2u").fields 0).value }}
+[credential "https://{{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").fields 20).value }}@dev.azure.com/"]
+    username = {{ (index (onepassword "h23kua4dl5e4zkswjhvhmkuq2u" "ylehyg24v4ktnhshngeyvl4fye").fields 0).value }}
 {{-	end }}
 {{- if eq $pager "delta" }}
 [delta]
