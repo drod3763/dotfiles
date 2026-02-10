@@ -1,7 +1,7 @@
 {{/* boolean feature tags */}}
 {{- $headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
 {{- $transient := false -}}{{/* true if this machine is temporary, e.g. a cloud or VM instance */}}
-{{- $personal := false -}}{{/* true if this machine should have personal secrets */}}
+{{- $personal := promptBool "personal" false -}}{{/* true if this machine should have personal secrets */}}
 {{- "" -}}
 
 {{/* determine whether the current machine is a laptop or desktop */}}
@@ -47,10 +47,6 @@
 {{- if eq .chezmoi.os "darwin" -}}
 {{-     $computerName := output "scutil" "--get" "ComputerName" | trim -}}
 {{-     $hostname = $computerName -}}
-{{- end -}}
-
-{{- if not (eq $hostname "P6H9DQX16L") -}}
-{{-     $personal = true -}}
 {{- end -}}
 
 {{- $shell := "" -}}
