@@ -192,7 +192,7 @@ set -eufo pipefail
     "yubikey-agent" ", restart_service: true"
     "saml2aws" "" -}}
 
-brew bundle --no-lock --force --zap --file=/dev/stdin <<EOF
+brew bundle --force --zap --file=/dev/stdin <<EOF
 {{ range ($taps | sortAlpha | uniq) -}}
 tap "{{ . }}"
 {{ end -}}
