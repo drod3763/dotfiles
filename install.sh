@@ -1,6 +1,5 @@
-#!/bin/sh
-
-set -e # -e: exit on error
+#!/usr/bin/env bash
+set -euo pipefail
 
 # Check and install Xcode Command Line Tools on macOS
 if [ "$(uname)" = "Darwin" ] && ! xcode-select -p >/dev/null 2>&1; then
@@ -62,27 +61,20 @@ if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
 fi
 
 # Install chezmoi if not present
-if [ ! "$(command -v chezmoi)" ]; then
+if ! command -v chezmoi >/dev/null 2>&1; then
   bin_dir="$HOME/.local/bin"
-  chezmoi="$bin_dir/chezmoi"
-  if [ "$(command -v curl)" ]; then
-    sh -c "$(curl -fsSL https://git.io/chezmoi)" -- -b "$bin_dir"
-  elif [ "$(command -v wget)" ]; then
-    sh -c "$(wget -qO- https://git.io/chezmoi)" -- -b "$bin_dir"
-  else
-    echo "To install chezmoi, you must have curl or wget installed." >&2
-    exit 1
-  fi
-else
-  chezmoi=chezmoi
+  mkdir -p "$bin_dir"
+  curl -fsSL https://git.io/chezmoi | sh -s -- -b "$bin_dir"
+  export PATH="$bin_dir:$PATH"
 fi
 
 # Get script directory - handle both downloaded and curl execution
-if [ -f "$0" ]; then
-  # Script run from file - use local directory
+if [[ -f "$0" ]]; then
   script_dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
-  exec "$chezmoi" init --apply "--source=$script_dir"
+  chezmoi init --source="$script_dir"
 else
-  # Script run from stdin (curl | sh) - use GitHub username
-  exec "$chezmoi" init --apply drod3763
+  chezmoi init drod3763
 fi
+
+# Force template re-evaluation and refresh externals to avoid stale cache
+chezmoi apply --force --refresh-externals
