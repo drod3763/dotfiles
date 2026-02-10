@@ -77,4 +77,4 @@ else
 fi
 
 # Force template re-evaluation and refresh externals to avoid stale cache
-chezmoi apply --force --refresh-externals
+chezmoi apply --force --refresh-externals --verbose
