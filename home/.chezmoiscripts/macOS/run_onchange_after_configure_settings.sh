@@ -11,7 +11,7 @@ sudo -v
 echo "Authentication successful. Configuring macOS settings (this may take a few minutes)..."
 
 # Keep-alive: update existing `sudo` time stamp until `.macos` has finished
-while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 
 ###############################################################################
 # General UI/UX                                                               #
