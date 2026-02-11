@@ -19,15 +19,19 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 {{ end -}}
 
 {{ $brews := list
+    "act"
+    "actionlint"
     "age"
     "bat"
     "bat-extras"
     "chezmoi"
     "eza"
     "fd"
+    "felixkratz/formulae/borders"
     "ffmpeg"
     "fx"
     "fzf"
+    "gdu"
     "gh"
     "git"
     "git-delta"
@@ -38,10 +42,12 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "libheif"
     "mas"
     "mcfly"
+    "mermaid-cli"
     "micro"
     "mise"
     "mosh"
     "opencode"
+    "oven-sh/bun/bun"
     "p7zip"
     "pandoc"
     "procs"
@@ -100,6 +106,7 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "marvin"
     "mouseless"
     "mountain-duck"
+    "notion"
     "popclip"
     "soundsource"
     "spotify"
@@ -130,21 +137,15 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 
 {{ if not .personal -}}
 {{  $brews = concat $brews (list
-    "act"
-    "actionlint"
     "awscli"
     "azure-cli"
     "docker-compose"
     "docker-credential-helper-ecr"
     "dotnet@8"
-    "felixkratz/formulae/borders"
-    "gdu"
     "helm"
     "kubectx"
     "kubernetes-cli"
-    "mermaid-cli"
     "nushell"
-    "oven-sh/bun/bun"
     "pulumi"
     "saml2aws"
     "tilt") -}}
@@ -155,13 +156,13 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "docker-desktop"
     "gitkraken"
     "jetbrains-toolbox"
-    "nikitabobko/tap/aerospace"
-    "notion") -}}
+    "nikitabobko/tap/aerospace") -}}
+
+{{ end -}}
 
 {{ if not .transient -}}
 {{  $casks = concat $casks (list
     "parallels") -}}
-{{ end -}}
 {{ end -}}
 
 {{ $mas := dict
