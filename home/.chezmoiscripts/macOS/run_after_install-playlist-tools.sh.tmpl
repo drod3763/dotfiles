@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -euo pipefail
+
+{{ if not .personal -}}
+# Ensure we are authenticated with GitHub for private tap access
+if ! gh auth status >/dev/null 2>&1; then
+  echo "GitHub CLI not authenticated. Starting authentication..."
+  gh auth login
+fi
+
+echo "Configuring git to use GitHub CLI as a credential helper..."
+gh auth setup-git
+
+echo "Installing playlist-tech tools..."
+
+# Install pipemind from private tap
+brew tap playlist-tech/tap
+brew install playlist-tech/tap/pipemind
+{{ end -}}

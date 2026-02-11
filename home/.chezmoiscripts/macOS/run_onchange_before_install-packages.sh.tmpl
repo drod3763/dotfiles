@@ -2,8 +2,13 @@
 
 set -eufo pipefail
 
+# Ask for the administrator password upfront
+sudo -v
+
+# Keep-alive: update existing `sudo` time stamp until the script has finished
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+
 {{ $taps := list
-    "homebrew/command-not-found"
     "nikitabobko/tap"
     "waydabber/betterdisplay" -}}
 
@@ -11,7 +16,6 @@ set -eufo pipefail
 {{  $taps = concat $taps (list
     "felixkratz/formulae"
     "oven-sh/bun"
-    "playlist-tech/tap"
     "ynqa/tap") -}}
 {{ end -}}
 
@@ -60,7 +64,6 @@ set -eufo pipefail
     "treefmt"
     "up"
     "uv"
-    "waydabber/betterdisplay/betterdisplaycli"
     "whalebrew"
     "xdg-ninja"
     "yazi"
@@ -158,7 +161,6 @@ set -eufo pipefail
     "okta-aws-cli"
     "openjdk@11"
     "oven-sh/bun/bun"
-    "playlist-tech/tap/pipemind"
     "pulumi"
     "saml2aws"
     "tilt"
@@ -172,8 +174,7 @@ set -eufo pipefail
     "jetbrains-toolbox"
     "notion"
     "parallels"
-    "powershell"
-    "yubico-yubikey-manager") -}}
+    "powershell") -}}
 {{ end -}}
 
 {{ $mas := dict
@@ -199,7 +200,9 @@ brew "{{ . }}"{{get $args . }}
 {{ range ($casks | sortAlpha | uniq) -}}
 cask "{{ . }}"
 {{ end -}}
+{{ if not .transient -}}
 {{ range (keys $mas | sortAlpha | uniq) -}}
 mas "{{ . }}"{{get $mas  . }}
+{{ end -}}
 {{ end -}}
 EOF

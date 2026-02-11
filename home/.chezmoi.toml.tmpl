@@ -38,7 +38,7 @@
 {{- end -}}
 
 {{/* detect GitHub codespaces and VSCode remote containers */}}
-{{- if or (env "CODESPACES") (env "REMOTE_CONTAINERS_IPC") -}}
+{{- if or (env "CODESPACES") (env "REMOTE_CONTAINERS_IPC") (eq .chezmoi.hostname "macos") -}}
 {{-     $headless = true -}}
 {{-     $transient = true -}}
 {{- end -}}
