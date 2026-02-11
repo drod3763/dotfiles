@@ -15,13 +15,11 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 {{ if not .personal -}}
 {{  $taps = concat $taps (list
     "felixkratz/formulae"
-    "oven-sh/bun"
-    "ynqa/tap") -}}
+    "oven-sh/bun") -}}
 {{ end -}}
 
 {{ $brews := list
     "age"
-    "age-plugin-yubikey"
     "bat"
     "bat-extras"
     "chezmoi"
@@ -34,10 +32,7 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "git"
     "git-delta"
     "glow"
-    "gnu-sed"
-    "gnupg"
     "go"
-    "httpie"
     "jq"
     "less"
     "libheif"
@@ -46,11 +41,9 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "micro"
     "mise"
     "mosh"
-    "neovim"
     "opencode"
     "p7zip"
     "pandoc"
-    "pipx"
     "procs"
     "rage"
     "ripgrep"
@@ -92,7 +85,6 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "docker"
     "dropbox"
     "elgato-stream-deck"
-    "firefox@developer-edition"
     "font-monaspace"
     "font-new-york"
     "font-sf-compact"
@@ -107,7 +99,6 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "iina"
     "itsycal"
     "komet"
-    "mac-mouse-fix"
     "macs-fan-control"
     "marvin"
     "mouseless"
@@ -118,8 +109,6 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "spotify"
     "suspicious-package"
     "swish"
-    "visual-studio-code"
-    "vlc"
     "zed"
     "zen" -}}
 
@@ -134,8 +123,6 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "ivpn"
     "jump"
     "ledger-live"
-    "obsidian"
-    "parsec"
     "ricoh-theta"
     "sensei"
     "soulver"
@@ -158,13 +145,10 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "kubernetes-cli"
     "mermaid-cli"
     "nushell"
-    "okta-aws-cli"
-    "openjdk@11"
     "oven-sh/bun/bun"
     "pulumi"
     "saml2aws"
-    "tilt"
-    "ynqa/tap/jnv") -}}
+    "tilt") -}}
 
 {{  $casks = concat $casks (list
     "bruno"
@@ -173,8 +157,7 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "gitkraken"
     "jetbrains-toolbox"
     "notion"
-    "parallels"
-    "powershell") -}}
+    "parallels") -}}
 {{ end -}}
 
 {{ $mas := dict
@@ -187,7 +170,6 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 {{ $args := dict
     "docker-credential-helper-ecr" ", link: false"
     "kubernetes-cli" ", link: false"
-    "yubikey-agent" ", restart_service: true"
     "saml2aws" "" -}}
 
 brew bundle --verbose --force --zap --file=/dev/stdin <<EOF
