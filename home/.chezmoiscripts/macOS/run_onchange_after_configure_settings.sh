@@ -8,6 +8,7 @@ osascript -e 'tell application "System Preferences" to quit'
 
 # Ask for the administrator password upfront
 sudo -v
+echo "Authentication successful. Configuring macOS settings (this may take a few minutes)..."
 
 # Keep-alive: update existing `sudo` time stamp until `.macos` has finished
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
@@ -15,6 +16,7 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 ###############################################################################
 # General UI/UX                                                               #
 ###############################################################################
+echo "Configuring General UI/UX..."
 
 # Set computer name (as done via System Preferences → Sharing)
 #sudo scutil --set ComputerName "0x6D746873"
@@ -243,6 +245,7 @@ sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutio
 ###############################################################################
 # Finder                                                                      #
 ###############################################################################
+echo "Configuring Finder..."
 
 # Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons
 # defaults write com.apple.finder QuitMenuItem -bool true
@@ -358,6 +361,7 @@ defaults write com.apple.finder FXInfoPanesExpanded -dict \
 ###############################################################################
 # Dock, Dashboard, and hot corners                                            #
 ###############################################################################
+echo "Configuring Dock and Hot Corners..."
 
 # Enable highlight hover effect for the grid view of a stack (Dock)
 defaults write com.apple.dock mouse-over-hilite-stack -bool true
@@ -459,6 +463,7 @@ defaults write com.apple.dock wvous-bl-modifier -int 0
 ###############################################################################
 # Safari & WebKit                                                             #
 ###############################################################################
+echo "Configuring Safari & WebKit..."
 
 # Privacy: don't send search queries to Apple
 defaults write com.apple.Safari UniversalSearchEnabled -bool false
@@ -839,6 +844,7 @@ defaults write com.brave.Browser AppleEnableSwipeNavigateWithScrolls -bool false
 ###############################################################################
 # Kill affected applications                                                  #
 ###############################################################################
+echo "Restarting affected applications..."
 
 for app in "Activity Monitor" \
 	"Address Book" \
