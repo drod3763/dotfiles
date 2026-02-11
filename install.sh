@@ -77,4 +77,8 @@ else
 fi
 
 # Force template re-evaluation and refresh externals to avoid stale cache
-chezmoi apply --force --refresh-externals --verbose
+if command -v caffeinate >/dev/null 2>&1; then
+  caffeinate -dim chezmoi apply --force --refresh-externals --verbose
+else
+  chezmoi apply --force --refresh-externals --verbose
+fi
