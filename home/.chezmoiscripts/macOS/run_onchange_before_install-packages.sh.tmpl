@@ -156,8 +156,12 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "docker-desktop"
     "gitkraken"
     "jetbrains-toolbox"
-    "notion"
+    "notion") -}}
+
+{{ if not .transient -}}
+{{  $casks = concat $casks (list
     "parallels") -}}
+{{ end -}}
 {{ end -}}
 
 {{ $mas := dict
