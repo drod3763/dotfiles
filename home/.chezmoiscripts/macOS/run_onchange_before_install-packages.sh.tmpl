@@ -69,16 +69,13 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 {{ $casks := list
     "1password"
     "1password-cli"
-    "affinity"
     "alfred"
-    "antigravity"
     "bartender"
     "betterdisplay"
     "betterzip"
     "beyond-compare"
     "boop"
     "brave-browser"
-    "chrysalis"
     "claude-code"
     "default-folder-x"
     "devtoys"
@@ -108,7 +105,6 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "soundsource"
     "spotify"
     "suspicious-package"
-    "swish"
     "zed"
     "zen" -}}
 
@@ -118,6 +114,9 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "mkcert") -}}
 
 {{  $casks = concat $casks (list
+    "affinity"
+    "antigravity"
+    "chrysalis"
     "discord"
     "istat-menus"
     "ivpn"
@@ -126,6 +125,7 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "ricoh-theta"
     "sensei"
     "soulver"
+    "swish"
     "windscribe") -}}
 {{ end -}}
 
