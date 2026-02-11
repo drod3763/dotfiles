@@ -76,9 +76,23 @@ else
   chezmoi init drod3763
 fi
 
+# Determine verbosity
+verbose_flag=""
+if [[ "${VERBOSE:-}" == "1" || "${VERBOSE:-}" == "true" ]]; then
+  verbose_flag="--verbose"
+fi
+
+# Check for verbose flag in arguments
+for arg in "$@"; do
+  if [[ "$arg" == "-v" || "$arg" == "--verbose" ]]; then
+    verbose_flag="--verbose"
+    break
+  fi
+done
+
 # Force template re-evaluation and refresh externals to avoid stale cache
 if command -v caffeinate >/dev/null 2>&1; then
-  caffeinate -dim chezmoi apply --force --refresh-externals --verbose
+  caffeinate -dim chezmoi apply --force --refresh-externals $verbose_flag
 else
-  chezmoi apply --force --refresh-externals --verbose
+  chezmoi apply --force --refresh-externals $verbose_flag
 fi
