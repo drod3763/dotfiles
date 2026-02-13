@@ -119,12 +119,6 @@
                 "tsfix" "sudo ./tailscaled install-system-daemon") -}}
 {{      end -}}
 
-{{/* trash - use trash cli in finder mode on macOS so files can be restored */ -}}
-{{      if lookPath "trash" -}}
-{{          $aliases := merge $aliases (dict
-                "trash" "trash -F") -}}
-{{      end -}}
-
 {{/* zapfix - fix zscaler in work laptop */ -}}
 {{      if not .personal -}}
 {{          $aliases := merge $aliases (dict

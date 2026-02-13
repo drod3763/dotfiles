@@ -27,7 +27,7 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "chezmoi"
     "eza"
     "fd"
-    "felixkratz/formulae/borders"
+    "felixkratz/formulae/borders", restart_service: true
     "ffmpeg"
     "fx"
     "fzf"
@@ -182,7 +182,11 @@ brew bundle --verbose --force --zap --file=/dev/stdin <<EOF
 tap "{{ . }}"
 {{ end -}}
 {{ range ($brews | sortAlpha | uniq) -}}
+{{ if eq . "felixkratz/formulae/borders" -}}
+brew "felixkratz/formulae/borders", restart_service: true
+{{ else -}}
 brew "{{ . }}"{{get $args . }}
+{{ end -}}
 {{ end -}}
 {{ range ($casks | sortAlpha | uniq) -}}
 cask "{{ . }}"
