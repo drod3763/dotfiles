@@ -19,17 +19,12 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 {{ end -}}
 
 {{ $brews := list
-    "act"
-    "actionlint"
-    "age"
     "bat"
     "bat-extras"
     "chezmoi"
     "eza"
     "fd"
     "felixkratz/formulae/borders", restart_service: true
-    "ffmpeg"
-    "fx"
     "fzf"
     "gdu"
     "gh"
@@ -39,12 +34,10 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "go"
     "jq"
     "less"
-    "libheif"
     "mas"
     "mcfly"
     "mermaid-cli"
     "micro"
-    "mise"
     "mosh"
     "opencode"
     "oven-sh/bun/bun"
@@ -57,19 +50,13 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "sd"
     "shellcheck"
     "tailscale"
-    "tealdeer"
     "thefuck"
-    "trash"
-    "treefmt"
     "up"
     "uv"
-    "whalebrew"
     "xdg-ninja"
     "yazi"
     "ykman"
-    "yq"
     "yt-dlp"
-    "zellij"
     "zoxide" -}}
 
 {{ $casks := list
@@ -79,7 +66,6 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "bartender"
     "betterdisplay"
     "betterzip"
-    "beyond-compare"
     "boop"
     "brave-browser"
     "claude-code"
@@ -98,17 +84,14 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "ghostty"
     "hammerspoon"
     "hazel"
-    "homerow"
     "iina"
     "itsycal"
     "komet"
     "macs-fan-control"
     "marvin"
-    "mouseless"
     "mountain-duck"
     "notion"
     "popclip"
-    "soundsource"
     "spotify"
     "suspicious-package"
     "zed"
@@ -116,20 +99,26 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 
 {{- if .personal }}
 {{  $brews = concat $brews (list
+    "ffmpeg"
+    "libheif"
     "imagemagick"
     "mkcert") -}}
 
 {{  $casks = concat $casks (list
     "affinity"
     "antigravity"
+    "beyond-compare"
     "chrysalis"
     "discord"
+    "homerow"
     "istat-menus"
     "ivpn"
     "jump"
     "ledger-live"
+    "mouseless"
     "ricoh-theta"
     "sensei"
+    "soundsource"
     "soulver"
     "swish"
     "windscribe") -}}
@@ -137,25 +126,35 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 
 {{ if not .personal -}}
 {{  $brews = concat $brews (list
+    "act"
+    "actionlint"
     "awscli"
     "azure-cli"
+    "caddy"
     "docker-compose"
     "docker-credential-helper-ecr"
     "dotnet@8"
+    "fx"
     "helm"
     "kubectx"
     "kubernetes-cli"
-    "nushell"
+    "lastpass-cli"
+    "mise"
     "pulumi"
+    "python"
     "saml2aws"
-    "tilt") -}}
+    "tilt"
+    "yq") -}}
 
 {{  $casks = concat $casks (list
     "bruno"
     "cursor"
+    "cursor-cli"
     "docker-desktop"
     "gitkraken"
     "jetbrains-toolbox"
+    "mac-mouse-fix"
+    "mouseless@preview"
     "nikitabobko/tap/aerospace") -}}
 
 {{ end -}}
@@ -166,11 +165,21 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 {{ end -}}
 
 {{ $mas := dict
+    "Brother iPrint&Scan" ", id: 1193539993"
     "CARROT Weather" ", id: 993487541"
     "Easy CSV Editor" ", id: 1171346381"
     "JSON Editor" ", id: 567740330"
+    "Kagi for Safari" ", id: 1622835804"
     "OpenIn" ", id: 1643649331"
-    "PLIST Editor" ", id: 1157491961" -}}
+    "Peek" ", id: 1554235898"
+    "PLIST Editor" ", id: 1157491961"
+    "TextSniper" ", id: 1528890965" -}}
+
+{{ if not .personal -}}
+{{  $mas = merge $mas (dict
+    "Amphetamine" ", id: 937984704"
+    "Xcode" ", id: 497799835") -}}
+{{ end -}}
 
 {{ $args := dict
     "docker-credential-helper-ecr" ", link: false"
