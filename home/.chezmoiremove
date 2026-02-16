@@ -1,4 +1,7 @@
 .bash_history
+.cups
+.docker
 .gitconfig
+.npmrc
 .zshrc
 .zsh_history
