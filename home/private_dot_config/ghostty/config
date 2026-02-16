@@ -1,0 +1,16 @@
+font-family = "PragmataPro Mono Liga"
+font-size = 16
+theme = dark:catppuccin-mocha,light:catppuccin-latte
+cursor-style-blink = false
+copy-on-select = true
+quick-terminal-position = top
+quick-terminal-screen = mouse
+macos-non-native-fullscreen = visible-menu
+macos-option-as-alt = true
+
+# Whether to enable the macOS window shadow. The default value is true.
+# With some window managers and window transparency settings, you may
+# find false more visually appealing.
+macos-window-shadow = true
+
+keybind = shift+enter=text:\n

@@ -1,0 +1,2 @@
+-P ubuntu-latest=node:20-bookworm
+--container-architecture linux/amd64

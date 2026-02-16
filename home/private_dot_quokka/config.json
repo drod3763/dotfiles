@@ -1,1 +1,0 @@
-{"dotenv":{"path":".env.local"},"env":{"params":{"runner":"--experimental-specifier-resolution=node"}},"plugins":["dotenv-quokka-plugin"],"nativeEsm":false,"pro":true,"stdEsm":true}
