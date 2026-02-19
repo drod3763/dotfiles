@@ -62,3 +62,23 @@ The installation script respects the following environment variables:
 - **Package Management:** Installs Homebrew packages, casks, and Mac App Store apps (via `mas`).
 - **Sleep Prevention:** Uses `caffeinate` during installation to prevent sleep interruptions.
 - **Progress Feedback:** Provides clear status updates during long-running tasks.
+- **Structured Template Data:** Uses domain-scoped `chezmoidata` files under `home/.chezmoidata/` for reusable catalogs (exports, packages, aliases, functions, MCP, 1Password mappings).
+
+## Template Data Layout
+
+Shared template data is split by domain in `home/.chezmoidata/*.toml`.
+
+- `exports.toml` - environment export rules
+- `packages.toml` - package catalogs and install rules
+- `aliases.toml` - alias catalog and conditional overlays
+- `functions.toml` - function toggles/rules
+- `mcp.toml` - shared MCP server definitions
+- `onepassword.toml` - centralized item/vault mappings and field identifiers
+
+## Secrets and 1Password
+
+Templates avoid hardcoded secrets and use centralized mappings from `home/.chezmoidata/onepassword.toml`.
+
+- Vault aliases are used (`dev`, `work`) instead of raw vault IDs in templates.
+- Helpers in `home/.chezmoitemplates/` resolve values by stable field id/label and URL label.
+- 1Password service account access is required for secret-backed template rendering.
