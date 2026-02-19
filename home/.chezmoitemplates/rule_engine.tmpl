@@ -1,0 +1,95 @@
+{{- $ctx := .context -}}
+{{- $rules := list -}}
+{{- if hasKey . "rules" -}}
+{{- $rules = .rules -}}
+{{- end -}}
+{{- $valueKey := "values" -}}
+{{- if hasKey . "valueKey" -}}
+{{- $valueKey = .valueKey -}}
+{{- end -}}
+{{- $listKeys := list -}}
+{{- if hasKey . "listKeys" -}}
+{{- $listKeys = .listKeys -}}
+{{- end -}}
+{{- $mapKeys := list -}}
+{{- if hasKey . "mapKeys" -}}
+{{- $mapKeys = .mapKeys -}}
+{{- end -}}
+{{- $out := dict -}}
+{{- if hasKey . "seed" -}}
+{{- $out = merge (dict) .seed -}}
+{{- end -}}
+
+{{- range $rules -}}
+{{- $rule := . -}}
+{{- $ok := true -}}
+{{- if and $ok (hasKey $rule "when_os") -}}
+{{- if ne $ctx.chezmoi.os $rule.when_os -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_shell") -}}
+{{- if ne $ctx.shell $rule.when_shell -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_tool") -}}
+{{- if not (lookPath $rule.when_tool) -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_tools") -}}
+{{- range $rule.when_tools -}}
+{{- if not (lookPath .) -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_not_personal") -}}
+{{- if and $rule.when_not_personal $ctx.personal -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_personal") -}}
+{{- if and $rule.when_personal (not $ctx.personal) -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_transient") -}}
+{{- if ne $ctx.transient $rule.when_transient -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_not_transient") -}}
+{{- if and $rule.when_not_transient $ctx.transient -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_stat") -}}
+{{- if not (stat $rule.when_stat) -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+
+{{- if $ok -}}
+{{- if hasKey $rule $valueKey -}}
+{{- $out = merge $out (get $rule $valueKey) -}}
+{{- end -}}
+
+{{- range $listKey := $listKeys -}}
+{{- if hasKey $rule $listKey -}}
+{{- $existing := get $out $listKey | default (list) -}}
+{{- $_ := set $out $listKey (concat $existing (get $rule $listKey)) -}}
+{{- end -}}
+{{- end -}}
+
+{{- range $mapKey := $mapKeys -}}
+{{- if hasKey $rule $mapKey -}}
+{{- $existing := get $out $mapKey | default (dict) -}}
+{{- $_ := set $out $mapKey (merge $existing (get $rule $mapKey)) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- $out | toJson -}}

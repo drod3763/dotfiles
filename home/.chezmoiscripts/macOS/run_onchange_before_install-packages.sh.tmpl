@@ -9,49 +9,21 @@ sudo -v
 while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 
 {{ $packages := .packages.macos -}}
-{{ $taps := concat (list) $packages.taps -}}
-{{ $brews := concat (list) $packages.brews -}}
-{{ $casks := concat (list) $packages.casks -}}
-{{ $mas := merge (dict) $packages.mas -}}
 {{ $args := merge (dict) $packages.brew_args -}}
-
-{{ range $packages.rules -}}
-{{   $ok := true -}}
-{{   if and $ok (hasKey . "when_personal") -}}
-{{     if and .when_personal (not $.personal) -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_not_personal") -}}
-{{     if and .when_not_personal $.personal -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_transient") -}}
-{{     if ne $.transient .when_transient -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_not_transient") -}}
-{{     if and .when_not_transient $.transient -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if $ok -}}
-{{     if hasKey . "taps" -}}
-{{       $taps = concat $taps .taps -}}
-{{     end -}}
-{{     if hasKey . "brews" -}}
-{{       $brews = concat $brews .brews -}}
-{{     end -}}
-{{     if hasKey . "casks" -}}
-{{       $casks = concat $casks .casks -}}
-{{     end -}}
-{{     if hasKey . "mas" -}}
-{{       $mas = merge $mas .mas -}}
-{{     end -}}
-{{   end -}}
-{{ end -}}
+{{ $resolved := (includeTemplate "rule_engine.tmpl" (dict
+    "context" .
+    "seed" (dict
+      "taps" $packages.taps
+      "brews" $packages.brews
+      "casks" $packages.casks
+      "mas" $packages.mas)
+    "rules" $packages.rules
+    "listKeys" (list "taps" "brews" "casks")
+    "mapKeys" (list "mas")) | fromJson) -}}
+{{ $taps := $resolved.taps -}}
+{{ $brews := $resolved.brews -}}
+{{ $casks := $resolved.casks -}}
+{{ $mas := $resolved.mas -}}
 
 brew bundle --verbose --force --zap --file=/dev/stdin <<EOF
 {{ range ($taps | sortAlpha | uniq) -}}

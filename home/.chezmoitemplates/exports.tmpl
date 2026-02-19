@@ -3,50 +3,11 @@
     "DOTFILES" .chezmoi.sourceDir
     "OPENAI_API_KEY" ((index (onepassword "d2sclj2vlu5y55x7ojx3uzm3tq" "ydxim6il3bd3reztx5kioejcmu").fields 2).value)
     "OP_SERVICE_ACCOUNT_TOKEN" ((index (onepassword "pwvya36g66yls5o5zj7tcrqaci" "ylehyg24v4ktnhshngeyvl4fye").fields 2).value)) -}}
-
-{{ range .exports.rules -}}
-{{   $ok := true -}}
-{{   if and $ok (hasKey . "when_os") -}}
-{{     if ne $.chezmoi.os .when_os -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_shell") -}}
-{{     if ne $.shell .when_shell -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_tool") -}}
-{{     if not (lookPath .when_tool) -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_tools") -}}
-{{     range .when_tools -}}
-{{       if not (lookPath .) -}}
-{{         $ok = false -}}
-{{       end -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_not_personal") -}}
-{{     if and .when_not_personal $.personal -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_personal") -}}
-{{     if and .when_personal (not $.personal) -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if and $ok (hasKey . "when_stat") -}}
-{{     if not (stat .when_stat) -}}
-{{       $ok = false -}}
-{{     end -}}
-{{   end -}}
-{{   if $ok -}}
-{{     $exports = merge $exports .values -}}
-{{   end -}}
-{{ end -}}
+{{ $exports = (includeTemplate "rule_engine.tmpl" (dict
+    "context" .
+    "seed" $exports
+    "rules" .exports.rules
+    "valueKey" "values") | fromJson) -}}
 
 {{ if lookPath "dotnet" -}}
 {{   $dotnetRoot := "/opt/homebrew/opt/dotnet/libexec" -}}
