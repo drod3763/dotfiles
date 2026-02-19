@@ -27,9 +27,10 @@
     refreshPeriod = "720h"
 {{ end -}}
 {{ if lookPath "op" -}}
+{{ $dropbox := .onepassword.items.dropbox -}}
 ["Library/Fonts/"]
     type = "archive"
     exact = true
-    url = {{- (index (onepassword "vnbnqwzvzaa7xzwacfpy3raz7y" "ylehyg24v4ktnhshngeyvl4fye").urls 1).href | quote }}
+    url = {{- includeTemplate "onepassword_url_label.tmpl" (dict "item" $dropbox.item "vault" $dropbox.vault "label" "private font download") | quote }}
     include = ['**/*.otf']
 {{ end -}}

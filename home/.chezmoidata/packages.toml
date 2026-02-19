@@ -1,0 +1,180 @@
+[packages.macos]
+taps = [
+  "nikitabobko/tap",
+  "waydabber/betterdisplay",
+]
+brews = [
+  "age",
+  "bat",
+  "bat-extras",
+  "chezmoi",
+  "eza",
+  "fd",
+  "felixkratz/formulae/borders",
+  "fzf",
+  "gdu",
+  "gh",
+  "git",
+  "git-delta",
+  "glow",
+  "go",
+  "gitleaks",
+  "jq",
+  "less",
+  "mas",
+  "mcfly",
+  "mermaid-cli",
+  "micro",
+  "mosh",
+  "opencode",
+  "oven-sh/bun/bun",
+  "p7zip",
+  "pandoc",
+  "procs",
+  "ripgrep",
+  "rsync",
+  "sd",
+  "shellcheck",
+  "tailscale",
+  "thefuck",
+  "up",
+  "uv",
+  "xdg-ninja",
+  "yazi",
+  "ykman",
+  "yt-dlp",
+  "zoxide",
+]
+casks = [
+  "1password",
+  "1password-cli",
+  "alfred",
+  "bartender",
+  "betterdisplay",
+  "betterzip",
+  "boop",
+  "brave-browser",
+  "claude-code",
+  "default-folder-x",
+  "devtoys",
+  "docker",
+  "dropbox",
+  "elgato-stream-deck",
+  "font-monaspace",
+  "font-new-york",
+  "font-sf-compact",
+  "font-sf-mono",
+  "font-sf-mono-for-powerline",
+  "font-sf-pro",
+  "font-sn-pro",
+  "ghostty",
+  "hammerspoon",
+  "hazel",
+  "iina",
+  "itsycal",
+  "komet",
+  "macs-fan-control",
+  "marvin",
+  "mountain-duck",
+  "notion",
+  "popclip",
+  "spotify",
+  "suspicious-package",
+  "zed",
+  "zen",
+]
+
+[packages.macos.mas]
+"Brother iPrint&Scan" = ", id: 1193539993"
+"CARROT Weather" = ", id: 993487541"
+"Easy CSV Editor" = ", id: 1171346381"
+"JSON Editor" = ", id: 567740330"
+"Kagi for Safari" = ", id: 1622835804"
+"OpenIn" = ", id: 1643649331"
+"Peek" = ", id: 1554235898"
+"PLIST Editor" = ", id: 1157491961"
+"TextSniper" = ", id: 1528890965"
+
+[packages.macos.brew_args]
+"docker-credential-helper-ecr" = ", link: false"
+"kubernetes-cli" = ", link: false"
+"saml2aws" = ""
+
+[[packages.macos.rules]]
+id = "personal"
+when_personal = true
+brews = [
+  "ffmpeg",
+  "libheif",
+  "imagemagick",
+  "mkcert",
+]
+casks = [
+  "affinity",
+  "antigravity",
+  "beyond-compare",
+  "chrysalis",
+  "discord",
+  "homerow",
+  "istat-menus",
+  "ivpn",
+  "jump",
+  "ledger-live",
+  "mouseless",
+  "ricoh-theta",
+  "sensei",
+  "soundsource",
+  "soulver",
+  "swish",
+  "windscribe",
+]
+
+[[packages.macos.rules]]
+id = "work"
+when_not_personal = true
+taps = [
+  "felixkratz/formulae",
+  "oven-sh/bun",
+]
+brews = [
+  "act",
+  "actionlint",
+  "awscli",
+  "azure-cli",
+  "caddy",
+  "docker-compose",
+  "docker-credential-helper-ecr",
+  "dotnet@8",
+  "fx",
+  "helm",
+  "kubectx",
+  "kubernetes-cli",
+  "lastpass-cli",
+  "mise",
+  "pulumi",
+  "python",
+  "saml2aws",
+  "tilt",
+  "yq",
+]
+casks = [
+  "bruno",
+  "cursor",
+  "cursor-cli",
+  "docker-desktop",
+  "gitkraken",
+  "jetbrains-toolbox",
+  "mac-mouse-fix",
+  "mouseless@preview",
+  "nikitabobko/tap/aerospace",
+]
+
+[packages.macos.rules.mas]
+"Amphetamine" = ", id: 937984704"
+"Xcode" = ", id: 497799835"
+
+[[packages.macos.rules]]
+id = "not-transient"
+when_not_transient = true
+casks = ["parallels"]
+

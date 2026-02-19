@@ -1,1 +1,2 @@
-{{- (index (onepassword "6nq62ybxd37bslycwnalaqsljy" "ylehyg24v4ktnhshngeyvl4fye").fields 2).value -}}
+{{- $wallaby := .onepassword.items.wallaby -}}
+{{- includeTemplate "onepassword_field.tmpl" (dict "item" $wallaby.item "vault" $wallaby.vault "field_id" $wallaby.fields.license_key) -}}

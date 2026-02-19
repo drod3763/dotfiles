@@ -1,8 +1,10 @@
 {{ $exports := merge (dict) .exports.common -}}
+{{ $openai := .onepassword.items.openai_key -}}
+{{ $serviceAccount := .onepassword.items.service_account_token -}}
 {{ $exports = merge $exports (dict
     "DOTFILES" .chezmoi.sourceDir
-    "OPENAI_API_KEY" ((index (onepassword "d2sclj2vlu5y55x7ojx3uzm3tq" "ydxim6il3bd3reztx5kioejcmu").fields 2).value)
-    "OP_SERVICE_ACCOUNT_TOKEN" ((index (onepassword "pwvya36g66yls5o5zj7tcrqaci" "ylehyg24v4ktnhshngeyvl4fye").fields 2).value)) -}}
+    "OPENAI_API_KEY" (includeTemplate "onepassword_field.tmpl" (dict "item" $openai.item "vault" $openai.vault "field_id" $openai.fields.credential))
+    "OP_SERVICE_ACCOUNT_TOKEN" (includeTemplate "onepassword_field.tmpl" (dict "item" $serviceAccount.item "vault" $serviceAccount.vault "field_id" $serviceAccount.fields.credential))) -}}
 {{ $exports = (includeTemplate "rule_engine.tmpl" (dict
     "context" .
     "seed" $exports

@@ -1,8 +1,8 @@
-{{- $nuget := onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu" -}}
-{{- $sourceKey := (index $nuget.fields 9).value -}}
-{{- $sourceURL := (index $nuget.fields 7).value -}}
-{{- $username := (index $nuget.fields 1).value -}}
-{{- $password := (index $nuget.fields 2).value -}}
+{{- $packaging := .onepassword.items.packaging_token -}}
+{{- $sourceKey := includeTemplate "onepassword_field_label.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "label" $packaging.fields.source_key_label) -}}
+{{- $sourceURL := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.nuget_source_url) -}}
+{{- $username := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.username) -}}
+{{- $password := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.credential) -}}
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>

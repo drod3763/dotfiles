@@ -1,14 +1,16 @@
 {{- $servers := merge (dict) .mcp.shared.servers -}}
+{{- $githubItem := .onepassword.items.github -}}
+{{- $workDomainItem := .onepassword.items.work_domain -}}
 {{- if .personal -}}
 {{- $servers = dict "github" (get $servers "github") -}}
 {{- end -}}
 {{- $github := merge (dict) (get $servers "github") -}}
 {{- $_ := set $github "headers" (dict
-  "Authorization" (printf "Bearer %s" ((index (onepassword "pwe3o2nzdxbccxtx5uyueegqdu" "ylehyg24v4ktnhshngeyvl4fye").fields 10).value))) -}}
+  "Authorization" (printf "Bearer %s" (includeTemplate "onepassword_field.tmpl" (dict "item" $githubItem.item "vault" $githubItem.vault "field_id" $githubItem.fields.github_mcp_pat)))) -}}
 {{- $_ := set $servers "github" $github -}}
 {{- if hasKey $servers "launchdarkly" -}}
 {{- $launchdarkly := merge (dict) (get $servers "launchdarkly") -}}
-{{- $ldArgs := concat ((get $launchdarkly "args") | default (list)) (list ((index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").fields 17).value)) -}}
+{{- $ldArgs := concat ((get $launchdarkly "args") | default (list)) (list (includeTemplate "onepassword_field_label.tmpl" (dict "item" $workDomainItem.item "vault" $workDomainItem.vault "label" $workDomainItem.fields.launchdarkly_reader_token_label))) -}}
 {{- $_ := set $launchdarkly "args" $ldArgs -}}
 {{- $_ := set $servers "launchdarkly" $launchdarkly -}}
 {{- end -}}

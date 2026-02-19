@@ -3,6 +3,7 @@
 {{- $diffCmd := "" -}}
 {{- $mergeCmd := "" -}}
 {{- $pager := "" -}}
+{{- $github := .onepassword.items.github -}}
 
 {{- if and (eq .chezmoi.os "darwin") (stat "/Applications/Komet.app") -}}
 {{- 	$editor = "/Applications/Komet.app/Contents/MacOS/Komet" -}}
@@ -29,7 +30,7 @@
 
 [user]
 	name = Derick Rodriguez
-    email = {{- (index (onepassword "pwe3o2nzdxbccxtx5uyueegqdu" "ylehyg24v4ktnhshngeyvl4fye").fields 8).value }}
+    email = {{- includeTemplate "onepassword_field.tmpl" (dict "item" $github.item "vault" $github.vault "field_id" $github.fields.email) }}
 [alias]
 	# Sourced via https://news.ycombinator.com/item?id=24175811
 	hs = "log --date=format-local:'%Y-%m-%d %H:%M:%S' --pretty=format:'%cd %<(20,trunc)%an %C(auto)%h%Creset%C(auto)%d%Creset %s'"

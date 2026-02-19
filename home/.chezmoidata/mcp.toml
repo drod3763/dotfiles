@@ -1,0 +1,19 @@
+[mcp.shared.servers.notion]
+type = "http"
+url = "https://mcp.notion.com/mcp"
+
+[mcp.shared.servers.github]
+type = "http"
+url = "https://api.githubcopilot.com/mcp/"
+
+[mcp.shared.servers.azure-devops]
+type = "stdio"
+command = "bunx"
+args = ["-y", "@azure-devops/mcp", "mindbody"]
+
+[mcp.shared.servers.launchdarkly]
+type = "stdio"
+command = "bunx"
+args = ["-y", "@launchdarkly/mcp-server", "start", "--scope", "read", "--api-key"]
+env = {}
+
