@@ -12,4 +12,19 @@
 {{- $_ := set $launchdarkly "args" $ldArgs -}}
 {{- $_ := set $servers "launchdarkly" $launchdarkly -}}
 {{- end -}}
-{{ dict "mcpServers" $servers | toPrettyJson }}
+
+{{- $opencodeMcp := dict -}}
+{{- range $name, $server := $servers -}}
+{{- if eq $server.type "http" -}}
+{{- $entry := dict "type" "remote" "url" $server.url -}}
+{{- if hasKey $server "headers" -}}
+{{- $entry = merge $entry (dict "headers" $server.headers) -}}
+{{- end -}}
+{{- $_ := set $opencodeMcp $name $entry -}}
+{{- else if eq $server.type "stdio" -}}
+{{- $cmd := concat (list $server.command) $server.args -}}
+{{- $entry := dict "type" "local" "command" $cmd "environment" ((get $server "env") | default (dict)) -}}
+{{- $_ := set $opencodeMcp $name $entry -}}
+{{- end -}}
+{{- end -}}
+{{ $opencodeMcp | toPrettyJson }}

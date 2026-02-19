@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v jq >/dev/null 2>&1; then
+  exit 0
+fi
+
+mcp_file="${HOME}/.config/opencode/mcp.json"
+opencode_file="${HOME}/.config/opencode/opencode.json"
+
+if [[ ! -f "${mcp_file}" ]]; then
+  exit 0
+fi
+
+mkdir -p "$(dirname "${opencode_file}")"
+
+if [[ ! -f "${opencode_file}" ]] || ! jq -e . "${opencode_file}" >/dev/null 2>&1; then
+  printf '%s\n' '{"$schema":"https://opencode.ai/config.json"}' > "${opencode_file}"
+fi
+
+tmp_file="$(mktemp)"
+trap 'rm -f "${tmp_file}"' EXIT
+
+jq --slurpfile mcp "${mcp_file}" '.mcp = $mcp[0]' "${opencode_file}" > "${tmp_file}"
+mv "${tmp_file}" "${opencode_file}"
+chmod 600 "${opencode_file}"
