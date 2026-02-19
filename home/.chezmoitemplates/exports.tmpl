@@ -1,211 +1,73 @@
-{{ $exports := dict
-    "CLAUDE_CONFIG_DIR" "${XDG_CONFIG_HOME}/claude"
-    "DATAGRIP_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/datagrip"
+{{ $exports := merge (dict) .exports.common -}}
+{{ $exports = merge $exports (dict
     "DOTFILES" .chezmoi.sourceDir
-    "GPG_TTY" "$TTY"
-    "INPUTRC" "${XDG_CONFIG_HOME}/readline/inputrc"
-    "LESSHISTFILE" "${XDG_CACHE_HOME}/less/history"
     "OPENAI_API_KEY" ((index (onepassword "d2sclj2vlu5y55x7ojx3uzm3tq" "ydxim6il3bd3reztx5kioejcmu").fields 2).value)
-    "OP_SERVICE_ACCOUNT_TOKEN" ((index (onepassword "pwvya36g66yls5o5zj7tcrqaci" "ylehyg24v4ktnhshngeyvl4fye").fields 2).value)
-    "OPENSPEC_TELEMETRY" "0"
-    "SSH_AUTH_SOCK" "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-    "TERMINFO" "${XDG_DATA_HOME}/terminfo"
-    "TERMINFO_DIRS" "${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
-    "WEBIDE_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/webstorm" -}}
+    "OP_SERVICE_ACCOUNT_TOKEN" ((index (onepassword "pwvya36g66yls5o5zj7tcrqaci" "ylehyg24v4ktnhshngeyvl4fye").fields 2).value)) -}}
 
-{{ if lookPath "aws" -}}
-{{      $exports = merge $exports (dict
-            "AWS_SHARED_CREDENTIALS_FILE" "${XDG_CONFIG_HOME}/aws/credentials"
-            "AWS_CONFIG_FILE" "${XDG_CONFIG_HOME}/aws/config") -}}
-{{ end -}}
-
-{{ if lookPath "adb" -}}
-{{      $exports = merge $exports (dict
-            "ANDROID_USER_HOME" "${XDG_DATA_HOME}/android") -}}
-{{ end -}}
-
-{{ if lookPath "az" -}}
-{{      $exports = merge $exports (dict
-            "AZURE_CONFIG_DIR" "${XDG_DATA_HOME}/azure"
-            "AZURE_DEVOPS_CACHE_DIR" "${XDG_CACHE_HOME}/azure-devops") -}}
-{{ end -}}
-
-{{ if eq .shell "bash" -}}
-{{      $exports = merge $exports (dict
-            "CLICOLOR" 1
-            "HISTFILE" (list "${XDG_STATE_HOME}/" .shell "/history" | join "")
-            "LSCOLORS" "GxFxCxDxBxegedabagaced") -}}
-{{ end -}}
-
-{{ if eq .shell "bat" -}}
-{{      $exports := merge $exports (dict
-            "PAGER" "bat --color=always") -}}
-{{ end -}}
-
-{{ if and (lookPath "batdiff") (lookPath "delta") -}}
-{{      $exports = merge $exports (dict
-            "BATDIFF_USE_DELTA" "true") -}}
-{{ end -}}
-
-{{ if lookPath "zed" -}}
-{{      $exports = merge $exports (dict
-            "VISUAL" "zed --wait") -}}
-{{ else if lookPath "code" -}}
-{{      $exports = merge $exports (dict
-            "VISUAL" "code -nw") -}}
-{{ end -}}
-
-{{ if lookPath "docker" -}}
-{{      $exports = merge $exports (dict
-            "DOCKER_CONFIG" "${XDG_CONFIG_HOME}/docker"
-            "MACHINE_STORAGE_PATH" "${XDG_DATA_HOME}/docker-machine") -}}
-{{ end -}}
-
-{{ if lookPath "npm" -}}
-{{      $exports = merge $exports (dict
-            "NPM_CONFIG_USERCONFIG" "${XDG_CONFIG_HOME}/npm/npmrc") -}}
-{{ end -}}
-
-{{ if lookPath "gpg" -}}
-{{      $exports := merge $exports (dict
-            "GNUPGHOME" "${XDG_DATA_HOME}/gnupg") -}}
-{{ end -}}
-
-{{ if lookPath "java" -}}
-{{      $exports := merge $exports (dict
-            "_JAVA_OPTIONS" "-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
-            "GRADLE_USER_HOME" "${XDG_DATA_HOME}/gradle") -}}
-{{ end -}}
-
-{{ if lookPath "micro" -}}
-{{      $exports := merge $exports (dict
-            "EDITOR" "micro"
-            "MICRO_TRUECOLOR" "1") -}}
-{{ else if lookPath "nano" -}}
-{{      $exports := merge $exports (dict
-            "EDITOR" "nano") -}}
-{{ else -}}
-{{      $exports := merge $exports (dict
-            "EDITOR" "vi") -}}
+{{ range .exports.rules -}}
+{{   $ok := true -}}
+{{   if and $ok (hasKey . "when_os") -}}
+{{     if ne $.chezmoi.os .when_os -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_shell") -}}
+{{     if ne $.shell .when_shell -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_tool") -}}
+{{     if not (lookPath .when_tool) -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_tools") -}}
+{{     range .when_tools -}}
+{{       if not (lookPath .) -}}
+{{         $ok = false -}}
+{{       end -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_not_personal") -}}
+{{     if and .when_not_personal $.personal -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_personal") -}}
+{{     if and .when_personal (not $.personal) -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_stat") -}}
+{{     if not (stat .when_stat) -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if $ok -}}
+{{     $exports = merge $exports .values -}}
+{{   end -}}
 {{ end -}}
 
 {{ if lookPath "dotnet" -}}
-{{      $dotnetRoot := "/opt/homebrew/opt/dotnet/libexec" -}}
-{{      if stat "/opt/homebrew/opt/dotnet@8/libexec" -}}
-{{          $dotnetRoot = "/opt/homebrew/opt/dotnet@8/libexec" -}}
-{{      end -}}
-{{      $exports = merge $exports (dict
-            "DOTNET_CLI_HOME" "${XDG_CONFIG_HOME}/dotnet"
-            "DOTNET_CLI_TELEMETRY_OPTOUT" "true"
-            "DOTNET_ROOT" $dotnetRoot) -}}
+{{   $dotnetRoot := "/opt/homebrew/opt/dotnet/libexec" -}}
+{{   if stat "/opt/homebrew/opt/dotnet@8/libexec" -}}
+{{     $dotnetRoot = "/opt/homebrew/opt/dotnet@8/libexec" -}}
+{{   end -}}
+{{   $exports = merge $exports (dict
+      "DOTNET_CLI_HOME" "${XDG_CONFIG_HOME}/dotnet"
+      "DOTNET_CLI_TELEMETRY_OPTOUT" "true"
+      "DOTNET_ROOT" $dotnetRoot) -}}
 {{ end -}}
 
-{{ if lookPath "go" -}}
-{{      $exports = merge $exports (dict
-            "GOPATH" "${XDG_DATA_HOME}/go") -}}
-{{ end -}}
-
-{{ if lookPath "omnisharp" -}}
-{{      $exports = merge $exports (dict
-            "OMNISHARPHOME" "${XDG_CONFIG_HOME}/omnisharp") -}}
-{{ end -}}
-
-{{ if lookPath "nuget" -}}
-{{      $exports := merge $exports (dict
-            "NUGET_PACKAGES" "${XDG_CACHE_HOME}/NuGetPackages") -}}
-{{ end -}}
-
-{{ if lookPath "pwsh" -}}
-{{      $exports := merge $exports (dict
-            "POWERSHELL_TELEMETRY_OPTOUT" 1) -}}
-{{ end -}}
-
-{{ if lookPath "rg" -}}
-{{      $exports := merge $exports (dict
-            "RIPGREP_CONFIG_PATH" "${XDG_CONFIG_HOME}/ripgrep/config") -}}
-{{ end -}}
-
-{{ if lookPath "ruby" -}}
-{{      $exports := merge $exports (dict
-            "GEM_HOME" "${XDG_DATA_HOME}/gem"
-            "GEM_SPEC_CACHE" "${XDG_CACHE_HOME}/gem") -}}
-{{ end -}}
-
-{{ if lookPath "bundle" -}}
-{{      $exports = merge $exports (dict
-            "BUNDLE_USER_CACHE" "${XDG_CACHE_HOME}/bundle"
-            "BUNDLE_USER_CONFIG" "${XDG_CONFIG_HOME}/bundle"
-            "BUNDLE_USER_PLUGIN" "${XDG_DATA_HOME}/bundle") -}}
-{{ end -}}
-
-{{ if lookPath "tldr" -}}
-{{      $exports := merge $exports (dict
-            "TEALDEER_CONFIG_DIR" (list .chezmoi.homeDir "/.config/tealdeer" | join "")) -}}
-{{ end -}}
-
-{{ if lookPath "volta" -}}
-{{      $exports = merge $exports (dict
-            "VOLTA_FEATURE_PNPM" 1
-            "VOLTA_HOME" "${XDG_DATA_HOME}/volta") -}}
-{{ end -}}
-
-{{ if eq .chezmoi.os "darwin" -}}
-{{/* Stops Catalina message about zsh */ -}}
-{{      $exports := merge $exports (dict
-            "BASH_SILENCE_DEPRECATION_WARNING" 1) -}}
-
-{{      if lookPath "brew" -}}
-{{/* HOMEBREW_NO_ANALYTICS - Stops Homebrew Telemetry */ -}}
-{{      $exports := merge $exports (dict
-            "HOMEBREW_NO_ANALYTICS" 1) -}}
-{{      end -}}
-
-{{      if lookPath "whalebrew" -}}
-{{          $exports := merge $exports (dict
-                "WHALEBREW_CONFIG_DIR" "${XDG_CONFIG_HOME}/whalebrew") -}}
-{{ end -}}
-
-{{      if lookPath "z" -}}
-{{      $exports := merge $exports (dict
-            "_ZO_DATA_DIR" "${XDG_DATA_HOME}") -}}
-{{      end -}}
-
-{{      if stat "${HOME}/Library/Python/" -}}
-{{      $exports := merge $exports (dict
-            "PYTHONPYCACHEPREFIX" "${XDG_CACHE_HOME}/python"
-            "PYTHON_HOMES" "(${HOME}/Library/Python/*)"
-            "PYTHON_HOME" "${PYTHON_HOMES}[0]"
-            "PYTHONPATH" "${HOME}/.python"
-            "PYTHONUSERBASE" "${XDG_DATA_HOME}/python") -}}
-{{      end -}}
-
-{{      if not .personal -}}
-{{/* AWS Arcus setup and IDEs used for C# and Ruby development */ -}}
-{{      $exports := merge $exports (dict
-            "OKTA_AWSCLI_AWS_ACCOUNT_FEDERATION_APP_ID" "0oafjkddhOnLDD8sZ356"
-            "OKTA_AWSCLI_OIDC_CLIENT_ID" "0oa15fv0jojsnIUtQ358"
-            "OKTA_AWSCLI_OPEN_BROWSER" "true"
-            "OKTA_AWSCLI_ORG_DOMAIN" "mbo.okta.com"
-            "OKTA_AWSCLI_SESSION_DURATION" 43200
-            "OKTA_AWSCLI_WRITE_AWS_CREDENTIALS" "true"
-            "AWS_PROFILE" "arcus_dev"
-            "AWS_SDK_LOAD_CONFIG" 1
-            "RIDER_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/rider"
-            "RUBYMINE_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/rubymine"
-            "TILT_NAMESPACE" "derick-rodriguez") -}}
-{{      end -}}
-{{  end -}}
-
-{{ if eq .chezmoi.os "linux" -}}
-{{      if lookPath "bcompare" -}}
-{{          $exports := merge $exports (dict
-                "DIFFPROG" "bcompare") -}}
-{{      else if lookPath "delta" -}}
-{{          $exports := merge $exports (dict
-                "DIFFPROG" "delta --dark --line-numbers --side-by-side --no-gitconfig") -}}
-{{      end -}}
+{{ if and (eq .chezmoi.os "darwin") (stat "${HOME}/Library/Python/") -}}
+{{   $exports = merge $exports (dict
+      "PYTHONPYCACHEPREFIX" "${XDG_CACHE_HOME}/python"
+      "PYTHON_HOMES" "(${HOME}/Library/Python/*)"
+      "PYTHON_HOME" "${PYTHON_HOMES}[0]"
+      "PYTHONPATH" "${HOME}/.python"
+      "PYTHONUSERBASE" "${XDG_DATA_HOME}/python") -}}
 {{ end -}}
 
 {{ range (keys $exports | sortAlpha | uniq) -}}
-export {{ . }}={{get $exports  . | quote }}
+export {{ . }}={{ get $exports . | quote }}
 {{ end -}}

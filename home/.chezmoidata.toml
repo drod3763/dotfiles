@@ -1,0 +1,397 @@
+[exports.common]
+CLAUDE_CONFIG_DIR = "${XDG_CONFIG_HOME}/claude"
+DATAGRIP_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/datagrip"
+GPG_TTY = "$TTY"
+INPUTRC = "${XDG_CONFIG_HOME}/readline/inputrc"
+LESSHISTFILE = "${XDG_CACHE_HOME}/less/history"
+OPENSPEC_TELEMETRY = "0"
+SSH_AUTH_SOCK = "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+TERMINFO = "${XDG_DATA_HOME}/terminfo"
+TERMINFO_DIRS = "${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
+WEBIDE_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/webstorm"
+
+[[exports.rules]]
+id = "aws"
+when_tool = "aws"
+[exports.rules.values]
+AWS_SHARED_CREDENTIALS_FILE = "${XDG_CONFIG_HOME}/aws/credentials"
+AWS_CONFIG_FILE = "${XDG_CONFIG_HOME}/aws/config"
+
+[[exports.rules]]
+id = "adb"
+when_tool = "adb"
+[exports.rules.values]
+ANDROID_USER_HOME = "${XDG_DATA_HOME}/android"
+
+[[exports.rules]]
+id = "az"
+when_tool = "az"
+[exports.rules.values]
+AZURE_CONFIG_DIR = "${XDG_DATA_HOME}/azure"
+AZURE_DEVOPS_CACHE_DIR = "${XDG_CACHE_HOME}/azure-devops"
+
+[[exports.rules]]
+id = "bash"
+when_shell = "bash"
+[exports.rules.values]
+CLICOLOR = 1
+HISTFILE = "${XDG_STATE_HOME}/bash/history"
+LSCOLORS = "GxFxCxDxBxegedabagaced"
+
+[[exports.rules]]
+id = "bat-pager"
+when_shell = "bat"
+[exports.rules.values]
+PAGER = "bat --color=always"
+
+[[exports.rules]]
+id = "batdiff-delta"
+when_tools = ["batdiff", "delta"]
+[exports.rules.values]
+BATDIFF_USE_DELTA = "true"
+
+[[exports.rules]]
+id = "visual-code"
+when_tool = "code"
+[exports.rules.values]
+VISUAL = "code -nw"
+
+[[exports.rules]]
+id = "visual-zed"
+when_tool = "zed"
+[exports.rules.values]
+VISUAL = "zed --wait"
+
+[[exports.rules]]
+id = "docker"
+when_tool = "docker"
+[exports.rules.values]
+DOCKER_CONFIG = "${XDG_CONFIG_HOME}/docker"
+MACHINE_STORAGE_PATH = "${XDG_DATA_HOME}/docker-machine"
+
+[[exports.rules]]
+id = "npm"
+when_tool = "npm"
+[exports.rules.values]
+NPM_CONFIG_USERCONFIG = "${XDG_CONFIG_HOME}/npm/npmrc"
+
+[[exports.rules]]
+id = "gpg"
+when_tool = "gpg"
+[exports.rules.values]
+GNUPGHOME = "${XDG_DATA_HOME}/gnupg"
+
+[[exports.rules]]
+id = "java"
+when_tool = "java"
+[exports.rules.values]
+_JAVA_OPTIONS = "-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
+GRADLE_USER_HOME = "${XDG_DATA_HOME}/gradle"
+
+[[exports.rules]]
+id = "editor-vi"
+[exports.rules.values]
+EDITOR = "vi"
+
+[[exports.rules]]
+id = "editor-nano"
+when_tool = "nano"
+[exports.rules.values]
+EDITOR = "nano"
+
+[[exports.rules]]
+id = "editor-micro"
+when_tool = "micro"
+[exports.rules.values]
+EDITOR = "micro"
+MICRO_TRUECOLOR = "1"
+
+[[exports.rules]]
+id = "go"
+when_tool = "go"
+[exports.rules.values]
+GOPATH = "${XDG_DATA_HOME}/go"
+
+[[exports.rules]]
+id = "omnisharp"
+when_tool = "omnisharp"
+[exports.rules.values]
+OMNISHARPHOME = "${XDG_CONFIG_HOME}/omnisharp"
+
+[[exports.rules]]
+id = "nuget"
+when_tool = "nuget"
+[exports.rules.values]
+NUGET_PACKAGES = "${XDG_CACHE_HOME}/NuGetPackages"
+
+[[exports.rules]]
+id = "pwsh"
+when_tool = "pwsh"
+[exports.rules.values]
+POWERSHELL_TELEMETRY_OPTOUT = 1
+
+[[exports.rules]]
+id = "rg"
+when_tool = "rg"
+[exports.rules.values]
+RIPGREP_CONFIG_PATH = "${XDG_CONFIG_HOME}/ripgrep/config"
+
+[[exports.rules]]
+id = "ruby"
+when_tool = "ruby"
+[exports.rules.values]
+GEM_HOME = "${XDG_DATA_HOME}/gem"
+GEM_SPEC_CACHE = "${XDG_CACHE_HOME}/gem"
+
+[[exports.rules]]
+id = "bundle"
+when_tool = "bundle"
+[exports.rules.values]
+BUNDLE_USER_CACHE = "${XDG_CACHE_HOME}/bundle"
+BUNDLE_USER_CONFIG = "${XDG_CONFIG_HOME}/bundle"
+BUNDLE_USER_PLUGIN = "${XDG_DATA_HOME}/bundle"
+
+[[exports.rules]]
+id = "tldr"
+when_tool = "tldr"
+[exports.rules.values]
+TEALDEER_CONFIG_DIR = "${HOME}/.config/tealdeer"
+
+[[exports.rules]]
+id = "volta"
+when_tool = "volta"
+[exports.rules.values]
+VOLTA_FEATURE_PNPM = 1
+VOLTA_HOME = "${XDG_DATA_HOME}/volta"
+
+[[exports.rules]]
+id = "darwin"
+when_os = "darwin"
+[exports.rules.values]
+BASH_SILENCE_DEPRECATION_WARNING = 1
+
+[[exports.rules]]
+id = "darwin-brew"
+when_os = "darwin"
+when_tool = "brew"
+[exports.rules.values]
+HOMEBREW_NO_ANALYTICS = 1
+
+[[exports.rules]]
+id = "darwin-whalebrew"
+when_os = "darwin"
+when_tool = "whalebrew"
+[exports.rules.values]
+WHALEBREW_CONFIG_DIR = "${XDG_CONFIG_HOME}/whalebrew"
+
+[[exports.rules]]
+id = "darwin-z"
+when_os = "darwin"
+when_tool = "z"
+[exports.rules.values]
+_ZO_DATA_DIR = "${XDG_DATA_HOME}"
+
+[[exports.rules]]
+id = "darwin-work"
+when_os = "darwin"
+when_not_personal = true
+[exports.rules.values]
+AWS_PROFILE = "arcus_dev"
+AWS_SDK_LOAD_CONFIG = 1
+RIDER_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/rider"
+RUBYMINE_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/rubymine"
+TILT_NAMESPACE = "derick-rodriguez"
+
+[[exports.rules]]
+id = "linux-diff-delta"
+when_os = "linux"
+when_tool = "delta"
+[exports.rules.values]
+DIFFPROG = "delta --dark --line-numbers --side-by-side --no-gitconfig"
+
+[[exports.rules]]
+id = "linux-diff-bcompare"
+when_os = "linux"
+when_tool = "bcompare"
+[exports.rules.values]
+DIFFPROG = "bcompare"
+
+[packages.macos]
+taps = [
+  "nikitabobko/tap",
+  "waydabber/betterdisplay",
+]
+brews = [
+  "age",
+  "bat",
+  "bat-extras",
+  "chezmoi",
+  "eza",
+  "fd",
+  "felixkratz/formulae/borders",
+  "fzf",
+  "gdu",
+  "gh",
+  "git",
+  "git-delta",
+  "glow",
+  "go",
+  "gitleaks",
+  "jq",
+  "less",
+  "mas",
+  "mcfly",
+  "mermaid-cli",
+  "micro",
+  "mosh",
+  "opencode",
+  "oven-sh/bun/bun",
+  "p7zip",
+  "pandoc",
+  "procs",
+  "ripgrep",
+  "rsync",
+  "sd",
+  "shellcheck",
+  "tailscale",
+  "thefuck",
+  "up",
+  "uv",
+  "xdg-ninja",
+  "yazi",
+  "ykman",
+  "yt-dlp",
+  "zoxide",
+]
+casks = [
+  "1password",
+  "1password-cli",
+  "alfred",
+  "bartender",
+  "betterdisplay",
+  "betterzip",
+  "boop",
+  "brave-browser",
+  "claude-code",
+  "default-folder-x",
+  "devtoys",
+  "docker",
+  "dropbox",
+  "elgato-stream-deck",
+  "font-monaspace",
+  "font-new-york",
+  "font-sf-compact",
+  "font-sf-mono",
+  "font-sf-mono-for-powerline",
+  "font-sf-pro",
+  "font-sn-pro",
+  "ghostty",
+  "hammerspoon",
+  "hazel",
+  "iina",
+  "itsycal",
+  "komet",
+  "macs-fan-control",
+  "marvin",
+  "mountain-duck",
+  "notion",
+  "popclip",
+  "spotify",
+  "suspicious-package",
+  "zed",
+  "zen",
+]
+
+[packages.macos.mas]
+"Brother iPrint&Scan" = ", id: 1193539993"
+"CARROT Weather" = ", id: 993487541"
+"Easy CSV Editor" = ", id: 1171346381"
+"JSON Editor" = ", id: 567740330"
+"Kagi for Safari" = ", id: 1622835804"
+"OpenIn" = ", id: 1643649331"
+"Peek" = ", id: 1554235898"
+"PLIST Editor" = ", id: 1157491961"
+"TextSniper" = ", id: 1528890965"
+
+[packages.macos.brew_args]
+"docker-credential-helper-ecr" = ", link: false"
+"kubernetes-cli" = ", link: false"
+"saml2aws" = ""
+
+[[packages.macos.rules]]
+id = "personal"
+when_personal = true
+brews = [
+  "ffmpeg",
+  "libheif",
+  "imagemagick",
+  "mkcert",
+]
+casks = [
+  "affinity",
+  "antigravity",
+  "beyond-compare",
+  "chrysalis",
+  "discord",
+  "homerow",
+  "istat-menus",
+  "ivpn",
+  "jump",
+  "ledger-live",
+  "mouseless",
+  "ricoh-theta",
+  "sensei",
+  "soundsource",
+  "soulver",
+  "swish",
+  "windscribe",
+]
+
+[[packages.macos.rules]]
+id = "work"
+when_not_personal = true
+taps = [
+  "felixkratz/formulae",
+  "oven-sh/bun",
+]
+brews = [
+  "act",
+  "actionlint",
+  "awscli",
+  "azure-cli",
+  "caddy",
+  "docker-compose",
+  "docker-credential-helper-ecr",
+  "dotnet@8",
+  "fx",
+  "helm",
+  "kubectx",
+  "kubernetes-cli",
+  "lastpass-cli",
+  "mise",
+  "pulumi",
+  "python",
+  "saml2aws",
+  "tilt",
+  "yq",
+]
+casks = [
+  "bruno",
+  "cursor",
+  "cursor-cli",
+  "docker-desktop",
+  "gitkraken",
+  "jetbrains-toolbox",
+  "mac-mouse-fix",
+  "mouseless@preview",
+  "nikitabobko/tap/aerospace",
+]
+
+[packages.macos.rules.mas]
+"Amphetamine" = ", id: 937984704"
+"Xcode" = ", id: 497799835"
+
+[[packages.macos.rules]]
+id = "not-transient"
+when_not_transient = true
+casks = ["parallels"]

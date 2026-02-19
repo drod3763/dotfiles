@@ -8,184 +8,50 @@ sudo -v
 # Keep-alive: update existing `sudo` time stamp until the script has finished
 while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 
-{{ $taps := list
-    "nikitabobko/tap"
-    "waydabber/betterdisplay" -}}
+{{ $packages := .packages.macos -}}
+{{ $taps := concat (list) $packages.taps -}}
+{{ $brews := concat (list) $packages.brews -}}
+{{ $casks := concat (list) $packages.casks -}}
+{{ $mas := merge (dict) $packages.mas -}}
+{{ $args := merge (dict) $packages.brew_args -}}
 
-{{ if not .personal -}}
-{{  $taps = concat $taps (list
-    "felixkratz/formulae"
-    "oven-sh/bun") -}}
+{{ range $packages.rules -}}
+{{   $ok := true -}}
+{{   if and $ok (hasKey . "when_personal") -}}
+{{     if and .when_personal (not $.personal) -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_not_personal") -}}
+{{     if and .when_not_personal $.personal -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_transient") -}}
+{{     if ne $.transient .when_transient -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if and $ok (hasKey . "when_not_transient") -}}
+{{     if and .when_not_transient $.transient -}}
+{{       $ok = false -}}
+{{     end -}}
+{{   end -}}
+{{   if $ok -}}
+{{     if hasKey . "taps" -}}
+{{       $taps = concat $taps .taps -}}
+{{     end -}}
+{{     if hasKey . "brews" -}}
+{{       $brews = concat $brews .brews -}}
+{{     end -}}
+{{     if hasKey . "casks" -}}
+{{       $casks = concat $casks .casks -}}
+{{     end -}}
+{{     if hasKey . "mas" -}}
+{{       $mas = merge $mas .mas -}}
+{{     end -}}
+{{   end -}}
 {{ end -}}
-
-{{ $brews := list
-    "age"
-    "bat"
-    "bat-extras"
-    "chezmoi"
-    "eza"
-    "fd"
-    "felixkratz/formulae/borders"
-    "fzf"
-    "gdu"
-    "gh"
-    "git"
-    "git-delta"
-    "glow"
-    "go"
-    "gitleaks"
-    "jq"
-    "less"
-    "mas"
-    "mcfly"
-    "mermaid-cli"
-    "micro"
-    "mosh"
-    "opencode"
-    "oven-sh/bun/bun"
-    "p7zip"
-    "pandoc"
-    "procs"
-    "ripgrep"
-    "rsync"
-    "sd"
-    "shellcheck"
-    "tailscale"
-    "thefuck"
-    "up"
-    "uv"
-    "xdg-ninja"
-    "yazi"
-    "ykman"
-    "yt-dlp"
-    "zoxide" -}}
-
-{{ $casks := list
-    "1password"
-    "1password-cli"
-    "alfred"
-    "bartender"
-    "betterdisplay"
-    "betterzip"
-    "boop"
-    "brave-browser"
-    "claude-code"
-    "default-folder-x"
-    "devtoys"
-    "docker"
-    "dropbox"
-    "elgato-stream-deck"
-    "font-monaspace"
-    "font-new-york"
-    "font-sf-compact"
-    "font-sf-mono"
-    "font-sf-mono-for-powerline"
-    "font-sf-pro"
-    "font-sn-pro"
-    "ghostty"
-    "hammerspoon"
-    "hazel"
-    "iina"
-    "itsycal"
-    "komet"
-    "macs-fan-control"
-    "marvin"
-    "mountain-duck"
-    "notion"
-    "popclip"
-    "spotify"
-    "suspicious-package"
-    "zed"
-    "zen" -}}
-
-{{- if .personal }}
-{{  $brews = concat $brews (list
-    "ffmpeg"
-    "libheif"
-    "imagemagick"
-    "mkcert") -}}
-
-{{  $casks = concat $casks (list
-    "affinity"
-    "antigravity"
-    "beyond-compare"
-    "chrysalis"
-    "discord"
-    "homerow"
-    "istat-menus"
-    "ivpn"
-    "jump"
-    "ledger-live"
-    "mouseless"
-    "ricoh-theta"
-    "sensei"
-    "soundsource"
-    "soulver"
-    "swish"
-    "windscribe") -}}
-{{ end -}}
-
-{{ if not .personal -}}
-{{  $brews = concat $brews (list
-    "act"
-    "actionlint"
-    "awscli"
-    "azure-cli"
-    "caddy"
-    "docker-compose"
-    "docker-credential-helper-ecr"
-    "dotnet@8"
-    "fx"
-    "helm"
-    "kubectx"
-    "kubernetes-cli"
-    "lastpass-cli"
-    "mise"
-    "pulumi"
-    "python"
-    "saml2aws"
-    "tilt"
-    "yq") -}}
-
-{{  $casks = concat $casks (list
-    "bruno"
-    "cursor"
-    "cursor-cli"
-    "docker-desktop"
-    "gitkraken"
-    "jetbrains-toolbox"
-    "mac-mouse-fix"
-    "mouseless@preview"
-    "nikitabobko/tap/aerospace") -}}
-
-{{ end -}}
-
-{{ if not .transient -}}
-{{  $casks = concat $casks (list
-    "parallels") -}}
-{{ end -}}
-
-{{ $mas := dict
-    "Brother iPrint&Scan" ", id: 1193539993"
-    "CARROT Weather" ", id: 993487541"
-    "Easy CSV Editor" ", id: 1171346381"
-    "JSON Editor" ", id: 567740330"
-    "Kagi for Safari" ", id: 1622835804"
-    "OpenIn" ", id: 1643649331"
-    "Peek" ", id: 1554235898"
-    "PLIST Editor" ", id: 1157491961"
-    "TextSniper" ", id: 1528890965" -}}
-
-{{ if not .personal -}}
-{{  $mas = merge $mas (dict
-    "Amphetamine" ", id: 937984704"
-    "Xcode" ", id: 497799835") -}}
-{{ end -}}
-
-{{ $args := dict
-    "docker-credential-helper-ecr" ", link: false"
-    "kubernetes-cli" ", link: false"
-    "saml2aws" "" -}}
 
 brew bundle --verbose --force --zap --file=/dev/stdin <<EOF
 {{ range ($taps | sortAlpha | uniq) -}}
