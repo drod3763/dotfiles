@@ -19,11 +19,7 @@
 {{- 	$pager = "delta" -}}
 {{- end -}}
 
-{{- if and (eq .chezmoi.os "darwin") (stat "/Applications/Kaleidoscope.app/Contents/MacOS/ksdiff") -}}
-{{- 	$diffTool = "Kaleidoscope" -}}
-{{- 	$diffCmd = "ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"" -}}
-{{- 	$mergeCmd = "ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" --snapshot \"$REMOTE\" --snapshot" -}}
-{{- else if and (eq .chezmoi.os "linux") (lookPath "bcompare") }}
+{{- if and (eq .chezmoi.os "linux") (lookPath "bcompare") }}
 {{/* From https://www.scootersoftware.com/support.php?zz=kb_vcs#gitlinux */}}
 {{- 	$diffTool = "bc" -}}
 {{- end -}}
