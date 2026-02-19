@@ -20,6 +20,28 @@ tldr --update
 defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua"
 {{ end -}}
 
+{{ if lookPath "ya" -}}
+if [ ! -d "$HOME/.config/yazi/flavors/catppuccin-mocha.yazi" ]; then
+  ya pkg add yazi-rs/flavors:catppuccin-mocha
+fi
+{{ end -}}
+
+{{ if not .personal -}}
+{{ $domainItem := onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu" -}}
+{{ $corpLocalDomain := "" -}}
+{{ range $domainItem.urls -}}
+{{   if eq .label "corp_local_domain" -}}
+{{     $corpLocalDomain = .href -}}
+{{   end -}}
+{{ end -}}
+{{ if ne $corpLocalDomain "" -}}
+if ! grep -qE '^[[:space:]]*127\.0\.0\.1[[:space:]]+{{ regexQuoteMeta $corpLocalDomain }}([[:space:]]|$)' /etc/hosts; then
+  sudo -v
+  printf '%s\n' '127.0.0.1 {{ $corpLocalDomain }}' | sudo tee -a /etc/hosts >/dev/null
+fi
+{{ end -}}
+{{ end -}}
+
 
 
 {{ if not .personal -}}
