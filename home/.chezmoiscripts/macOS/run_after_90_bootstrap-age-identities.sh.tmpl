@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v op >/dev/null 2>&1; then
+  exit 0
+fi
+
+if ! command -v chezmoi >/dev/null 2>&1; then
+  exit 0
+fi
+
+if ! command -v age >/dev/null 2>&1 && ! command -v rage >/dev/null 2>&1; then
+  exit 0
+fi
+
+config_dir="${HOME}/.config/chezmoi"
+age_dir="${config_dir}/age-identities"
+items_file="${config_dir}/age-identities.items"
+identities_file="${age_dir}/identities.txt"
+recipients_file="${age_dir}/recipients.txt"
+
+mkdir -p "${age_dir}"
+
+declare -a sources=()
+
+if [[ -n "${CHEZMOI_AGE_IDENTITY_ITEMS:-}" ]]; then
+  IFS=',' read -r -a entries <<< "${CHEZMOI_AGE_IDENTITY_ITEMS}"
+  for entry in "${entries[@]}"; do
+    trimmed="$(printf '%s' "${entry}" | xargs)"
+    [[ -n "${trimmed}" ]] || continue
+    sources+=("${trimmed}")
+  done
+elif [[ -f "${items_file}" ]]; then
+  while IFS= read -r line; do
+    clean="$(printf '%s' "${line}" | sed -E 's/#.*$//; s/^[[:space:]]+//; s/[[:space:]]+$//')"
+    [[ -n "${clean}" ]] || continue
+    item_id="${clean%% *}"
+    vault_id="${clean#* }"
+    if [[ "${item_id}" == "${vault_id}" ]]; then
+      continue
+    fi
+    sources+=("${item_id}:${vault_id}")
+  done < "${items_file}"
+fi
+
+if [[ ${#sources[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+tmp_identities="$(mktemp)"
+tmp_recipients="$(mktemp)"
+trap 'rm -f "${tmp_identities}" "${tmp_recipients}"' EXIT
+
+for source in "${sources[@]}"; do
+  item_id="${source%%:*}"
+  vault_id="${source##*:}"
+  if [[ -z "${item_id}" || -z "${vault_id}" || "${item_id}" == "${vault_id}" ]]; then
+    continue
+  fi
+
+  identity="$(op item get "${item_id}" --vault "${vault_id}" --fields credential --reveal 2>/dev/null || true)"
+  if [[ -z "${identity}" ]]; then
+    continue
+  fi
+
+  printf '%s\n' "${identity}" >> "${tmp_identities}"
+  tmp_identity_file="$(mktemp)"
+  printf '%s\n' "${identity}" > "${tmp_identity_file}"
+  recipient="$(chezmoi age-keygen -y "${tmp_identity_file}" 2>/dev/null || true)"
+  rm -f "${tmp_identity_file}"
+  if [[ -n "${recipient}" ]]; then
+    printf '%s\n' "${recipient}" >> "${tmp_recipients}"
+  fi
+done
+
+if [[ ! -s "${tmp_identities}" ]]; then
+  exit 0
+fi
+
+awk 'NF && !seen[$0]++' "${tmp_identities}" > "${identities_file}"
+awk 'NF && !seen[$0]++' "${tmp_recipients}" > "${recipients_file}"
+chmod 600 "${identities_file}" "${recipients_file}"

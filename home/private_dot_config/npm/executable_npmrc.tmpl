@@ -3,9 +3,9 @@ cache=${XDG_CACHE_HOME}/npm
 tmp=${XDG_RUNTIME_DIR}/npm
 init-module=${XDG_CONFIG_HOME}/npm/config/npm-init.js
 ; begin auth token
-{{ (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").urls 0).href -}}/registry/:username={{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").fields 20).value }}
-{{ (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").urls 0).href -}}/registry/:_password={{- b64enc (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").fields 19).value }}
-{{ (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").urls 0).href -}}/registry/:email={{- (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").additional_information }}
-{{ (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").urls 0).href -}}/:username={{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").fields 20).value }}
-{{ (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").urls 0).href -}}/:_password={{- b64enc (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").fields 19).value }}
-{{ (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").urls 0).href -}}/:email={{- (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").additional_information }}
+{{ (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 8).value -}}registry/:username={{- (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 1).value }}
+{{ (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 8).value -}}registry/:_password={{- b64enc (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 2).value }}
+{{ (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 8).value -}}registry/:email={{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").fields 0).value }}
+{{ (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 8).value -}}:username={{- (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 1).value }}
+{{ (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 8).value -}}:_password={{- b64enc (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 2).value }}
+{{ (index (onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu").fields 8).value -}}:email={{- (index (onepassword "wuo6jezj45c2bdzyttgfvxygzu" "ydxim6il3bd3reztx5kioejcmu").fields 0).value }}

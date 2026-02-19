@@ -217,9 +217,55 @@ cd() { {{/* wrap `cd_`, add behaviors */}}
 }
 
 {{- /* Fix theme for flag highlights in manpages */}}
-{{if lookPath "batman" -}}
+{{ if lookPath "batman" }}
 man() {
   BAT_THEME="Monokai Extended" batman "$@"
   return $?
 }
-{{- end -}}
+{{ end }}
+
+{{ if and (eq .chezmoi.os "darwin") (lookPath "osascript") }}
+notifyMe() {
+  if [ $? -eq 0 ]; then
+    osascript -e 'display notification "The command worked" with title "Success"'
+  else
+    osascript -e 'display notification "The command failed" with title "Failed"'
+  fi
+}
+{{ end }}
+
+{{ if and (eq .chezmoi.os "darwin") (not .personal) }}
+{{ if lookPath "saml2aws" }}
+loginarcus() {
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force
+}
+
+loginarcussu() {
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a superuser
+}
+{{ end }}
+
+{{ if and (lookPath "aws") (lookPath "kubectl") }}
+switchprod() {
+  aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod --profile=arcus_prod
+  export AWS_PROFILE="arcus_prod"
+  export ASPNETCORE_ENVIRONMENT="Production"
+}
+
+switchprodsu() {
+  aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod-su --profile=arcus_prod_su
+  export AWS_PROFILE="arcus_prod"
+  export ASPNETCORE_ENVIRONMENT="Production"
+}
+
+pgadmin() {
+  POD=$(kubectl get pods -n subscription-management --no-headers -o custom-columns=":metadata.name" | grep "mindbody-pgadmin-" | head -n 1)
+  if [ -z "$POD" ]; then
+    echo -e "\033[0;31mNo mindbody-pgadmin pods found.\033[0m"
+    return 1
+  fi
+
+  kubectl port-forward "$POD" 6001:5000 -n subscription-management
+}
+{{ end }}
+{{ end }}

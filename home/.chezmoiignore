@@ -23,7 +23,6 @@
     {{- $ignore = concat $ignore (list
         ".chezmoiscripts/linux/**"
         ".config/paru"
-        ".config/1Password"
         ".config/kitty"
         "1password_settings.json") -}}
 {{- end }}

@@ -10,12 +10,13 @@
        wtfport - easily see what ports are in use */ -}}
 {{ $aliases := dict
        "clear" "z4h-clear-screen-soft-bottom"
-       "ln" (list "ln" $lnFlag | join " ")
-       "restart" (list "exec" .shell $loginFlag | join " " | trim)
-       "sudo" "sudo "
-       "reload" (list "source ~/." .shell "rc" | join "")
-       "tailcat" "tail --lines=+0"
-       "wtfport" "lsof -i -P -n | grep LISTEN" -}}
+        "ln" (list "ln" $lnFlag | join " ")
+        "restart" (list "exec" .shell $loginFlag | join " " | trim)
+        "secretscan" "${DOTFILES}/scripts/check_secrets.sh"
+        "sudo" "sudo "
+        "reload" (list "source ~/." .shell "rc" | join "")
+        "tailcat" "tail --lines=+0"
+        "wtfport" "lsof -i -P -n | grep LISTEN" -}}
 
 {{/* --/../..2/..3/..4/..5 - move up the appropriate number of directories */ -}}
 {{ if eq .shell "bash" -}}

@@ -1,9 +1,12 @@
 {{ $exports := dict
+    "CLAUDE_CONFIG_DIR" "${XDG_CONFIG_HOME}/claude"
     "DATAGRIP_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/datagrip"
     "DOTFILES" .chezmoi.sourceDir
     "GPG_TTY" "$TTY"
     "INPUTRC" "${XDG_CONFIG_HOME}/readline/inputrc"
     "LESSHISTFILE" "${XDG_CACHE_HOME}/less/history"
+    "OPENAI_API_KEY" ((index (onepassword "d2sclj2vlu5y55x7ojx3uzm3tq" "ydxim6il3bd3reztx5kioejcmu").fields 2).value)
+    "OP_SERVICE_ACCOUNT_TOKEN" ((index (onepassword "pwvya36g66yls5o5zj7tcrqaci" "ylehyg24v4ktnhshngeyvl4fye").fields 2).value)
     "OPENSPEC_TELEMETRY" "0"
     "SSH_AUTH_SOCK" "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
     "TERMINFO" "${XDG_DATA_HOME}/terminfo"
@@ -14,6 +17,17 @@
 {{      $exports = merge $exports (dict
             "AWS_SHARED_CREDENTIALS_FILE" "${XDG_CONFIG_HOME}/aws/credentials"
             "AWS_CONFIG_FILE" "${XDG_CONFIG_HOME}/aws/config") -}}
+{{ end -}}
+
+{{ if lookPath "adb" -}}
+{{      $exports = merge $exports (dict
+            "ANDROID_USER_HOME" "${XDG_DATA_HOME}/android") -}}
+{{ end -}}
+
+{{ if lookPath "az" -}}
+{{      $exports = merge $exports (dict
+            "AZURE_CONFIG_DIR" "${XDG_DATA_HOME}/azure"
+            "AZURE_DEVOPS_CACHE_DIR" "${XDG_CACHE_HOME}/azure-devops") -}}
 {{ end -}}
 
 {{ if eq .shell "bash" -}}
@@ -76,10 +90,24 @@
 {{ end -}}
 
 {{ if lookPath "dotnet" -}}
-{{      $exports := merge $exports (dict
+{{      $dotnetRoot := "/opt/homebrew/opt/dotnet/libexec" -}}
+{{      if stat "/opt/homebrew/opt/dotnet@8/libexec" -}}
+{{          $dotnetRoot = "/opt/homebrew/opt/dotnet@8/libexec" -}}
+{{      end -}}
+{{      $exports = merge $exports (dict
             "DOTNET_CLI_HOME" "${XDG_CONFIG_HOME}/dotnet"
             "DOTNET_CLI_TELEMETRY_OPTOUT" "true"
-            "DOTNET_ROOT" "/opt/homebrew/opt/dotnet/libexec") -}}
+            "DOTNET_ROOT" $dotnetRoot) -}}
+{{ end -}}
+
+{{ if lookPath "go" -}}
+{{      $exports = merge $exports (dict
+            "GOPATH" "${XDG_DATA_HOME}/go") -}}
+{{ end -}}
+
+{{ if lookPath "omnisharp" -}}
+{{      $exports = merge $exports (dict
+            "OMNISHARPHOME" "${XDG_CONFIG_HOME}/omnisharp") -}}
 {{ end -}}
 
 {{ if lookPath "nuget" -}}
@@ -117,6 +145,7 @@
 
 {{ if lookPath "volta" -}}
 {{      $exports = merge $exports (dict
+            "VOLTA_FEATURE_PNPM" 1
             "VOLTA_HOME" "${XDG_DATA_HOME}/volta") -}}
 {{ end -}}
 
@@ -153,6 +182,12 @@
 {{      if not .personal -}}
 {{/* AWS Arcus setup and IDEs used for C# and Ruby development */ -}}
 {{      $exports := merge $exports (dict
+            "OKTA_AWSCLI_AWS_ACCOUNT_FEDERATION_APP_ID" "0oafjkddhOnLDD8sZ356"
+            "OKTA_AWSCLI_OIDC_CLIENT_ID" "0oa15fv0jojsnIUtQ358"
+            "OKTA_AWSCLI_OPEN_BROWSER" "true"
+            "OKTA_AWSCLI_ORG_DOMAIN" "mbo.okta.com"
+            "OKTA_AWSCLI_SESSION_DURATION" 43200
+            "OKTA_AWSCLI_WRITE_AWS_CREDENTIALS" "true"
             "AWS_PROFILE" "arcus_dev"
             "AWS_SDK_LOAD_CONFIG" 1
             "RIDER_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/rider"

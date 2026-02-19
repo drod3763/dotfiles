@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "notion": {
+      "type": "http",
+      "url": "https://mcp.notion.com/mcp"
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": {{ printf "Bearer %s" ((index (onepassword "pwe3o2nzdxbccxtx5uyueegqdu" "ylehyg24v4ktnhshngeyvl4fye").fields 10).value) | quote }}
+      }
+    }
+  }
+}

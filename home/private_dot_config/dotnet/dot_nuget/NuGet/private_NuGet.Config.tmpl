@@ -1,0 +1,18 @@
+{{- $nuget := onepassword "4itl7orehcbljin364jxdxft5e" "ydxim6il3bd3reztx5kioejcmu" -}}
+{{- $sourceKey := (index $nuget.fields 9).value -}}
+{{- $sourceURL := (index $nuget.fields 7).value -}}
+{{- $username := (index $nuget.fields 1).value -}}
+{{- $password := (index $nuget.fields 2).value -}}
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="{{ $sourceKey }}" value="{{ $sourceURL }}" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+  </packageSources>
+  <packageSourceCredentials>
+    <{{ $sourceKey }}>
+      <add key="Username" value="{{ $username }}" />
+      <add key="ClearTextPassword" value="{{ $password }}" />
+    </{{ $sourceKey }}>
+  </packageSourceCredentials>
+</configuration>

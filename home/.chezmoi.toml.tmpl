@@ -60,11 +60,15 @@
 {{-     end -}}
 {{- end -}}
 
+encryption = "age"
 progress = true
 sourceDir = "~/.local/share/chezmoi"
 remove = true
 [onepassword]
     mode = "service"
+[age]
+    identities = ["~/.config/chezmoi/age-identities/identities.txt"]
+    recipientsFile = "~/.config/chezmoi/age-identities/recipients.txt"
 {{- if eq .chezmoi.os "windows" -}}
 [cd]
     command = 'powershell'

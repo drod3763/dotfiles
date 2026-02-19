@@ -1,6 +1,6 @@
 font-family = "PragmataPro Mono Liga"
 font-size = 16
-theme = dark:catppuccin-mocha,light:catppuccin-latte
+theme = catppuccin-mocha
 cursor-style-blink = false
 copy-on-select = true
 quick-terminal-position = top

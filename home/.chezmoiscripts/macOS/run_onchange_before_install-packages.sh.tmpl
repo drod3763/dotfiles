@@ -19,6 +19,7 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
 {{ end -}}
 
 {{ $brews := list
+    "age"
     "bat"
     "bat-extras"
     "chezmoi"
@@ -32,6 +33,7 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "git-delta"
     "glow"
     "go"
+    "gitleaks"
     "jq"
     "less"
     "mas"
@@ -44,7 +46,6 @@ while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
     "p7zip"
     "pandoc"
     "procs"
-    "rage"
     "ripgrep"
     "rsync"
     "sd"

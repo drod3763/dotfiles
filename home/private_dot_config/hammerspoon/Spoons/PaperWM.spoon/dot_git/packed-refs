@@ -1,0 +1,16 @@
+# pack-refs with: peeled fully-peeled sorted 
+f5f45e27d93a48dd4c14a944ecf0c1a9db887092 refs/remotes/origin/cmd-drag
+94be19e1d4c4524075474e9a9bd0bffc1bbac8e7 refs/remotes/origin/firefox-profiles
+0bbfe74e13462225018d9664a658865d56a5539d refs/remotes/origin/fix-focus-on-remove-window
+6d56a19239bd60dbc01dd6179e7833d978df71a2 refs/remotes/origin/float-window-move-space
+ba1748b678b6c4ea91c2417e22f30133179f3cce refs/remotes/origin/ignore-non-maximizable-windows
+83f313c317c3879e1ec0a93441aaa6b463bd6438 refs/remotes/origin/ignore-screen
+a2e985ce33ea9cd039c8a54486557fd526dd653d refs/remotes/origin/ignore-tabbed-windows
+254bf9244e316e231cd9d37e9a03ad147314bbee refs/remotes/origin/main
+113bd50284a190671e0450f9963f589421645fea refs/remotes/origin/nil-x-positions
+dbf5b9d01eef538c299f01f9f8ede942fde67095 refs/remotes/origin/pull-windows-in
+ed2455f6ada516f30788de495230f50a3ab4f22c refs/remotes/origin/readme-format
+a05e294d4cc45f219d70fc344cde3ef08e11d215 refs/remotes/origin/refactor
+3510d0cdd1f3d815159b29f63d2315fb624985fc refs/remotes/origin/refresh-windows
+f2ef65d6ddce16f6c45883ba6a43b4ed8a2f2044 refs/remotes/origin/release
+8cb5ea5c4b18670c5d15f27819fea4100071c5e8 refs/remotes/origin/unit-tests
