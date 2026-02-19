@@ -11,8 +11,14 @@ z4h source --compile $DOTFILES/functions/bash_path_funcs/edpath
 z4h source --compile $DOTFILES/functions/bash_path_funcs/realpath_filter
 z4h source --compile $DOTFILES/functions/dmginstall */ -}}
 
+{{- $functionFlags := (includeTemplate "rule_engine.tmpl" (dict
+  "context" .
+  "seed" .functions.flags
+  "rules" .functions.rules
+  "valueKey" "values") | fromJson) -}}
+
 {{/* Extract any archive. Usage: ex <file> */ -}}
-{{- if and (lookPath "unrar") (lookPath "7z") }}
+{{- if (get $functionFlags "ex") }}
 ex()
 {
   if [ -f $1 ] ; then
@@ -40,7 +46,7 @@ ex()
 {{- end }}
 
 {{- /* Docker Helpers */}}
-{{- if lookPath "docker" }}
+{{- if (get $functionFlags "docker_helpers") }}
 function dkrbuild() {
   docker build -t ${1} .
 }
@@ -53,7 +59,7 @@ function dkrrunmount() {
 {{- end }}
 
 {{- /* Update pip packages */}}
-{{- if lookPath "pip" }}
+{{- if (get $functionFlags "pipu") }}
 function pipu() {
 	pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U --user
 }
@@ -123,7 +129,7 @@ function listusers () {
 {{- /* Use ImageMagick convert to fake a scanned pdf. The order is important. the density argument applies to input.pdf
 and resize and rotate to output.pdf. Source: https://gist.github.com/andyrbell/25c8632e15d17c83a54602f6acde2724
 Note: You may need ghostscript installed on mac (brew install gs) */}}
-{{- if lookPath "convert"}}
+{{- if (get $functionFlags "fake_scan") }}
 function fakeScan() {
 	convert -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
 }
@@ -217,14 +223,14 @@ cd() { {{/* wrap `cd_`, add behaviors */}}
 }
 
 {{- /* Fix theme for flag highlights in manpages */}}
-{{ if lookPath "batman" }}
+{{ if (get $functionFlags "batman_man") }}
 man() {
   BAT_THEME="Monokai Extended" batman "$@"
   return $?
 }
 {{ end }}
 
-{{ if and (eq .chezmoi.os "darwin") (lookPath "osascript") }}
+{{ if (get $functionFlags "notify_me") }}
 notifyMe() {
   if [ $? -eq 0 ]; then
     osascript -e 'display notification "The command worked" with title "Success"'
@@ -234,8 +240,7 @@ notifyMe() {
 }
 {{ end }}
 
-{{ if and (eq .chezmoi.os "darwin") (not .personal) }}
-{{ if lookPath "saml2aws" }}
+{{ if (get $functionFlags "loginarcus") }}
 loginarcus() {
   saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force
 }
@@ -245,7 +250,7 @@ loginarcussu() {
 }
 {{ end }}
 
-{{ if and (lookPath "aws") (lookPath "kubectl") }}
+{{ if (get $functionFlags "switchprod") }}
 switchprod() {
   aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod --profile=arcus_prod
   export AWS_PROFILE="arcus_prod"
@@ -267,5 +272,4 @@ pgadmin() {
 
   kubectl port-forward "$POD" 6001:5000 -n subscription-management
 }
-{{ end }}
 {{ end }}

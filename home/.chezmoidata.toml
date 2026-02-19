@@ -511,3 +511,59 @@ type = "stdio"
 command = "bunx"
 args = ["-y", "@launchdarkly/mcp-server", "start", "--scope", "read", "--api-key"]
 env = {}
+
+[functions.flags]
+
+[[functions.rules]]
+id = "extract"
+when_tool = "unrar"
+when_tools = ["7z"]
+[functions.rules.values]
+ex = true
+
+[[functions.rules]]
+id = "docker-helpers"
+when_tool = "docker"
+[functions.rules.values]
+docker_helpers = true
+
+[[functions.rules]]
+id = "pip-update"
+when_tool = "pip"
+[functions.rules.values]
+pipu = true
+
+[[functions.rules]]
+id = "fake-scan"
+when_tool = "convert"
+[functions.rules.values]
+fake_scan = true
+
+[[functions.rules]]
+id = "man-batman"
+when_tool = "batman"
+[functions.rules.values]
+batman_man = true
+
+[[functions.rules]]
+id = "notify-darwin"
+when_os = "darwin"
+when_tool = "osascript"
+[functions.rules.values]
+notify_me = true
+
+[[functions.rules]]
+id = "work-saml2aws"
+when_os = "darwin"
+when_not_personal = true
+when_tool = "saml2aws"
+[functions.rules.values]
+loginarcus = true
+
+[[functions.rules]]
+id = "work-aws-k8s"
+when_os = "darwin"
+when_not_personal = true
+when_tools = ["aws", "kubectl"]
+[functions.rules.values]
+switchprod = true
