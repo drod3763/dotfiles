@@ -2,6 +2,7 @@
     "*.deb"
     "*.tar.gz"
     "1password_settings.json"
+    ".config/claude/.claude.json"
     "functions"
     "key.txt.age"
     "install.sh"

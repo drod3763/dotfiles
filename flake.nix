@@ -167,6 +167,7 @@
         fd
         fx
         fzf
+        gitleaks
         httpie
         imagemagick
         ldns

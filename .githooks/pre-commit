@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+global_hooks_path="$(git config --global --get core.hooksPath || true)"
+if [[ -n "${global_hooks_path}" ]]; then
+  case "${global_hooks_path}" in
+    /*) ;;
+    ~*) global_hooks_path="${HOME}${global_hooks_path#\~}" ;;
+    *) global_hooks_path="${HOME}/${global_hooks_path}" ;;
+  esac
+
+  global_pre_commit="${global_hooks_path}/pre-commit"
+  if [[ -x "${global_pre_commit}" ]]; then
+    "${global_pre_commit}" "$@"
+  fi
+fi
+
+"$(git rev-parse --show-toplevel)/scripts/check_secrets.sh"
