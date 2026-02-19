@@ -10,7 +10,12 @@
 
 # Exclude files or directories matching the specified globs
 # Env $TREEFMT_EXCLUDES
-# excludes = ["*.md", "*.gif"]
+excludes = [
+  ".git/**",
+  "tmp/**",
+  "home/private_dot_config/hammerspoon/Spoons/**",
+  "**/*.age",
+]
 
 # Exit with error if any changes were made during execution
 # Useful for CI
@@ -46,29 +51,31 @@
 # Env $TREEFMT_WALK
 # walk = "filesystem"
 
-[formatter.mylanguage]
-# Command to execute
-command = "command-to-run"
-# Command-line arguments for the command
-options = []
-# Glob pattern of files to include
-includes = [ "*.<language-extension>" ]
-# Glob patterns of files to exclude
-excludes = []
-# Controls the order of application when multiple formatters match the same file
-# Lower the number, the higher the precedence
-# Default is 0
-priority = 0
-
 [formatter.nix]
 command = "nixpkgs-fmt"
 includes = ["*.nix"]
 
-[formatter.gofmt]
-command = "gofmt"
-excludes = ["vendor/*"]
-includes = ["tmpl"]
-options = ["-w"]
+[formatter.toml]
+command = "taplo"
+includes = ["*.toml"]
+options = ["format"]
+
+[formatter.prettier]
+command = "bunx"
+includes = ["*.json", "*.jsonc", "*.md", "*.mdc", "*.yaml", "*.yml"]
+options = ["prettier", "--write"]
+
+[formatter.go-template]
+command = "bunx"
+includes = ["*.tmpl"]
+options = [
+  "prettier",
+  "--plugin",
+  "prettier-plugin-go-template",
+  "--parser",
+  "go-template",
+  "--write",
+]
 
 [formatter.shfmt]
 command = "shfmt"

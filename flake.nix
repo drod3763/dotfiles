@@ -184,6 +184,8 @@
         sd
         shellcheck
         tailscale
+        taplo
+        treefmt
         tealdeer
         thefuck
         up

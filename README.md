@@ -64,6 +64,20 @@ The installation script respects the following environment variables:
 - **Progress Feedback:** Provides clear status updates during long-running tasks.
 - **Structured Template Data:** Uses domain-scoped `chezmoidata` files under `home/.chezmoidata/` for reusable catalogs (exports, packages, aliases, functions, MCP, 1Password mappings).
 
+## Formatting
+
+This repo includes multi-language formatting via `treefmt` configuration at `home/treefmt.toml`.
+
+- Run all formatters: `treefmt`
+- Nix-based run (if available): `nix run .#treefmt`
+
+Configured formatters include:
+- `nixpkgs-fmt` for Nix
+- `taplo` for TOML
+- `shfmt` for shell scripts
+- `prettier` (via `bunx`) for JSON/YAML/Markdown
+- `prettier-plugin-go-template` (via `bunx`) for `*.tmpl` Go templates
+
 ## Template Data Layout
 
 Shared template data is split by domain in `home/.chezmoidata/*.toml`.

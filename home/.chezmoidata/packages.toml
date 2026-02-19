@@ -36,7 +36,9 @@ brews = [
   "sd",
   "shellcheck",
   "tailscale",
+  "taplo",
   "thefuck",
+  "treefmt",
   "up",
   "uv",
   "xdg-ninja",
@@ -177,4 +179,3 @@ casks = [
 id = "not-transient"
 when_not_transient = true
 casks = ["parallels"]
-
