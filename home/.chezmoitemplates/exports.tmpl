@@ -1,6 +1,7 @@
 {{ $exports := merge (dict) .exports.common -}}
 {{ $openai := .onepassword.items.openai_key -}}
 {{ $serviceAccount := .onepassword.items.service_account_token -}}
+{{ $awsCreds := .onepassword.items.aws_credentials -}}
 {{ $exports = merge $exports (dict
     "DOTFILES" .chezmoi.sourceDir
     "OPENAI_API_KEY" (includeTemplate "onepassword_field.tmpl" (dict "item" $openai.item "vault" $openai.vault "field_id" $openai.fields.credential))
@@ -10,6 +11,13 @@
     "seed" $exports
     "rules" .exports.rules
     "valueKey" "values") | fromJson) -}}
+{{ $workAccountID := includeTemplate "onepassword_field.tmpl" (dict "item" $awsCreds.item "vault" $awsCreds.vault "field_id" $awsCreds.fields.arcus_dev_account_id) -}}
+{{ $awsRegion := (get $exports "AWS_REGION") | default "us-west-2" -}}
+{{ if and (not .personal) (ne $workAccountID "") -}}
+{{   $exports = merge $exports (dict
+      "ANTHROPIC_MODEL" (printf "arn:aws:bedrock:%s:%s:inference-profile/us.anthropic.claude-opus-4-6-v1" $awsRegion $workAccountID)
+      "ANTHROPIC_SMALL_FAST_MODEL" (printf "arn:aws:bedrock:%s:%s:application-inference-profile/haiku" $awsRegion $workAccountID)) -}}
+{{ end -}}
 
 {{ if lookPath "dotnet" -}}
 {{   $dotnetRoot := "/opt/homebrew/opt/dotnet/libexec" -}}

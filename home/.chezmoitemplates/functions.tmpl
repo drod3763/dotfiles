@@ -273,3 +273,35 @@ pgadmin() {
   kubectl port-forward "$POD" 6001:5000 -n subscription-management
 }
 {{ end }}
+
+claude_bedrock() {
+  local mode="${1:-toggle}"
+
+  case "$mode" in
+    on|1|true)
+      export CLAUDE_CODE_USE_BEDROCK="1"
+      ;;
+    off|0|false)
+      export CLAUDE_CODE_USE_BEDROCK="0"
+      ;;
+    status)
+      ;;
+    toggle)
+      if [[ "${CLAUDE_CODE_USE_BEDROCK:-0}" == "1" ]]; then
+        export CLAUDE_CODE_USE_BEDROCK="0"
+      else
+        export CLAUDE_CODE_USE_BEDROCK="1"
+      fi
+      ;;
+    *)
+      echo "Usage: claude_bedrock [on|off|toggle|status]" >&2
+      return 1
+      ;;
+  esac
+
+  if [[ "${CLAUDE_CODE_USE_BEDROCK:-0}" == "1" ]]; then
+    echo "CLAUDE_CODE_USE_BEDROCK=1 (enabled)"
+  else
+    echo "CLAUDE_CODE_USE_BEDROCK=0 (disabled)"
+  fi
+}
