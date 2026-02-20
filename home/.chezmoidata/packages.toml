@@ -163,6 +163,7 @@ casks = [
   "bruno",
   "cursor",
   "cursor-cli",
+  "displaylink",
   "docker-desktop",
   "gitkraken",
   "jetbrains-toolbox",
