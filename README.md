@@ -9,13 +9,13 @@ My dotfiles, managed with [`chezmoi`](https://github.com/twpayne/chezmoi).
 To install these dotfiles on a new machine, run:
 
 ```bash
-sh -c "$(curl -fsSL https://chezmoi.io/get)" -- init --apply drod3763
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/drod3763/dotfiles/main/install.sh)"
 ```
 
 This will:
-1. Install `chezmoi` locally.
-2. Initialize with this repository.
-3. Apply the configuration (install packages, configure settings).
+1. Bootstrap prerequisites (Xcode CLI tools/Homebrew/1Password CLI as needed).
+2. Install `chezmoi` locally if missing.
+3. Initialize with this repository and apply configuration.
 
 ### Advanced Installation (Clone & Run)
 
@@ -42,9 +42,9 @@ By default, the installation script runs quietly. To see detailed output from `c
 
 **Via curl:**
 ```bash
-sh -c "$(curl -fsSL https://chezmoi.io/get)" -- init --apply drod3763 --verbose
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/drod3763/dotfiles/main/install.sh)" -- --verbose
 # or set the environment variable
-VERBOSE=1 sh -c "$(curl -fsSL https://chezmoi.io/get)" -- init --apply drod3763
+VERBOSE=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/drod3763/dotfiles/main/install.sh)"
 ```
 
 ### Configuration Variables
