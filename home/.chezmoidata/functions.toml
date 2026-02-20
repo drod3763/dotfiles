@@ -26,6 +26,12 @@ when_tool = "convert"
 fake_scan = true
 
 [[functions.rules]]
+id = "fake-scan-magick"
+when_tool = "magick"
+[functions.rules.values]
+fake_scan = true
+
+[[functions.rules]]
 id = "man-batman"
 when_tool = "batman"
 [functions.rules.values]
@@ -50,5 +56,5 @@ loginarcus = true
 id = "work-aws-k8s"
 when_os = "darwin"
 when_not_personal = true
-when_tools = ["aws", "kubectl"]
 [functions.rules.values]
+switchprod = true
