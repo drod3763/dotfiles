@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if ! command -v brew >/dev/null 2>&1; then
+  if [[ -x "/opt/homebrew/bin/brew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x "/usr/local/bin/brew" ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  else
+    echo "Skipping helper bootstrap: Homebrew is unavailable."
+    exit 0
+  fi
+fi
+
+install_helper_if_needed() {
+  local cask="$1"
+  local required_app="$2"
+  local helper_app="$3"
+
+  if [[ -n "${required_app}" && ! -d "${required_app}" ]]; then
+    echo "Skipping ${cask}: required app not found (${required_app})."
+    return
+  fi
+
+  if [[ -d "${helper_app}" ]]; then
+    echo "Skipping ${cask}: helper already installed."
+    return
+  fi
+
+  echo "Installing helper cask ${cask}..."
+  brew install --cask "drod3763/tap/${cask}"
+}
+
+brew tap drod3763/tap
+
+# cask | required app | helper app
+install_helper_if_needed "openin-helper" "/Applications/OpenIn.app" "/Applications/OpenIn Helper.app"
