@@ -105,11 +105,13 @@ casks = [
 [[packages.macos.rules]]
 id = "personal"
 when_personal = true
+taps = ["drod3763/tap"]
 brews = [
   "ffmpeg",
   "libheif",
   "imagemagick",
   "mkcert",
+  "rar",
 ]
 casks = [
   "affinity",
@@ -135,6 +137,7 @@ casks = [
 id = "work"
 when_not_personal = true
 taps = [
+  "drod3763/tap",
   "felixkratz/formulae",
   "oven-sh/bun",
 ]
@@ -155,6 +158,7 @@ brews = [
   "mise",
   "pulumi",
   "python",
+  "rar",
   "saml2aws",
   "tilt",
   "yq",
@@ -175,6 +179,11 @@ casks = [
 [packages.macos.rules.mas]
 "Amphetamine" = ", id: 937984704"
 "Xcode" = ", id: 497799835"
+
+[[packages.macos.rules]]
+id = "openin-helper"
+when_stat = "/Applications/OpenIn.app"
+casks = ["openin-helper"]
 
 [[packages.macos.rules]]
 id = "not-transient"
