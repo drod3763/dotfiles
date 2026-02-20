@@ -2,6 +2,10 @@
 
 set -eufo pipefail
 
+{{ includeTemplate "sudo_helpers.tmpl" . }}
+
+trap stop_sudo_keepalive EXIT
+
 {{ if and (stat "/Applications/iTerm.app")
 (and
 (not (stat (expandenv "$HOME/.iterm2_shell_integration.zsh")))
@@ -31,8 +35,7 @@ fi
 {{ $corpLocalDomain := includeTemplate "onepassword_url_label.tmpl" (dict "item" $workDomain.item "vault" $workDomain.vault "label" "corp_local_domain") -}}
 {{ if ne $corpLocalDomain "" -}}
 if ! grep -qE '^[[:space:]]*127\.0\.0\.1[[:space:]]+{{ regexQuoteMeta $corpLocalDomain }}([[:space:]]|$)' /etc/hosts; then
-  sudo -v
-  printf '%s\n' '127.0.0.1 {{ $corpLocalDomain }}' | sudo tee -a /etc/hosts >/dev/null
+  printf '%s\n' '127.0.0.1 {{ $corpLocalDomain }}' | with_sudo tee -a /etc/hosts >/dev/null
 fi
 {{ end -}}
 {{ end -}}
@@ -42,6 +45,6 @@ fi
 {{ if not .personal -}}
 {{  if lookPath "java" -}}
 # Setup Java for Homebrew
-sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+with_sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
 {{  end -}}
 {{ end -}}

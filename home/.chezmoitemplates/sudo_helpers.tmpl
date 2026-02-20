@@ -1,0 +1,30 @@
+sudo_keepalive_pid=""
+
+start_sudo_keepalive() {
+  if ! sudo -n true >/dev/null 2>&1; then
+    sudo -v
+  fi
+
+  if [[ -n "${sudo_keepalive_pid}" ]]; then
+    return
+  fi
+
+  while true; do
+    sudo -n true
+    sleep 10
+    kill -0 "$$" || exit
+  done 2>/dev/null &
+  sudo_keepalive_pid=$!
+}
+
+stop_sudo_keepalive() {
+  if [[ -n "${sudo_keepalive_pid}" ]]; then
+    kill "${sudo_keepalive_pid}" >/dev/null 2>&1 || true
+    sudo_keepalive_pid=""
+  fi
+}
+
+with_sudo() {
+  start_sudo_keepalive
+  sudo "$@"
+}

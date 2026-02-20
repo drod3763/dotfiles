@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# Keep sudo alive only when credentials are already available.
-if sudo -n true >/dev/null 2>&1; then
-  while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
-fi
+{{ includeTemplate "sudo_helpers.tmpl" . }}
+
+trap stop_sudo_keepalive EXIT
+start_sudo_keepalive
 
 # Ensure Homebrew is available even in non-interactive PATH contexts.
 if ! command -v brew >/dev/null 2>&1; then
