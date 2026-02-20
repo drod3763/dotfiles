@@ -39,7 +39,11 @@ fi
 {{ $casks := $resolved.casks -}}
 {{ $mas := $resolved.mas -}}
 
-brew bundle --verbose --force --zap --file=/dev/stdin <<EOF
+max_attempts="${BREW_BUNDLE_MAX_ATTEMPTS:-3}"
+attempt=1
+
+while true; do
+  if brew bundle --verbose --force --zap --file=/dev/stdin <<EOF
 {{ range ($taps | sortAlpha | uniq) -}}
 tap "{{ . }}"
 {{ end -}}
@@ -59,3 +63,17 @@ mas "{{ . }}"{{get $mas  . }}
 {{ end -}}
 {{ end -}}
 EOF
+  then
+    break
+  fi
+
+  if [[ "${attempt}" -ge "${max_attempts}" ]]; then
+    echo "brew bundle failed after ${attempt} attempts." >&2
+    exit 1
+  fi
+
+  delay_seconds=$((attempt * 15))
+  echo "brew bundle failed (attempt ${attempt}/${max_attempts}); retrying in ${delay_seconds}s..." >&2
+  sleep "${delay_seconds}"
+  attempt=$((attempt + 1))
+done
