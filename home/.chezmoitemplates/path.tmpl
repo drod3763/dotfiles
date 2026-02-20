@@ -6,6 +6,10 @@
         "$VOLTA_HOME/bin/" ) -}}
 {{ end -}}
 
+{{ $paths = concat $paths (list
+    "$GOPATH/bin"
+    "$DOTNET_CLI_HOME/.dotnet/tools" ) -}}
+
 {{ if eq .chezmoi.os "darwin" -}}
 {{      if lookPath "brew" -}}
 {{          $paths = concat $paths (list
