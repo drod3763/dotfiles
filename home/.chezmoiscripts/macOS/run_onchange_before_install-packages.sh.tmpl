@@ -2,11 +2,10 @@
 
 set -euo pipefail
 
-# Ask for the administrator password upfront
-sudo -v
-
-# Keep-alive: update existing `sudo` time stamp until the script has finished
-while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
+# Keep sudo alive only when credentials are already available.
+if sudo -n true >/dev/null 2>&1; then
+  while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null &
+fi
 
 # Ensure Homebrew is available even in non-interactive PATH contexts.
 if ! command -v brew >/dev/null 2>&1; then
