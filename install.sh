@@ -52,9 +52,13 @@ if [ "$(uname)" = "Darwin" ] && ! command -v brew >/dev/null 2>&1; then
 
 	# Add Homebrew to PATH for this session
 	if [ "$(uname -m)" = "arm64" ]; then
-		eval "$(/opt/homebrew/bin/brew shellenv)"
+		if brew_shellenv="$(/opt/homebrew/bin/brew shellenv)"; then
+			eval "${brew_shellenv}"
+		fi
 	else
-		eval "$(/usr/local/bin/brew shellenv)"
+		if brew_shellenv="$(/usr/local/bin/brew shellenv)"; then
+			eval "${brew_shellenv}"
+		fi
 	fi
 	echo "Homebrew installed and added to PATH." >&2
 fi

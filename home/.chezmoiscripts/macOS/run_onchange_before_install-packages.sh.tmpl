@@ -10,9 +10,13 @@ start_sudo_keepalive
 # Ensure Homebrew is available even in non-interactive PATH contexts.
 if ! command -v brew >/dev/null 2>&1; then
   if [[ -x "/opt/homebrew/bin/brew" ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    if brew_shellenv="$(/opt/homebrew/bin/brew shellenv)"; then
+      eval "${brew_shellenv}"
+    fi
   elif [[ -x "/usr/local/bin/brew" ]]; then
-    eval "$(/usr/local/bin/brew shellenv)"
+    if brew_shellenv="$(/usr/local/bin/brew shellenv)"; then
+      eval "${brew_shellenv}"
+    fi
   fi
 fi
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eufo pipefail
+set -euo pipefail
 
 {{ includeTemplate "sudo_helpers.tmpl" . }}
 
@@ -25,7 +25,7 @@ defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspo
 {{ end -}}
 
 {{ if lookPath "ya" -}}
-if [ ! -d "$HOME/.config/yazi/flavors/catppuccin-mocha.yazi" ]; then
+if [[ ! -d "${HOME}/.config/yazi/flavors/catppuccin-mocha.yazi" ]]; then
   ya pkg add yazi-rs/flavors:catppuccin-mocha
 fi
 {{ end -}}

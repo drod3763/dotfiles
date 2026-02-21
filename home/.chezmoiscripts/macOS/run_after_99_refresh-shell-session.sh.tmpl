@@ -5,5 +5,6 @@ set -euo pipefail
 # Print a clear next step so the user can refresh their login shell.
 if [[ -t 1 ]]; then
   printf '\n%s\n' "Bootstrap finished. Refresh your shell session:"
+  # shellcheck disable=SC2016
   printf '  %s\n\n' 'exec "$SHELL" -l'
 fi

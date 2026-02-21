@@ -5,6 +5,20 @@ log() {
   printf '%s\n' "[age-bootstrap] $*" >&2
 }
 
+add_source() {
+  local source="$1"
+  local origin="$2"
+  local item_id="${source%%:*}"
+  local vault_id="${source##*:}"
+
+  if [[ -z "${item_id}" || -z "${vault_id}" || "${item_id}" == "${vault_id}" ]]; then
+    log "Ignoring malformed source from ${origin}: ${source}"
+    return
+  fi
+
+  sources+=("${item_id}:${vault_id}")
+}
+
 if ! command -v op >/dev/null 2>&1; then
   log "Skipping: 1Password CLI (op) is not installed."
   exit 0
@@ -38,21 +52,19 @@ if [[ -n "${CHEZMOI_AGE_IDENTITY_ITEMS:-}" ]]; then
   for entry in "${entries[@]}"; do
     trimmed="$(printf '%s' "${entry}" | xargs)"
     [[ -n "${trimmed}" ]] || continue
-    sources+=("${trimmed}")
+    add_source "${trimmed}" "CHEZMOI_AGE_IDENTITY_ITEMS"
   done
 else
   log "Checking target items file: ${items_file}"
   if [[ -f "${items_file}" ]]; then
     log "Target items file found."
+  # shellcheck disable=SC2094
   while IFS= read -r line; do
     clean="$(printf '%s' "${line}" | sed -E 's/#.*$//; s/^[[:space:]]+//; s/[[:space:]]+$//')"
     [[ -n "${clean}" ]] || continue
     item_id="${clean%% *}"
     vault_id="${clean#* }"
-    if [[ "${item_id}" == "${vault_id}" ]]; then
-      continue
-    fi
-    sources+=("${item_id}:${vault_id}")
+    add_source "${item_id}:${vault_id}" "${items_file}"
   done < "${items_file}"
   else
     log "Target items file not found."
@@ -65,15 +77,13 @@ else
 
     if [[ -n "${source_items_file}" && -f "${source_items_file}" ]]; then
       log "Source items file found."
+    # shellcheck disable=SC2094
     while IFS= read -r line; do
       clean="$(printf '%s' "${line}" | sed -E 's/#.*$//; s/^[[:space:]]+//; s/[[:space:]]+$//')"
       [[ -n "${clean}" ]] || continue
       item_id="${clean%% *}"
       vault_id="${clean#* }"
-      if [[ "${item_id}" == "${vault_id}" ]]; then
-        continue
-      fi
-      sources+=("${item_id}:${vault_id}")
+      add_source "${item_id}:${vault_id}" "${source_items_file}"
     done < "${source_items_file}"
     else
       log "Source items file not found."
@@ -116,8 +126,8 @@ for source in "${sources[@]}"; do
 done
 
 if [[ ! -s "${tmp_identities}" ]]; then
-  log "No identities written; bootstrap did not produce output."
-  exit 0
+  log "No identities written from ${#sources[@]} source(s); stopping to avoid downstream decryption failures."
+  exit 1
 fi
 
 awk 'NF && !seen[$0]++' "${tmp_identities}" > "${identities_file}"
