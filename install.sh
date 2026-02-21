@@ -66,6 +66,13 @@ if ! command -v op >/dev/null 2>&1; then
 	echo "1Password CLI installed." >&2
 fi
 
+# Install age if not present (required for chezmoi decryption when builtin age is disabled)
+if ! command -v age >/dev/null 2>&1 && ! command -v rage >/dev/null 2>&1; then
+	echo "Installing age..." >&2
+	brew install age
+	echo "age installed." >&2
+fi
+
 # Set up 1Password CLI service account token
 if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
 	echo "Enter 1Password service account token (or press Enter to skip):" >&2

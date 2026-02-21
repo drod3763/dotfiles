@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+log() {
+  printf '%s\n' "[age-bootstrap] $*" >&2
+}
+
 if ! command -v op >/dev/null 2>&1; then
+  log "Skipping: 1Password CLI (op) is not installed."
   exit 0
 fi
 
 if ! command -v chezmoi >/dev/null 2>&1; then
+  log "Skipping: chezmoi is not installed."
   exit 0
 fi
 
 if ! command -v age >/dev/null 2>&1 && ! command -v rage >/dev/null 2>&1; then
-  exit 0
+  log "Missing required dependency: age or rage."
+  echo "age or rage is required to decrypt chezmoi-managed secrets." >&2
+  echo "Install age first, then re-run install.sh or chezmoi apply." >&2
+  exit 1
 fi
 
 config_dir="${HOME}/.config/chezmoi"
@@ -24,13 +33,17 @@ mkdir -p "${age_dir}"
 declare -a sources=()
 
 if [[ -n "${CHEZMOI_AGE_IDENTITY_ITEMS:-}" ]]; then
+  log "Using CHEZMOI_AGE_IDENTITY_ITEMS environment override."
   IFS=',' read -r -a entries <<< "${CHEZMOI_AGE_IDENTITY_ITEMS}"
   for entry in "${entries[@]}"; do
     trimmed="$(printf '%s' "${entry}" | xargs)"
     [[ -n "${trimmed}" ]] || continue
     sources+=("${trimmed}")
   done
-elif [[ -f "${items_file}" ]]; then
+else
+  log "Checking target items file: ${items_file}"
+  if [[ -f "${items_file}" ]]; then
+    log "Target items file found."
   while IFS= read -r line; do
     clean="$(printf '%s' "${line}" | sed -E 's/#.*$//; s/^[[:space:]]+//; s/[[:space:]]+$//')"
     [[ -n "${clean}" ]] || continue
@@ -41,11 +54,39 @@ elif [[ -f "${items_file}" ]]; then
     fi
     sources+=("${item_id}:${vault_id}")
   done < "${items_file}"
+  else
+    log "Target items file not found."
+    source_items_file="$(chezmoi source-path "${items_file}" 2>/dev/null || true)"
+    if [[ -z "${source_items_file}" ]]; then
+      log "Could not resolve source path for items file."
+    else
+      log "Resolved source items path: ${source_items_file}"
+    fi
+
+    if [[ -n "${source_items_file}" && -f "${source_items_file}" ]]; then
+      log "Source items file found."
+    while IFS= read -r line; do
+      clean="$(printf '%s' "${line}" | sed -E 's/#.*$//; s/^[[:space:]]+//; s/[[:space:]]+$//')"
+      [[ -n "${clean}" ]] || continue
+      item_id="${clean%% *}"
+      vault_id="${clean#* }"
+      if [[ "${item_id}" == "${vault_id}" ]]; then
+        continue
+      fi
+      sources+=("${item_id}:${vault_id}")
+    done < "${source_items_file}"
+    else
+      log "Source items file not found."
+    fi
+  fi
 fi
 
 if [[ ${#sources[@]} -eq 0 ]]; then
+  log "No age identity sources found; nothing to bootstrap."
   exit 0
 fi
+
+log "Found ${#sources[@]} identity source(s)."
 
 tmp_identities="$(mktemp)"
 tmp_recipients="$(mktemp)"
@@ -60,6 +101,7 @@ for source in "${sources[@]}"; do
 
   identity="$(op item get "${item_id}" --vault "${vault_id}" --fields credential --reveal 2>/dev/null || true)"
   if [[ -z "${identity}" ]]; then
+    log "No credential returned for ${item_id}:${vault_id}; skipping."
     continue
   fi
 
@@ -74,9 +116,11 @@ for source in "${sources[@]}"; do
 done
 
 if [[ ! -s "${tmp_identities}" ]]; then
+  log "No identities written; bootstrap did not produce output."
   exit 0
 fi
 
 awk 'NF && !seen[$0]++' "${tmp_identities}" > "${identities_file}"
 awk 'NF && !seen[$0]++' "${tmp_recipients}" > "${recipients_file}"
 chmod 600 "${identities_file}" "${recipients_file}"
+log "Wrote identities to ${identities_file} and recipients to ${recipients_file}."
