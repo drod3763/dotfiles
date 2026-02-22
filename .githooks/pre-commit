@@ -16,3 +16,4 @@ if [[ -n "${global_hooks_path}" ]]; then
 fi
 
 "$(git rev-parse --show-toplevel)/scripts/check_secrets.sh"
+"$(git rev-parse --show-toplevel)/scripts/check_rendered_shell_templates.sh"
