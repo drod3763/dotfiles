@@ -83,7 +83,7 @@ Configured formatters include:
 Shell script logic tests use `bats-core` with CLI mocks.
 
 - Run test suite: `scripts/run_bats_tests.sh`
-- Test files: `tests/bats/*.bats`
+- Test files: `tests/bats/**/*.bats`
 
 ## Template Data Layout
 

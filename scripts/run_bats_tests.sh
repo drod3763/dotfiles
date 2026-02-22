@@ -8,4 +8,4 @@ if ! command -v bats >/dev/null 2>&1; then
 	exit 1
 fi
 
-bats "${repo_root}/tests/bats"
+bats -r "${repo_root}/tests/bats"

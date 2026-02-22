@@ -25,11 +25,13 @@ add_candidate() {
 	local candidate="$1"
 	local existing
 
-	for existing in "${candidates[@]}"; do
-		if [[ "${existing}" == "${candidate}" ]]; then
-			return
-		fi
-	done
+	if [[ ${#candidates[@]} -gt 0 ]]; then
+		for existing in "${candidates[@]}"; do
+			if [[ "${existing}" == "${candidate}" ]]; then
+				return
+			fi
+		done
+	fi
 
 	candidates+=("${candidate}")
 }
@@ -49,11 +51,19 @@ while IFS= read -r path; do
 done <<<"${staged_paths}"
 
 if [[ ${check_all} -eq 1 ]]; then
-	shopt -s nullglob globstar
-	for full_path in "${repo_root}"/home/.chezmoiscripts/**/*.tmpl; do
-		rel_path="${full_path#"${repo_root}"/}"
-		add_candidate "${rel_path}"
-	done
+	if ! tracked_paths="$(git ls-files)"; then
+		echo "Failed to list tracked files." >&2
+		exit 1
+	fi
+
+	while IFS= read -r rel_path; do
+		case "${rel_path}" in
+		home/.chezmoiscripts/*/*.tmpl)
+			add_candidate "${rel_path}"
+			;;
+		*) ;;
+		esac
+	done <<<"${tracked_paths}"
 fi
 
 if [[ ${#candidates[@]} -eq 0 ]]; then
