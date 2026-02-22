@@ -9,9 +9,14 @@ setup() {
   MOCK_BIN_DIR="${TEST_TMPDIR}/bin"
   mkdir -p "${MOCK_BIN_DIR}" "${TEST_TMPDIR}/home/.config/claude"
 
+  export HOME="${TEST_TMPDIR}/home"
+  export PATH="${MOCK_BIN_DIR}:${PATH}"
+  export MOCK_JQ_CALLS_FILE="${TEST_TMPDIR}/jq.calls"
+
   cat > "${MOCK_BIN_DIR}/jq" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+printf '%s\n' "$*" >> "${MOCK_JQ_CALLS_FILE:?}"
 
 if [[ "${1:-}" == "-e" ]]; then
   exit 1
@@ -26,8 +31,6 @@ exit 0
 EOF
 
   chmod +x "${MOCK_BIN_DIR}/jq"
-  export HOME="${TEST_TMPDIR}/home"
-  export PATH="${MOCK_BIN_DIR}:${PATH}"
 
   cat > "${HOME}/.config/claude/mcp-servers.json" <<'EOF'
 {"demo":{"command":"demo"}}
@@ -48,4 +51,16 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   run test -f "${HOME}/.config/claude/.claude.json"
   [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN mcp file missing EXPECT script exits without jq merge" {
+  rm -f "${HOME}/.config/claude/mcp-servers.json"
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  if [[ -f "${MOCK_JQ_CALLS_FILE}" ]]; then
+    run grep -q '^--slurpfile' "${MOCK_JQ_CALLS_FILE}"
+    [[ "${status}" -eq 1 ]]
+  fi
 }

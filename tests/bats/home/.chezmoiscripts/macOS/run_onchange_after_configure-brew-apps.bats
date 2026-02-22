@@ -22,12 +22,15 @@ EOF
 
   cat > "${MOCK_BIN_DIR}/ya" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "${MOCK_YA_CALLS_FILE:?}"
 exit 0
 EOF
 
   chmod +x "${MOCK_BIN_DIR}/tldr" "${MOCK_BIN_DIR}/defaults" "${MOCK_BIN_DIR}/ya"
 
   export PATH="${MOCK_BIN_DIR}:${PATH}"
+  export MOCK_YA_CALLS_FILE="${TEST_TMPDIR}/ya.calls"
 
   override_file="${TEST_TMPDIR}/override.json"
   printf '%s\n' '{"personal":true}' > "${override_file}"
@@ -43,5 +46,15 @@ teardown() {
 
 @test "GIVEN personal profile EXPECT script executes without sudo-required work steps" {
   run env HOME="${TEST_HOME}" PATH="${PATH}" bash "${RENDERED_SCRIPT}"
+  [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN yazi flavor missing EXPECT script installs catppuccin flavor" {
+  rm -rf "${TEST_HOME}/.config/yazi/flavors/catppuccin-mocha.yazi"
+
+  run env HOME="${TEST_HOME}" PATH="${PATH}" bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^pkg add yazi-rs/flavors:catppuccin-mocha$' "${MOCK_YA_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
 }

@@ -7,7 +7,8 @@ setup() {
 
   TEST_TMPDIR="$(mktemp -d)"
   MOCK_BIN_DIR="${TEST_TMPDIR}/bin"
-  mkdir -p "${MOCK_BIN_DIR}"
+  MOCK_APPS_DIR="${TEST_TMPDIR}/Applications"
+  mkdir -p "${MOCK_BIN_DIR}" "${MOCK_APPS_DIR}"
 
   cat > "${MOCK_BIN_DIR}/brew" <<'EOF'
 #!/usr/bin/env bash
@@ -20,8 +21,10 @@ EOF
   export MOCK_BREW_CALLS_FILE="${TEST_TMPDIR}/brew.calls"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
 
+  RENDERED_SCRIPT_RAW="${TEST_TMPDIR}/run_once_after_install-helpers.raw.sh"
   RENDERED_SCRIPT="${TEST_TMPDIR}/run_once_after_install-helpers.sh"
-  "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
+  "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT_RAW}"
+  sed "s|/Applications|${MOCK_APPS_DIR}|g" "${RENDERED_SCRIPT_RAW}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
 
@@ -34,5 +37,23 @@ teardown() {
 
   [[ "${status}" -eq 0 ]]
   run grep -q '^tap drod3763/tap$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN required app missing EXPECT helper cask install is skipped" {
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^install --cask drod3763/tap/openin-helper$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 1 ]]
+}
+
+@test "GIVEN required app present and helper absent EXPECT helper cask is installed" {
+  mkdir -p "${MOCK_APPS_DIR}/OpenIn.app"
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^install --cask drod3763/tap/openin-helper$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
 }

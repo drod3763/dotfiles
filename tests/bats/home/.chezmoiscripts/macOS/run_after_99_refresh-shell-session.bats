@@ -19,3 +19,14 @@ teardown() {
   run bash "${RENDERED_SCRIPT}"
   [[ "${status}" -eq 0 ]]
 }
+
+@test "GIVEN interactive branch forced EXPECT refresh instruction is printed" {
+  forced_script="${TEST_TMPDIR}/run_after_99_refresh-shell-session-forced.sh"
+  sed 's/\[\[ -t 1 \]\]/true/' "${RENDERED_SCRIPT}" > "${forced_script}"
+  chmod +x "${forced_script}"
+
+  run bash "${forced_script}"
+
+  [[ "${status}" -eq 0 ]]
+  [[ "${output}" == *'exec "$SHELL" -l'* ]]
+}
