@@ -16,6 +16,11 @@ fi
 declare -a candidates=()
 check_all=0
 
+if ! staged_paths="$(git diff --cached --name-only --diff-filter=ACMR)"; then
+	echo "Failed to read staged files." >&2
+	exit 1
+fi
+
 add_candidate() {
 	local candidate="$1"
 	local existing
@@ -39,13 +44,14 @@ while IFS= read -r path; do
 	home/.chezmoiscripts/*/*.tmpl)
 		add_candidate "${path}"
 		;;
+	*) ;;
 	esac
-done < <(git diff --cached --name-only --diff-filter=ACMR)
+done <<<"${staged_paths}"
 
 if [[ ${check_all} -eq 1 ]]; then
 	shopt -s nullglob globstar
 	for full_path in "${repo_root}"/home/.chezmoiscripts/**/*.tmpl; do
-		rel_path="${full_path#${repo_root}/}"
+		rel_path="${full_path#"${repo_root}"/}"
 		add_candidate "${rel_path}"
 	done
 fi

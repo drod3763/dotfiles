@@ -78,6 +78,13 @@ Configured formatters include:
 - `prettier` (via `bunx`) for JSON/YAML/Markdown
 - `prettier-plugin-go-template` (via `bunx`) for `*.tmpl` Go templates
 
+## Testing
+
+Shell script logic tests use `bats-core` with CLI mocks.
+
+- Run test suite: `scripts/run_bats_tests.sh`
+- Test files: `tests/bats/*.bats`
+
 ## Template Data Layout
 
 Shared template data is split by domain in `home/.chezmoidata/*.toml`.
