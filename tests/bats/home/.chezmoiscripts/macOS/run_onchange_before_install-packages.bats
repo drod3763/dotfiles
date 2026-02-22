@@ -76,10 +76,15 @@ EOF
 set -euo pipefail
 
 if [[ "${1:-}" == "-n" && "${2:-}" == "true" ]]; then
+  if [[ -n "${MOCK_SUDO_NEEDS_PROMPT:-}" && ! -f "${MOCK_SUDO_CACHE_FILE:?}" ]]; then
+    exit 1
+  fi
   exit 0
 fi
 
 if [[ "${1:-}" == "-v" ]]; then
+  printf '%s\n' "$*" >> "${MOCK_SUDO_CALLS_FILE:?}"
+  : > "${MOCK_SUDO_CACHE_FILE:?}"
   exit 0
 fi
 
@@ -98,6 +103,8 @@ EOF
   chmod +x "${RENDERED_SCRIPT}"
 
   export MOCK_BREW_COUNTER_FILE="${TEST_TMPDIR}/brew-bundle-count"
+  export MOCK_SUDO_CALLS_FILE="${TEST_TMPDIR}/sudo.calls"
+  export MOCK_SUDO_CACHE_FILE="${TEST_TMPDIR}/sudo.cache"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
 }
 
@@ -138,6 +145,16 @@ render_with_mocked_brew_paths() {
 
   [ "${status}" -eq 1 ]
   [ "$(cat "${MOCK_BREW_COUNTER_FILE}")" -eq 2 ]
+}
+
+@test "GIVEN max attempts set to one EXPECT script fails without retry" {
+  export MOCK_BREW_FAILS_BEFORE_SUCCESS=99
+  export BREW_BUNDLE_MAX_ATTEMPTS=1
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [ "${status}" -eq 1 ]
+  [ "$(cat "${MOCK_BREW_COUNTER_FILE}")" -eq 1 ]
 }
 
 @test "GIVEN personal non-transient EXPECT personal package set excludes work-only brews" {
@@ -190,4 +207,14 @@ render_with_mocked_brew_paths() {
 
   [ "${status}" -eq 127 ]
   [[ "${output}" == *"Homebrew is required but was not found in PATH."* ]]
+}
+
+@test "GIVEN sudo cache missing EXPECT script prompts with sudo -v before install" {
+  export MOCK_SUDO_NEEDS_PROMPT=1
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q '^-v$' "${MOCK_SUDO_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
 }

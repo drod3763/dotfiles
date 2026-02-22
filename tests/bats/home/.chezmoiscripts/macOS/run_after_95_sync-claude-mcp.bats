@@ -12,6 +12,7 @@ setup() {
   export HOME="${TEST_TMPDIR}/home"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
   export MOCK_JQ_CALLS_FILE="${TEST_TMPDIR}/jq.calls"
+  export MOCK_TMP_FILE="${TEST_TMPDIR}/jq.tmp"
 
   cat > "${MOCK_BIN_DIR}/jq" <<'EOF'
 #!/usr/bin/env bash
@@ -19,10 +20,21 @@ set -euo pipefail
 printf '%s\n' "$*" >> "${MOCK_JQ_CALLS_FILE:?}"
 
 if [[ "${1:-}" == "-e" ]]; then
+  if [[ -n "${MOCK_JQ_VALID_TARGET:-}" ]]; then
+    exit 0
+  fi
   exit 1
 fi
 
 if [[ "${1:-}" == "--slurpfile" ]]; then
+  if [[ -n "${MOCK_JQ_MERGE_FAIL:-}" ]]; then
+    exit 1
+  fi
+  if [[ -n "${MOCK_JQ_PASSTHROUGH_TARGET:-}" ]]; then
+    target_file="${4:-}"
+    cat "${target_file}"
+    exit 0
+  fi
   printf '%s\n' '{"mcpServers":{"demo":{"command":"demo"}}}'
   exit 0
 fi
@@ -30,7 +42,14 @@ fi
 exit 0
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/jq"
+  cat > "${MOCK_BIN_DIR}/mktemp" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "${MOCK_TMP_FILE:?}"
+: > "${MOCK_TMP_FILE:?}"
+EOF
+
+  chmod +x "${MOCK_BIN_DIR}/jq" "${MOCK_BIN_DIR}/mktemp"
 
   cat > "${HOME}/.config/claude/mcp-servers.json" <<'EOF'
 {"demo":{"command":"demo"}}
@@ -73,4 +92,26 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   run test -f "${HOME}/.config/claude/.claude.json"
   [[ "${status}" -eq 1 ]]
+}
+
+@test "GIVEN valid target JSON EXPECT default bootstrap content is not rewritten" {
+  export MOCK_JQ_VALID_TARGET=1
+  export MOCK_JQ_PASSTHROUGH_TARGET=1
+  printf '%s\n' '{"keep":true}' > "${HOME}/.config/claude/.claude.json"
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '"keep":true' "${HOME}/.config/claude/.claude.json"
+  [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN jq merge fails EXPECT script exits non-zero and temp file is cleaned" {
+  export MOCK_JQ_MERGE_FAIL=1
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -ne 0 ]]
+  run test -f "${MOCK_TMP_FILE}"
+  [[ "${status}" -ne 0 ]]
 }

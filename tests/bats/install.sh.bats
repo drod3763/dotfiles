@@ -93,11 +93,11 @@ done
 "$@"
 EOF
 
-  cat > "${MOCK_BIN_DIR}/curl" <<'EOF'
+cat > "${MOCK_BIN_DIR}/curl" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "$*" >> "${MOCK_CURL_CALLS_FILE:?}"
-printf '%s\n' 'exit 0'
+printf '%s\n' "${MOCK_CURL_SCRIPT_CONTENT:-exit 0}"
 EOF
 
   cat > "${MOCK_BIN_DIR}/xcode-select" <<'EOF'
@@ -289,4 +289,14 @@ teardown() {
   [ "${status}" -eq 0 ]
   run grep -q '^apply --force --refresh-externals$' "${MOCK_CHEZMOI_CALLS_FILE}"
   [ "${status}" -eq 0 ]
+}
+
+@test "GIVEN Darwin Homebrew bootstrap command fails EXPECT installer exits non-zero" {
+  export MOCK_UNAME_S="Darwin"
+  rm -f "${MOCK_BIN_DIR}/brew"
+  export MOCK_CURL_SCRIPT_CONTENT='exit 1'
+
+  run bash "${INSTALL_SCRIPT}"
+
+  [ "${status}" -ne 0 ]
 }

@@ -20,13 +20,26 @@ if [[ "${1:-}" == "auth" && "${2:-}" == "status" ]]; then
   exit 1
 fi
 
+if [[ "${1:-}" == "auth" && "${2:-}" == "login" && -n "${MOCK_GH_LOGIN_FAIL:-}" ]]; then
+  exit 1
+fi
+
 printf '%s\n' "$*" >> "${MOCK_GH_CALLS_FILE:?}"
 exit 0
 EOF
 
-  cat > "${MOCK_BIN_DIR}/brew" <<'EOF'
+cat > "${MOCK_BIN_DIR}/brew" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+
+if [[ "${1:-}" == "tap" && -n "${MOCK_BREW_TAP_FAIL:-}" ]]; then
+  exit 1
+fi
+
+if [[ "${1:-}" == "install" && -n "${MOCK_BREW_INSTALL_FAIL:-}" ]]; then
+  exit 1
+fi
+
 printf '%s\n' "$*" >> "${MOCK_BREW_CALLS_FILE:?}"
 exit 0
 EOF
@@ -85,4 +98,23 @@ teardown() {
   [[ "${status}" -eq 1 ]]
   run grep -q '^auth setup-git$' "${MOCK_GH_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN gh login fails EXPECT script exits non-zero" {
+  export MOCK_GH_LOGIN_FAIL=1
+  render_non_personal_script
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -ne 0 ]]
+}
+
+@test "GIVEN brew tap fails EXPECT script exits non-zero" {
+  export MOCK_GH_AUTHENTICATED=1
+  export MOCK_BREW_TAP_FAIL=1
+  render_non_personal_script
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -ne 0 ]]
 }
