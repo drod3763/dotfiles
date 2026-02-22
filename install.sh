@@ -38,7 +38,13 @@ if [ "$(uname)" = "Darwin" ] && ! command -v git >/dev/null 2>&1; then
 fi
 
 # Configure Git with placeholder values if not configured
-if [ ! "$(git config --global user.name)" ] || [ ! "$(git config --global user.email)" ]; then
+has_git_name=1
+has_git_email=1
+
+git config --global user.name >/dev/null 2>&1 || has_git_name=0
+git config --global user.email >/dev/null 2>&1 || has_git_email=0
+
+if [[ "${has_git_name}" -eq 0 || "${has_git_email}" -eq 0 ]]; then
 	echo "Setting placeholder Git configuration (will be replaced by chezmoi)..." >&2
 	git config --global user.name "Temporary User"
 	git config --global user.email "temp@example.com"

@@ -22,11 +22,25 @@ EOF
 set -euo pipefail
 
 if [[ "${1:-}" == "config" && "${2:-}" == "--global" && "${3:-}" == "user.name" ]]; then
+  if [[ -n "${MOCK_GIT_CONFIG_MISSING:-}" && $# -eq 3 ]]; then
+    exit 1
+  fi
+  if [[ $# -gt 3 ]]; then
+    printf '%s\n' "$*" >> "${MOCK_GIT_CALLS_FILE:?}"
+    exit 0
+  fi
   printf '%s\n' 'Test User'
   exit 0
 fi
 
 if [[ "${1:-}" == "config" && "${2:-}" == "--global" && "${3:-}" == "user.email" ]]; then
+  if [[ -n "${MOCK_GIT_CONFIG_MISSING:-}" && $# -eq 3 ]]; then
+    exit 1
+  fi
+  if [[ $# -gt 3 ]]; then
+    printf '%s\n' "$*" >> "${MOCK_GIT_CALLS_FILE:?}"
+    exit 0
+  fi
   printf '%s\n' 'test@example.com'
   exit 0
 fi
@@ -62,6 +76,7 @@ EOF
 
   export MOCK_CHEZMOI_CALLS_FILE="${TEST_TMPDIR}/chezmoi.calls"
   export MOCK_BREW_CALLS_FILE="${TEST_TMPDIR}/brew.calls"
+  export MOCK_GIT_CALLS_FILE="${TEST_TMPDIR}/git.calls"
   export OP_SERVICE_ACCOUNT_TOKEN="dummy-token"
   export PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin"
 }
@@ -89,5 +104,17 @@ teardown() {
   run grep -q '^install --cask 1password-cli$' "${MOCK_BREW_CALLS_FILE}"
   [ "${status}" -eq 0 ]
   run grep -q '^install age$' "${MOCK_BREW_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+}
+
+@test "GIVEN missing git config EXPECT install script sets placeholder values" {
+  export MOCK_GIT_CONFIG_MISSING=1
+
+  run bash "${INSTALL_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q '^config --global user.name Temporary User$' "${MOCK_GIT_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+  run grep -q '^config --global user.email temp@example.com$' "${MOCK_GIT_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 }
