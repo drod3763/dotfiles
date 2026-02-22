@@ -64,3 +64,13 @@ teardown() {
     [[ "${status}" -eq 1 ]]
   fi
 }
+
+@test "GIVEN jq missing EXPECT script exits without writing opencode config" {
+  rm -f "${MOCK_BIN_DIR}/jq"
+
+  run env PATH="${MOCK_BIN_DIR}" /bin/bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run test -f "${HOME}/.config/opencode/opencode.json"
+  [[ "${status}" -eq 1 ]]
+}

@@ -73,3 +73,16 @@ teardown() {
   run grep -q '^install playlist-tech/tap/pipemind$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
 }
+
+@test "GIVEN non-personal and authenticated gh EXPECT script skips gh auth login" {
+  export MOCK_GH_AUTHENTICATED=1
+  render_non_personal_script
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^auth login$' "${MOCK_GH_CALLS_FILE}"
+  [[ "${status}" -eq 1 ]]
+  run grep -q '^auth setup-git$' "${MOCK_GH_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+}

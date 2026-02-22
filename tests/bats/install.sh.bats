@@ -11,9 +11,9 @@ setup() {
   cat > "${MOCK_BIN_DIR}/uname" <<'EOF'
 #!/usr/bin/env bash
 if [[ "${1:-}" == "-m" ]]; then
-  printf '%s\n' 'x86_64'
+  printf '%s\n' "${MOCK_UNAME_M:-x86_64}"
 else
-  printf '%s\n' 'Linux'
+  printf '%s\n' "${MOCK_UNAME_S:-Linux}"
 fi
 EOF
 
@@ -62,6 +62,59 @@ printf '%s\n' "$*" >> "${MOCK_BREW_CALLS_FILE:?}"
 exit 0
 EOF
 
+  cat > "${MOCK_BIN_DIR}/sudo" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "-n" && "${2:-}" == "true" ]]; then
+  exit 0
+fi
+
+if [[ "${1:-}" == "-v" ]]; then
+  exit 0
+fi
+
+exit 0
+EOF
+
+  cat > "${MOCK_BIN_DIR}/caffeinate" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "${MOCK_CAFFEINATE_CALLS_FILE:?}"
+
+while [[ "$#" -gt 0 ]]; do
+  if [[ "$1" == -* ]]; then
+    shift
+    continue
+  fi
+  break
+done
+
+"$@"
+EOF
+
+  cat > "${MOCK_BIN_DIR}/curl" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "${MOCK_CURL_CALLS_FILE:?}"
+printf '%s\n' 'exit 0'
+EOF
+
+  cat > "${MOCK_BIN_DIR}/xcode-select" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "-p" ]]; then
+  exit 0
+fi
+
+if [[ "${1:-}" == "--install" ]]; then
+  exit 0
+fi
+
+exit 0
+EOF
+
   cat > "${MOCK_BIN_DIR}/op" <<'EOF'
 #!/usr/bin/env bash
 exit 0
@@ -72,11 +125,13 @@ EOF
 exit 0
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/uname" "${MOCK_BIN_DIR}/git" "${MOCK_BIN_DIR}/chezmoi" "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age"
+  chmod +x "${MOCK_BIN_DIR}/uname" "${MOCK_BIN_DIR}/git" "${MOCK_BIN_DIR}/chezmoi" "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/caffeinate" "${MOCK_BIN_DIR}/curl" "${MOCK_BIN_DIR}/xcode-select"
 
   export MOCK_CHEZMOI_CALLS_FILE="${TEST_TMPDIR}/chezmoi.calls"
   export MOCK_BREW_CALLS_FILE="${TEST_TMPDIR}/brew.calls"
   export MOCK_GIT_CALLS_FILE="${TEST_TMPDIR}/git.calls"
+  export MOCK_CAFFEINATE_CALLS_FILE="${TEST_TMPDIR}/caffeinate.calls"
+  export MOCK_CURL_CALLS_FILE="${TEST_TMPDIR}/curl.calls"
   export OP_SERVICE_ACCOUNT_TOKEN="dummy-token"
   export PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin"
 }
@@ -116,5 +171,24 @@ teardown() {
   run grep -q '^config --global user.name Temporary User$' "${MOCK_GIT_CALLS_FILE}"
   [ "${status}" -eq 0 ]
   run grep -q '^config --global user.email temp@example.com$' "${MOCK_GIT_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+}
+
+@test "GIVEN caffeinate available EXPECT apply runs through caffeinate wrapper" {
+  run bash "${INSTALL_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q '^-dim chezmoi apply --force --refresh-externals$' "${MOCK_CAFFEINATE_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+}
+
+@test "GIVEN Darwin with missing brew EXPECT install script triggers Homebrew bootstrap" {
+  export MOCK_UNAME_S="Darwin"
+  rm -f "${MOCK_BIN_DIR}/brew"
+
+  run bash "${INSTALL_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q 'https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh' "${MOCK_CURL_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 }

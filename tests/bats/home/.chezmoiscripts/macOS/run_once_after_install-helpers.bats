@@ -57,3 +57,13 @@ teardown() {
   run grep -q '^install --cask drod3763/tap/openin-helper$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
 }
+
+@test "GIVEN helper already installed EXPECT helper cask install is not attempted" {
+  mkdir -p "${MOCK_APPS_DIR}/OpenIn.app" "${MOCK_APPS_DIR}/OpenIn Helper.app"
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^install --cask drod3763/tap/openin-helper$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 1 ]]
+}

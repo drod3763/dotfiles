@@ -44,6 +44,9 @@ EOF
   cat > "${MOCK_BIN_DIR}/chezmoi" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ -n "${MOCK_CHEZMOI_RENDER_FAIL:-}" ]]; then
+  exit 1
+fi
 cat
 EOF
 
@@ -51,6 +54,9 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "${1}" >> "${MOCK_SHELLCHECK_CALLS_FILE:?}"
+if [[ -n "${MOCK_SHELLCHECK_FAIL:-}" ]]; then
+  exit 1
+fi
 exit 0
 EOF
 
@@ -81,4 +87,22 @@ teardown() {
 
   [ "${status}" -eq 0 ]
   [ "$(wc -l < "${MOCK_SHELLCHECK_CALLS_FILE}" | tr -d ' ')" -eq 2 ]
+}
+
+@test "GIVEN template render failure EXPECT checker exits non-zero" {
+  export MOCK_STAGED_PATHS='home/.chezmoiscripts/macOS/a.sh.tmpl'
+  export MOCK_CHEZMOI_RENDER_FAIL=1
+
+  run bash "${CHECK_SCRIPT}"
+
+  [ "${status}" -eq 1 ]
+}
+
+@test "GIVEN shellcheck failure EXPECT checker exits non-zero" {
+  export MOCK_STAGED_PATHS='home/.chezmoiscripts/macOS/a.sh.tmpl'
+  export MOCK_SHELLCHECK_FAIL=1
+
+  run bash "${CHECK_SCRIPT}"
+
+  [ "${status}" -eq 1 ]
 }
