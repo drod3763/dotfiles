@@ -191,6 +191,14 @@ teardown() {
   [ "${status}" -eq 0 ]
 }
 
+@test "GIVEN VERBOSE env EXPECT install script applies with verbose" {
+  run env VERBOSE=1 bash "${INSTALL_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q '^apply --force --refresh-externals --verbose$' "${MOCK_CHEZMOI_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+}
+
 @test "GIVEN missing op and age EXPECT install script installs required brew packages" {
   rm -f "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age"
 
@@ -251,6 +259,15 @@ teardown() {
 
   [ "${status}" -eq 0 ]
   [[ "${output}" == *"Skipping 1Password service account setup."* ]]
+}
+
+@test "GIVEN token unset and provided EXPECT installer acknowledges token setup" {
+  unset OP_SERVICE_ACCOUNT_TOKEN
+
+  run bash "${INSTALL_SCRIPT}" <<<"token-value"
+
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"1Password service account token set."* ]]
 }
 
 @test "GIVEN Darwin and missing xcode tools EXPECT installer runs xcode-select --install" {

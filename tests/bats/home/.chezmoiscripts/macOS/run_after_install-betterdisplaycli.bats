@@ -87,3 +87,14 @@ teardown() {
   run grep -q '^install betterdisplaycli$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -ne 0 ]]
 }
+
+@test "GIVEN non-personal and brew missing EXPECT script exits cleanly without install" {
+  render_non_personal_script
+  rm -f "${MOCK_BIN_DIR}/brew"
+
+  run env PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin" bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run test -f "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]]
+}

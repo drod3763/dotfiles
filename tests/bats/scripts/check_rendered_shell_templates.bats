@@ -28,6 +28,9 @@ if [[ "${1:-}" == "rev-parse" && "${2:-}" == "--show-toplevel" ]]; then
 fi
 
 if [[ "${1:-}" == "diff" && "${2:-}" == "--cached" ]]; then
+  if [[ -n "${MOCK_GIT_DIFF_FAIL:-}" ]]; then
+    exit 1
+  fi
   printf '%s' "${MOCK_STAGED_PATHS:-}"
   exit 0
 fi
@@ -105,4 +108,30 @@ teardown() {
   run bash "${CHECK_SCRIPT}"
 
   [ "${status}" -eq 1 ]
+}
+
+@test "GIVEN git staged-files lookup failure EXPECT checker exits non-zero" {
+  export MOCK_GIT_DIFF_FAIL=1
+
+  run bash "${CHECK_SCRIPT}"
+
+  [ "${status}" -eq 1 ]
+}
+
+@test "GIVEN chezmoi missing EXPECT checker exits with dependency error" {
+  rm -f "${MOCK_BIN_DIR}/chezmoi"
+
+  run env PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin" /bin/bash "${CHECK_SCRIPT}"
+
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"chezmoi is required to render script templates."* ]]
+}
+
+@test "GIVEN shellcheck missing EXPECT checker exits with dependency error" {
+  rm -f "${MOCK_BIN_DIR}/shellcheck"
+
+  run env PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin" /bin/bash "${CHECK_SCRIPT}"
+
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"shellcheck is required to lint rendered script templates."* ]]
 }

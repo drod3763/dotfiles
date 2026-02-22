@@ -17,6 +17,8 @@ EOF
 
   cat > "${MOCK_BIN_DIR}/defaults" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "${MOCK_DEFAULTS_CALLS_FILE:?}"
 exit 0
 EOF
 
@@ -30,6 +32,13 @@ EOF
   cat > "${MOCK_BIN_DIR}/java" <<'EOF'
 #!/usr/bin/env bash
 exit 0
+EOF
+
+  cat > "${MOCK_BIN_DIR}/curl" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "${MOCK_CURL_CALLS_FILE:?}"
+printf '%s\n' "touch \"${MOCK_ITERM_MARKER_FILE:?}\""
 EOF
 
   cat > "${MOCK_BIN_DIR}/sudo" <<'EOF'
@@ -48,11 +57,14 @@ printf '%s\n' "$*" >> "${MOCK_SUDO_CALLS_FILE:?}"
 exit 0
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/tldr" "${MOCK_BIN_DIR}/defaults" "${MOCK_BIN_DIR}/ya" "${MOCK_BIN_DIR}/java" "${MOCK_BIN_DIR}/sudo"
+  chmod +x "${MOCK_BIN_DIR}/tldr" "${MOCK_BIN_DIR}/defaults" "${MOCK_BIN_DIR}/ya" "${MOCK_BIN_DIR}/java" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/curl"
 
   export PATH="${MOCK_BIN_DIR}:${PATH}"
   export MOCK_YA_CALLS_FILE="${TEST_TMPDIR}/ya.calls"
   export MOCK_SUDO_CALLS_FILE="${TEST_TMPDIR}/sudo.calls"
+  export MOCK_DEFAULTS_CALLS_FILE="${TEST_TMPDIR}/defaults.calls"
+  export MOCK_CURL_CALLS_FILE="${TEST_TMPDIR}/curl.calls"
+  export MOCK_ITERM_MARKER_FILE="${TEST_TMPDIR}/iterm-installer.ran"
 
   override_file="${TEST_TMPDIR}/override.json"
   printf '%s\n' '{"personal":true}' > "${override_file}"
@@ -109,5 +121,18 @@ teardown() {
 
   [[ "${status}" -eq 0 ]]
   run grep -q '^tee -a /etc/hosts$' "${MOCK_SUDO_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN forced iTerm branch EXPECT script runs integration installer pipeline" {
+  forced_script="${TEST_TMPDIR}/run_onchange_after_configure-brew-apps-forced-iterm.sh"
+  cp "${RENDERED_SCRIPT}" "${forced_script}"
+  printf '\ncurl --location https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash\n' >> "${forced_script}"
+  chmod +x "${forced_script}"
+
+  run env HOME="${TEST_HOME}" PATH="${PATH}" bash "${forced_script}"
+
+  [[ "${status}" -eq 0 ]]
+  run test -f "${MOCK_ITERM_MARKER_FILE}"
   [[ "${status}" -eq 0 ]]
 }
