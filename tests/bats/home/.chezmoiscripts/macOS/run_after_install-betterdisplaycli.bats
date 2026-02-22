@@ -65,3 +65,25 @@ teardown() {
   run grep -q '^install betterdisplaycli$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
 }
+
+@test "GIVEN non-personal and Xcode missing EXPECT script skips install" {
+  render_non_personal_script
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^install betterdisplaycli$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]]
+}
+
+@test "GIVEN non-personal and formula already installed EXPECT install is not repeated" {
+  render_non_personal_script
+  mkdir -p "${MOCK_APPS_DIR}/Xcode.app"
+  export MOCK_BREW_HAS_BETTERDISPLAYCLI=1
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^install betterdisplaycli$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]]
+}

@@ -7,8 +7,9 @@ setup() {
 
   TEST_TMPDIR="$(mktemp -d)"
   MOCK_BIN_DIR="${TEST_TMPDIR}/bin"
+  MOCK_FALLBACK_HOME="${TEST_TMPDIR}/fallback"
   MOCK_APPS_DIR="${TEST_TMPDIR}/Applications"
-  mkdir -p "${MOCK_BIN_DIR}" "${MOCK_APPS_DIR}"
+  mkdir -p "${MOCK_BIN_DIR}" "${MOCK_APPS_DIR}" "${MOCK_FALLBACK_HOME}/opt/homebrew/bin" "${MOCK_FALLBACK_HOME}/usr/local/bin"
 
   cat > "${MOCK_BIN_DIR}/brew" <<'EOF'
 #!/usr/bin/env bash
@@ -66,4 +67,16 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   run grep -q '^install --cask drod3763/tap/openin-helper$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 1 ]]
+}
+
+@test "GIVEN brew unavailable EXPECT script exits cleanly with skip message" {
+  rm -f "${MOCK_BIN_DIR}/brew" "${MOCK_FALLBACK_HOME}/opt/homebrew/bin/brew"
+  no_brew_script="${TEST_TMPDIR}/run_once_after_install-helpers-no-brew.sh"
+  sed -e "s|/opt/homebrew|${MOCK_FALLBACK_HOME}/opt/homebrew|g" -e "s|/usr/local|${MOCK_FALLBACK_HOME}/usr/local|g" "${RENDERED_SCRIPT_RAW}" > "${no_brew_script}"
+  chmod +x "${no_brew_script}"
+
+  run env PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin" bash "${no_brew_script}"
+
+  [[ "${status}" -eq 0 ]]
+  [[ "${output}" == *"Skipping helper bootstrap: Homebrew is unavailable."* ]]
 }

@@ -97,3 +97,17 @@ teardown() {
   run grep -q 'ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk' "${MOCK_SUDO_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
 }
+
+@test "GIVEN forced hosts update path EXPECT script writes hosts entry via sudo tee" {
+  render_non_personal_script
+  forced_script="${TEST_TMPDIR}/run_onchange_after_configure-brew-apps-forced-hosts.sh"
+  cp "${RENDERED_SCRIPT}" "${forced_script}"
+  printf '\nprintf %s\\n "127.0.0.1 corp.local" | with_sudo tee -a /etc/hosts >/dev/null\n' "'%s'" >> "${forced_script}"
+  chmod +x "${forced_script}"
+
+  run env HOME="${TEST_HOME}" PATH="${PATH}" bash "${forced_script}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^tee -a /etc/hosts$' "${MOCK_SUDO_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+}

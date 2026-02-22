@@ -1,13 +1,17 @@
 #!/usr/bin/env bats
 
 setup() {
+  bats_require_minimum_version 1.5.0
+
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_onchange_before_install-packages.sh.tmpl"
   REAL_CHEZMOI_BIN="$(command -v chezmoi)"
 
   TEST_TMPDIR="$(mktemp -d)"
   MOCK_BIN_DIR="${TEST_TMPDIR}/bin"
-  mkdir -p "${MOCK_BIN_DIR}"
+  MOCK_FALLBACK_HOME="${TEST_TMPDIR}/fallback"
+  mkdir -p "${MOCK_BIN_DIR}" "${MOCK_FALLBACK_HOME}/opt/homebrew/bin" "${MOCK_FALLBACK_HOME}/usr/local/bin"
+  export MOCK_FALLBACK_HOME
 
   cat > "${MOCK_BIN_DIR}/brew" <<'EOF'
 #!/usr/bin/env bash
@@ -38,6 +42,35 @@ fi
 exit 0
 EOF
 
+  cat > "${MOCK_FALLBACK_HOME}/opt/homebrew/bin/brew" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+counter_file="${MOCK_BREW_COUNTER_FILE:?}"
+fails_before_success="${MOCK_BREW_FAILS_BEFORE_SUCCESS:-0}"
+
+if [[ "${1:-}" == "shellenv" ]]; then
+  printf '%s\n' "export PATH=\"${MOCK_FALLBACK_HOME}/opt/homebrew/bin:\$PATH\""
+  exit 0
+fi
+
+if [[ "${1:-}" == "bundle" ]]; then
+  count=0
+  if [[ -f "${counter_file}" ]]; then
+    count="$(cat "${counter_file}")"
+  fi
+  count=$((count + 1))
+  printf '%s\n' "${count}" > "${counter_file}"
+
+  if [[ "${count}" -le "${fails_before_success}" ]]; then
+    exit 1
+  fi
+  exit 0
+fi
+
+exit 0
+EOF
+
   cat > "${MOCK_BIN_DIR}/sudo" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -58,7 +91,7 @@ EOF
 /bin/sleep 0.01
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/sleep"
+  chmod +x "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/sleep" "${MOCK_FALLBACK_HOME}/opt/homebrew/bin/brew"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/install-packages.sh"
   chezmoi execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
@@ -80,6 +113,12 @@ render_with_overrides() {
 
 teardown() {
   rm -rf "${TEST_TMPDIR}"
+}
+
+render_with_mocked_brew_paths() {
+  local output_path="$1"
+  sed -e "s|/opt/homebrew|${MOCK_FALLBACK_HOME}/opt/homebrew|g" -e "s|/usr/local|${MOCK_FALLBACK_HOME}/usr/local|g" "${RENDERED_SCRIPT}" > "${output_path}"
+  chmod +x "${output_path}"
 }
 
 @test "GIVEN brew bundle fails once EXPECT script retries and succeeds" {
@@ -129,4 +168,26 @@ teardown() {
 
   run grep -q 'cask "parallels"' "${rendered_file}"
   [ "${status}" -eq 1 ]
+}
+
+@test "GIVEN brew absent in PATH EXPECT script resolves brew via fallback shellenv path" {
+  rm -f "${MOCK_BIN_DIR}/brew"
+  fallback_script="${TEST_TMPDIR}/install-packages-fallback.sh"
+  render_with_mocked_brew_paths "${fallback_script}"
+
+  run env PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin" bash "${fallback_script}"
+
+  [ "${status}" -eq 0 ]
+  [ "$(cat "${MOCK_BREW_COUNTER_FILE}")" -ge 1 ]
+}
+
+@test "GIVEN brew unavailable everywhere EXPECT script exits with clear missing-brew error" {
+  rm -f "${MOCK_BIN_DIR}/brew" "${MOCK_FALLBACK_HOME}/opt/homebrew/bin/brew"
+  fallback_script="${TEST_TMPDIR}/install-packages-no-brew.sh"
+  render_with_mocked_brew_paths "${fallback_script}"
+
+  run -127 env PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin" bash "${fallback_script}"
+
+  [ "${status}" -eq 127 ]
+  [[ "${output}" == *"Homebrew is required but was not found in PATH."* ]]
 }
