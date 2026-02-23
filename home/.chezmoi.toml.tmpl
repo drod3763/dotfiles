@@ -60,12 +60,17 @@
 {{-     end -}}
 {{- end -}}
 
+{{- $onepasswordMode := "service" -}}
+{{- if and (eq .chezmoi.os "darwin") (stat "/Applications/1Password.app") -}}
+{{-     $onepasswordMode = "account" -}}
+{{- end -}}
+
 encryption = "age"
 progress = true
 sourceDir = "~/.local/share/chezmoi"
 remove = true
 [onepassword]
-    mode = "service"
+    mode = {{ $onepasswordMode | quote }}
 [age]
     identities = ["~/.config/chezmoi/age-identities/identities.txt"]
     recipientsFile = "~/.config/chezmoi/age-identities/recipients.txt"
