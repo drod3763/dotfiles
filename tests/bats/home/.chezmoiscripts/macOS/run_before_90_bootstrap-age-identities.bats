@@ -27,11 +27,6 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ "${1:-}" == "source-path" ]]; then
-  printf '%s\n' "${MOCK_SOURCE_ITEMS_FILE:?}"
-  exit 0
-fi
-
 if [[ "${1:-}" == "age-keygen" && "${2:-}" == "-y" ]]; then
   printf '%s\n' 'age1testrecipient'
   exit 0
@@ -43,13 +38,10 @@ EOF
   chmod +x "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age" "${MOCK_BIN_DIR}/chezmoi"
 
   export HOME="${TEST_TMPDIR}/home"
-  mkdir -p "${HOME}/.local/share/chezmoi/home/private_dot_config/chezmoi"
-
-  export MOCK_SOURCE_ITEMS_FILE="${HOME}/.local/share/chezmoi/home/private_dot_config/chezmoi/private_age-identities.items"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/age-bootstrap.sh"
-  "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
+  "${REAL_CHEZMOI_BIN}" execute-template --source "${REPO_ROOT}" < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
 
@@ -58,9 +50,6 @@ teardown() {
 }
 
 @test "GIVEN configured sources but no identities returned EXPECT script fails" {
-  cat > "${MOCK_SOURCE_ITEMS_FILE}" <<'EOF'
-item-id vault-id
-EOF
   unset MOCK_OP_IDENTITY
 
   run bash "${RENDERED_SCRIPT}"
@@ -68,11 +57,14 @@ EOF
   [ "${status}" -eq 1 ]
 }
 
-@test "GIVEN malformed env source entries EXPECT script ignores them and exits cleanly" {
-  export CHEZMOI_AGE_IDENTITY_ITEMS="malformed-entry"
-  unset MOCK_OP_IDENTITY
+@test "GIVEN identities returned EXPECT script writes bootstrap files" {
+  export MOCK_OP_IDENTITY="AGE-SECRET-KEY-TEST"
 
   run bash "${RENDERED_SCRIPT}"
 
   [ "${status}" -eq 0 ]
+  [ -f "${HOME}/.config/chezmoi/age-identities/identities.txt" ]
+  [ -f "${HOME}/.config/chezmoi/age-identities/recipients.txt" ]
+  grep -Fx "AGE-SECRET-KEY-TEST" "${HOME}/.config/chezmoi/age-identities/identities.txt"
+  grep -Fx "age1testrecipient" "${HOME}/.config/chezmoi/age-identities/recipients.txt"
 }

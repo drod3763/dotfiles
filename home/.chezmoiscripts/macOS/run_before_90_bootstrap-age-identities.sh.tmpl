@@ -38,7 +38,6 @@ fi
 
 config_dir="${HOME}/.config/chezmoi"
 age_dir="${config_dir}/age-identities"
-items_file="${config_dir}/age-identities.items"
 identities_file="${age_dir}/identities.txt"
 recipients_file="${age_dir}/recipients.txt"
 
@@ -46,50 +45,15 @@ mkdir -p "${age_dir}"
 
 declare -a sources=()
 
-if [[ -n "${CHEZMOI_AGE_IDENTITY_ITEMS:-}" ]]; then
-  log "Using CHEZMOI_AGE_IDENTITY_ITEMS environment override."
-  IFS=',' read -r -a entries <<< "${CHEZMOI_AGE_IDENTITY_ITEMS}"
-  for entry in "${entries[@]}"; do
-    trimmed="$(printf '%s' "${entry}" | xargs)"
-    [[ -n "${trimmed}" ]] || continue
-    add_source "${trimmed}" "CHEZMOI_AGE_IDENTITY_ITEMS"
-  done
-else
-  log "Checking target items file: ${items_file}"
-  if [[ -f "${items_file}" ]]; then
-    log "Target items file found."
-  # shellcheck disable=SC2094
-  while IFS= read -r line; do
-    clean="$(printf '%s' "${line}" | sed -E 's/#.*$//; s/^[[:space:]]+//; s/[[:space:]]+$//')"
-    [[ -n "${clean}" ]] || continue
-    item_id="${clean%% *}"
-    vault_id="${clean#* }"
-    add_source "${item_id}:${vault_id}" "${items_file}"
-  done < "${items_file}"
-  else
-    log "Target items file not found."
-    source_items_file="$(chezmoi source-path "${items_file}" 2>/dev/null || true)"
-    if [[ -z "${source_items_file}" ]]; then
-      log "Could not resolve source path for items file."
-    else
-      log "Resolved source items path: ${source_items_file}"
-    fi
+declare -a configured_sources=(
+{{- range .onepassword.age_identities }}
+  "{{ .item }}:{{ index $.onepassword.vaults .vault }}"
+{{- end }}
+)
 
-    if [[ -n "${source_items_file}" && -f "${source_items_file}" ]]; then
-      log "Source items file found."
-    # shellcheck disable=SC2094
-    while IFS= read -r line; do
-      clean="$(printf '%s' "${line}" | sed -E 's/#.*$//; s/^[[:space:]]+//; s/[[:space:]]+$//')"
-      [[ -n "${clean}" ]] || continue
-      item_id="${clean%% *}"
-      vault_id="${clean#* }"
-      add_source "${item_id}:${vault_id}" "${source_items_file}"
-    done < "${source_items_file}"
-    else
-      log "Source items file not found."
-    fi
-  fi
-fi
+for source in "${configured_sources[@]}"; do
+  add_source "${source}" "onepassword.age_identities"
+done
 
 if [[ ${#sources[@]} -eq 0 ]]; then
   log "No age identity sources found; nothing to bootstrap."
