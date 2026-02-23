@@ -1,0 +1,21 @@
+{{- $formatters := dict -}}
+
+{{- if lookPath "taplo" -}}
+{{- $_ := set $formatters "toml" (dict
+  "command" (list "taplo" "format" "$FILE")
+  "extensions" (list ".toml")) -}}
+{{- end -}}
+
+{{- if lookPath "bunx" -}}
+{{- $_ := set $formatters "prettier" (dict
+  "command" (list "bunx" "prettier" "--write" "$FILE")
+  "extensions" (list ".json" ".jsonc" ".md" ".mdc" ".yaml" ".yml")) -}}
+{{- $_ := set $formatters "go_template" (dict
+  "command" (list "bunx" "prettier" "--plugin" "prettier-plugin-go-template" "--parser" "go-template" "--write" "$FILE")
+  "extensions" (list ".tmpl")) -}}
+{{- end -}}
+
+{{- $config := dict
+  "$schema" "https://opencode.ai/config.json"
+  "formatter" $formatters -}}
+{{ $config | toPrettyJson }}

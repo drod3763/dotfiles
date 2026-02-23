@@ -72,6 +72,16 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
+@test "GIVEN mcp file exists EXPECT jq merge only updates mcp section" {
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '\.mcp = \$mcp\[0\]' "${MOCK_JQ_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+  run grep -q '\.formatter\.' "${MOCK_JQ_CALLS_FILE}"
+  [[ "${status}" -eq 1 ]]
+}
+
 @test "GIVEN mcp file missing EXPECT script exits without jq merge" {
   rm -f "${HOME}/.config/opencode/mcp.json"
 
