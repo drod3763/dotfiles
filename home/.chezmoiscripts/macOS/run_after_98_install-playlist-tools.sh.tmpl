@@ -5,8 +5,31 @@ set -euo pipefail
 {{ if not .personal -}}
 # Ensure we are authenticated with GitHub for private tap access
 if ! gh auth status >/dev/null 2>&1; then
-  echo "GitHub CLI not authenticated. Starting authentication..."
-  gh auth login
+  gh_token=""
+  if command -v op >/dev/null 2>&1; then
+    echo "GitHub CLI not authenticated. Trying token from 1Password..."
+    gh_token="$(op item get "yytfutnf6rwe7vfxchxlbcc4li" --vault "{{ .onepassword.vaults.dev }}" --fields credential --reveal 2>/dev/null || true)"
+  else
+    echo "1Password CLI is unavailable; token lookup skipped."
+  fi
+
+  if [[ -z "${gh_token}" ]]; then
+    echo "Unable to retrieve GitHub token from 1Password item yytfutnf6rwe7vfxchxlbcc4li in dev vault."
+    echo "Paste a GitHub token and press Enter:"
+    if [[ -t 0 ]]; then
+      read -r -s gh_token
+      echo
+    else
+      read -r gh_token || true
+    fi
+  fi
+
+  if [[ -z "${gh_token}" ]]; then
+    echo "No GitHub token provided; cannot continue."
+    exit 1
+  fi
+
+  printf '%s' "${gh_token}" | gh auth login --hostname github.com --with-token
 fi
 
 echo "Configuring git to use GitHub CLI as a credential helper..."

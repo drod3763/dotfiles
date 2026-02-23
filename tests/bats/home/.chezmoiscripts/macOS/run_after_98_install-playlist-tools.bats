@@ -28,6 +28,21 @@ printf '%s\n' "$*" >> "${MOCK_GH_CALLS_FILE:?}"
 exit 0
 EOF
 
+  cat > "${MOCK_BIN_DIR}/op" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "item" && "${2:-}" == "get" ]]; then
+  if [[ -n "${MOCK_OP_FAIL:-}" ]]; then
+    exit 1
+  fi
+  printf '%s' "${MOCK_OP_TOKEN:-ghp_test_token}"
+  exit 0
+fi
+
+exit 1
+EOF
+
 cat > "${MOCK_BIN_DIR}/brew" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -44,7 +59,7 @@ printf '%s\n' "$*" >> "${MOCK_BREW_CALLS_FILE:?}"
 exit 0
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/gh" "${MOCK_BIN_DIR}/brew"
+  chmod +x "${MOCK_BIN_DIR}/gh" "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/brew"
   export MOCK_GH_CALLS_FILE="${TEST_TMPDIR}/gh.calls"
   export MOCK_BREW_CALLS_FILE="${TEST_TMPDIR}/brew.calls"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
@@ -73,13 +88,13 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
-@test "GIVEN non-personal and unauthenticated gh EXPECT script logs in and installs tools" {
+@test "GIVEN non-personal and unauthenticated gh EXPECT script logs in with token and installs tools" {
   render_non_personal_script
 
   run bash "${RENDERED_SCRIPT}"
 
   [[ "${status}" -eq 0 ]]
-  run grep -q '^auth login$' "${MOCK_GH_CALLS_FILE}"
+  run grep -q '^auth login --hostname github.com --with-token$' "${MOCK_GH_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
   run grep -q '^tap playlist-tech/tap$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
@@ -94,7 +109,7 @@ teardown() {
   run bash "${RENDERED_SCRIPT}"
 
   [[ "${status}" -eq 0 ]]
-  run grep -q '^auth login$' "${MOCK_GH_CALLS_FILE}"
+  run grep -q '^auth login --hostname github.com --with-token$' "${MOCK_GH_CALLS_FILE}"
   [[ "${status}" -eq 1 ]]
   run grep -q '^auth setup-git$' "${MOCK_GH_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
@@ -107,6 +122,26 @@ teardown() {
   run bash "${RENDERED_SCRIPT}"
 
   [[ "${status}" -ne 0 ]]
+}
+
+@test "GIVEN unauthenticated gh and token lookup fails EXPECT script exits non-zero" {
+  export MOCK_OP_FAIL=1
+  render_non_personal_script
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -ne 0 ]]
+}
+
+@test "GIVEN unauthenticated gh and token lookup fails EXPECT pasted token is used" {
+  export MOCK_OP_FAIL=1
+  render_non_personal_script
+
+  run bash "${RENDERED_SCRIPT}" <<< "ghp_pasted_token"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^auth login --hostname github.com --with-token$' "${MOCK_GH_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
 }
 
 @test "GIVEN brew tap fails EXPECT script exits non-zero" {
