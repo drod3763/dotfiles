@@ -2,7 +2,7 @@
 
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
-  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_after_install-betterdisplaycli.sh.tmpl"
+  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_after_97_install-betterdisplaycli.sh.tmpl"
   REAL_CHEZMOI_BIN="$(command -v chezmoi)"
 
   TEST_TMPDIR="$(mktemp -d)"
@@ -32,14 +32,14 @@ export PATH="${MOCK_BIN_DIR}:${PATH}"
   override_file="${TEST_TMPDIR}/override.json"
   printf '%s\n' '{"personal":true}' > "${override_file}"
 
-  RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_install-betterdisplaycli.sh"
+  RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_97_install-betterdisplaycli.sh"
   "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
 
 render_non_personal_script() {
   local override_file="${TEST_TMPDIR}/override-non-personal.json"
-  local raw_script="${TEST_TMPDIR}/run_after_install-betterdisplaycli.raw.sh"
+  local raw_script="${TEST_TMPDIR}/run_after_97_install-betterdisplaycli.raw.sh"
   printf '%s\n' '{"personal":false}' > "${override_file}"
   "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" < "${TEMPLATE_PATH}" > "${raw_script}"
   sed "s|/Applications|${MOCK_APPS_DIR}|g" "${raw_script}" > "${RENDERED_SCRIPT}"
