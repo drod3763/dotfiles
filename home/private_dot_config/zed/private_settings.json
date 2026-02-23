@@ -21,8 +21,8 @@
       "type": "custom",
       "command": "/opt/homebrew/bin/opencode",
       "args": ["acp"],
-      "env": {},
-    },
+      "env": {}
+    }
   },
   "agent": {
     "use_modifier_to_send": true,
@@ -30,33 +30,33 @@
     "always_allow_tool_actions": true,
     "default_model": {
       "provider": "openai",
-      "model": "gpt-4o",
+      "model": "gpt-4o"
     },
     "provider": {
       "name": "openai",
-      "default_model": "gpt-4-turbo-preview",
-    },
+      "default_model": "gpt-4-turbo-preview"
+    }
   },
   "autosave": {
     "after_delay": {
-      "milliseconds": 1000,
-    },
+      "milliseconds": 1000
+    }
   },
   "buffer_font_family": "PragmataPro Mono Liga",
   "buffer_font_size": 16,
   "file_types": {
     "Dockerfile": ["Dockerfile*"],
-    "Plain Text": ["txt"],
+    "Plain Text": ["txt"]
   },
   "indent_guides": {
     "enabled": true,
     "coloring": "indent_aware",
-    "background_coloring": "indent_aware",
+    "background_coloring": "indent_aware"
   },
   "theme": "Catppuccin Macchiato",
   "telemetry": {
     "diagnostics": false,
-    "metrics": false,
+    "metrics": false
   },
-  "ui_font_size": 16,
+  "ui_font_size": 16
 }
