@@ -54,7 +54,7 @@ The installation script respects the following environment variables:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `VERBOSE` | Set to `1` or `true` to enable verbose output from `chezmoi` | `false` |
-| `OP_SERVICE_ACCOUNT_TOKEN` | 1Password Service Account token for secret injection | (Interactive prompt) |
+| `OP_SERVICE_ACCOUNT_TOKEN` | Optional 1Password Service Account token for headless/service-mode secret injection | (Interactive prompt) |
 
 ## Features
 
@@ -73,10 +73,10 @@ This repo includes multi-language formatting via `treefmt` configuration at `hom
 
 Configured formatters include:
 - `nixpkgs-fmt` for Nix
-- `taplo` for TOML
+- `taplo` for TOML (including `home/private_dot_config/git/config.tmpl` via a dedicated formatter rule)
 - `shfmt` for shell scripts
 - `prettier` (via `bunx`) for JSON/YAML/Markdown
-- `prettier-plugin-go-template` (via `bunx`) for `*.tmpl` Go templates
+- `prettier-plugin-go-template` (via `bunx`) for `*.tmpl` Go templates (when the plugin is resolvable in the active environment)
 
 ## Testing
 
@@ -102,4 +102,6 @@ Templates avoid hardcoded secrets and use centralized mappings from `home/.chezm
 
 - Vault aliases are used (`dev`, `work`) instead of raw vault IDs in templates.
 - Helpers in `home/.chezmoitemplates/` resolve values by stable field id/label and URL label.
-- 1Password service account access is required for secret-backed template rendering.
+- On macOS with 1Password app installed, chezmoi uses `onepassword.mode = "account"`; otherwise it falls back to `"service"` mode.
+- Service account token (`OP_SERVICE_ACCOUNT_TOKEN`) is optional and primarily for headless/CI/service-mode workflows.
+- Age identities are bootstrapped from `home/.chezmoidata/onepassword.toml` (`[[onepassword.age_identities]]`) into `~/.config/chezmoi/age-identities/` before apply.
