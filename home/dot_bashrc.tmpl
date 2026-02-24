@@ -1,15 +1,15 @@
 {{ template "exports.tmpl" . }}
 {{/* CD preferences */ -}}
-shopt -s cdable_vars 
-shopt -s cdspell {{/* Automatically fix directory name typos when changing directory*/}}
-shopt -s direxpand dirspell {{/* Expand directory names to their full path */}} 
-shopt -s globstar {{/* Allow ** in pathnames */}}
+shopt -s cdable_vars
+shopt -s cdspell
+shopt -s direxpand dirspell
+shopt -s globstar
 {{/* History preferences */ -}}
-shopt -s histappend {{/* Append to history, do not overwrite */}}
-shopt -s histreedit {{/* Edit the history interactively */}}
-shopt -s histverify {{/* Verify the history interactively */}}
-HISTCONTROL='ignoreboth':erasedups {{/* Ignore duplicates and commands that begin with a space */}}
-HISTIGNORE=?:?? {{/* Ignore these commands */}}
-HISTFILESIZE=50000 {{/* History File Size */}}
-HISTSIZE=50000 {{/* History Size */}}
-PROMPT_COMMAND="history -a;history -c;history -r; $PROMPT_COMMAND" {{/* Color Support. Update prompt when history is updated */}}
+shopt -s histappend
+shopt -s histreedit
+shopt -s histverify
+HISTCONTROL='ignoreboth':erasedups
+HISTIGNORE=?:??
+HISTFILESIZE=50000
+HISTSIZE=50000
+PROMPT_COMMAND="history -a;history -c;history -r; $PROMPT_COMMAND"
