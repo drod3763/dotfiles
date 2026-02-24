@@ -60,6 +60,11 @@ command = "taplo"
 includes = ["*.toml"]
 options = ["format"]
 
+[formatter.toml-git-config]
+command = "taplo"
+includes = ["home/private_dot_config/git/config.tmpl"]
+options = ["format", "--force"]
+
 [formatter.prettier]
 command = "bunx"
 includes = ["*.json", "*.jsonc", "*.md", "*.mdc", "*.yaml", "*.yml"]
