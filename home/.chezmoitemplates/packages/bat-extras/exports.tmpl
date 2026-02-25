@@ -1,0 +1,6 @@
+{{- $exports := dict -}}
+{{- if and (lookPath "batdiff") (lookPath "delta") -}}
+{{-   $exports = merge $exports (dict
+      "BATDIFF_USE_DELTA" "true") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

@@ -48,6 +48,12 @@ target_class = "all"
 brew_formula_name = "actionlint"
 
 [[package_catalog.packages]]
+name = "adb"
+os = "linux"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
 name = "age"
 os = "mac"
 type = "common"
@@ -976,77 +982,77 @@ target_class = "all"
 brew_cask_name = "zen"
 
 [[package_catalog.packages]]
-name = "mas-497799835"
+name = "Xcode"
 os = "mac"
 type = "work"
 target_class = "all"
 mas_app_id = 497799835
 
 [[package_catalog.packages]]
-name = "mas-567740330"
+name = "JSON Editor"
 os = "mac"
 type = "common"
 target_class = "all"
 mas_app_id = 567740330
 
 [[package_catalog.packages]]
-name = "mas-937984704"
+name = "Amphetamine"
 os = "mac"
 type = "work"
 target_class = "all"
 mas_app_id = 937984704
 
 [[package_catalog.packages]]
-name = "mas-993487541"
+name = "CARROT Weather"
 os = "mac"
 type = "common"
 target_class = "all"
 mas_app_id = 993487541
 
 [[package_catalog.packages]]
-name = "mas-1157491961"
+name = "PLIST Editor"
 os = "mac"
 type = "common"
 target_class = "all"
 mas_app_id = 1157491961
 
 [[package_catalog.packages]]
-name = "mas-1171346381"
+name = "Easy CSV Editor"
 os = "mac"
 type = "common"
 target_class = "all"
 mas_app_id = 1171346381
 
 [[package_catalog.packages]]
-name = "mas-1193539993"
+name = "Brother iPrint&Scan"
 os = "mac"
 type = "common"
 target_class = "all"
 mas_app_id = 1193539993
 
 [[package_catalog.packages]]
-name = "mas-1528890965"
+name = "TextSniper"
 os = "mac"
 type = "common"
 target_class = "all"
 mas_app_id = 1528890965
 
 [[package_catalog.packages]]
-name = "mas-1554235898"
+name = "Peek"
 os = "mac"
 type = "common"
 target_class = "all"
 mas_app_id = 1554235898
 
 [[package_catalog.packages]]
-name = "mas-1622835804"
+name = "Kagi for Safari"
 os = "mac"
 type = "common"
 target_class = "all"
 mas_app_id = 1622835804
 
 [[package_catalog.packages]]
-name = "mas-1643649331"
+name = "OpenIn"
 os = "mac"
 type = "common"
 target_class = "all"

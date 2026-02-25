@@ -1,20 +1,10 @@
 [exports.common]
-CLAUDE_CODE_USE_BEDROCK = "0"
-DATAGRIP_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/datagrip"
 GPG_TTY = "$TTY"
 INPUTRC = "${XDG_CONFIG_HOME}/readline/inputrc"
 LESSHISTFILE = "${XDG_CACHE_HOME}/less/history"
 OPENSPEC_TELEMETRY = "0"
-SSH_AUTH_SOCK = "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
 TERMINFO = "${XDG_DATA_HOME}/terminfo"
 TERMINFO_DIRS = "${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
-WEBIDE_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/webstorm"
-
-[[exports.rules]]
-id = "adb"
-when_tool = "adb"
-[exports.rules.values]
-ANDROID_USER_HOME = "${XDG_DATA_HOME}/android"
 
 [[exports.rules]]
 id = "bash"
@@ -23,18 +13,6 @@ when_shell = "bash"
 CLICOLOR = 1
 HISTFILE = "${XDG_STATE_HOME}/bash/history"
 LSCOLORS = "GxFxCxDxBxegedabagaced"
-
-[[exports.rules]]
-id = "bat-pager"
-when_shell = "bat"
-[exports.rules.values]
-PAGER = "bat --color=always"
-
-[[exports.rules]]
-id = "batdiff-delta"
-when_tools = ["batdiff", "delta"]
-[exports.rules.values]
-BATDIFF_USE_DELTA = "true"
 
 [[exports.rules]]
 id = "visual-code"
@@ -175,8 +153,6 @@ when_not_personal = true
 AWS_PROFILE = "arcus_dev"
 AWS_REGION = "us-west-2"
 AWS_SDK_LOAD_CONFIG = 1
-RIDER_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/rider"
-RUBYMINE_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/rubymine"
 TILT_NAMESPACE = "derick-rodriguez"
 
 [[exports.rules]]

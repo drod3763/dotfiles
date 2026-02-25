@@ -5,6 +5,7 @@
   "brew_formula_args" (dict)
   "brew_casks" (list)
   "mas_app_ids" (list)
+  "mas_app_names" (dict)
   "linux_packages" (list)
   "active_config_paths" (list)
   "inactive_config_paths" (list) -}}
@@ -61,7 +62,10 @@
       {{- $_ := set $out "brew_casks" (concat ($out.brew_casks | default (list)) (list $pkg.brew_cask_name)) -}}
     {{- end -}}
     {{- if hasKey $pkg "mas_app_id" -}}
-      {{- $_ := set $out "mas_app_ids" (concat ($out.mas_app_ids | default (list)) (list $pkg.mas_app_id)) -}}
+      {{- $masID := (int $pkg.mas_app_id) -}}
+      {{- $_ := set $out "mas_app_ids" (concat ($out.mas_app_ids | default (list)) (list $masID)) -}}
+      {{- $masName := (get $pkg "mas_app_name" | default $pkg.name) -}}
+      {{- $_ := set $out.mas_app_names (printf "%d" $masID) $masName -}}
     {{- end -}}
     {{- if hasKey $pkg "linux_pkg_name" -}}
       {{- $_ := set $out "linux_packages" (concat ($out.linux_packages | default (list)) (list $pkg.linux_pkg_name)) -}}

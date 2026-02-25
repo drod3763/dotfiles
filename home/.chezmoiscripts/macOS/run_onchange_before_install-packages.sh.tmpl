@@ -31,10 +31,12 @@ fi
 {{ $brews := ($packageCatalog.brew_formulas | default (list)) -}}
 {{ $args := ($packageCatalog.brew_formula_args | default (dict)) -}}
 {{ $casks := ($packageCatalog.brew_casks | default (list)) -}}
+{{ $masNames := ($packageCatalog.mas_app_names | default (dict)) -}}
 {{ $mas := dict -}}
 {{ range ($packageCatalog.mas_app_ids | default (list)) -}}
 {{   $id := (int .) -}}
-{{   $_ := set $mas (printf "Catalog app %d" $id) (printf ", id: %d" $id) -}}
+{{   $name := (get $masNames (printf "%d" $id) | default (printf "Catalog app %d" $id)) -}}
+{{   $_ := set $mas $name (printf ", id: %d" $id) -}}
 {{ end -}}
 
 max_attempts="${BREW_BUNDLE_MAX_ATTEMPTS:-3}"

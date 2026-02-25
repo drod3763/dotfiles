@@ -1,0 +1,5 @@
+{{- dict "exports" (dict
+  "DATAGRIP_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/datagrip"
+  "RIDER_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/rider"
+  "RUBYMINE_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/rubymine"
+  "WEBIDE_PROPERTIES" "${XDG_CONFIG_HOME}/jetbrains/webstorm") | toJson -}}
