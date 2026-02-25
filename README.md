@@ -63,7 +63,7 @@ The installation script respects the following environment variables:
 - **Sleep Prevention:** Uses `caffeinate` during installation to prevent sleep interruptions.
 - **Progress Feedback:** Provides clear status updates during long-running tasks.
 - **Structured Template Data:** Uses domain-scoped `chezmoidata` files under `home/.chezmoidata/` for reusable catalogs (exports, packages, aliases, functions, MCP, 1Password mappings).
-- **Package-Aware Config:** Derives app config/env inclusion from package rules so machine profiles only materialize relevant app settings.
+- **Package-Aware Config:** Derives app config/env inclusion from the package catalog so machine profiles only materialize relevant app settings.
 
 ## Formatting
 
@@ -91,8 +91,7 @@ Shell script logic tests use `bats-core` with CLI mocks.
 Shared template data is split by domain in `home/.chezmoidata/*.toml`.
 
 - `exports.toml` - environment export rules
-- `packages.toml` - legacy package install rules and migration bridge data
-- `package_catalog.toml` - package objects used for package-centric install/config behavior (pilot migration)
+- `package_catalog.toml` - package objects used for package-centric install/config behavior
 - `aliases.toml` - alias catalog and conditional overlays
 - `functions.toml` - function toggles/rules
 - `mcp.toml` - shared MCP server definitions

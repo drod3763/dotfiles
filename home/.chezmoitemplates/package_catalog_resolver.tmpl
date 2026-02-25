@@ -1,6 +1,8 @@
 {{- $out := dict
   "active_packages" (list)
+  "brew_taps" (list)
   "brew_formulas" (list)
+  "brew_formula_args" (dict)
   "brew_casks" (list)
   "mas_app_ids" (list)
   "linux_packages" (list)
@@ -37,11 +39,23 @@
     {{- $active = false -}}
   {{- end -}}
 
+  {{- if and $active (hasKey $pkg "when_stat") -}}
+    {{- if not (stat $pkg.when_stat) -}}
+      {{- $active = false -}}
+    {{- end -}}
+  {{- end -}}
+
   {{- $configPaths := (get $pkg "config_file_locations" | default (list)) -}}
   {{- if $active -}}
     {{- $_ := set $out "active_packages" (concat ($out.active_packages | default (list)) (list $pkg.name)) -}}
     {{- if hasKey $pkg "brew_formula_name" -}}
       {{- $_ := set $out "brew_formulas" (concat ($out.brew_formulas | default (list)) (list $pkg.brew_formula_name)) -}}
+      {{- if hasKey $pkg "brew_formula_args" -}}
+        {{- $_ := set $out.brew_formula_args $pkg.brew_formula_name $pkg.brew_formula_args -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if hasKey $pkg "brew_tap_name" -}}
+      {{- $_ := set $out "brew_taps" (concat ($out.brew_taps | default (list)) (list $pkg.brew_tap_name)) -}}
     {{- end -}}
     {{- if hasKey $pkg "brew_cask_name" -}}
       {{- $_ := set $out "brew_casks" (concat ($out.brew_casks | default (list)) (list $pkg.brew_cask_name)) -}}

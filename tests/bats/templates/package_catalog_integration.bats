@@ -58,9 +58,9 @@ render_with_overrides() {
   render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/package_catalog_resolver.tmpl" false false "${host_json}"
   render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/package_catalog_resolver.tmpl" false true "${vm_json}"
 
-  run jq -e '.active_packages | index("saml2aws") != null' "${host_json}"
+  run jq -e '.active_packages | index("parallels") != null' "${host_json}"
   [ "${status}" -eq 0 ]
 
-  run jq -e '.active_packages | index("saml2aws") == null' "${vm_json}"
+  run jq -e '.active_packages | index("parallels") == null' "${vm_json}"
   [ "${status}" -eq 0 ]
 }

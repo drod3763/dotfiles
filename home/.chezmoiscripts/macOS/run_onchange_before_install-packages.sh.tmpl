@@ -26,34 +26,15 @@ if ! command -v brew >/dev/null 2>&1; then
   exit 127
 fi
 
-{{ $packages := .packages.macos -}}
-{{ $args := merge (dict) $packages.brew_args -}}
 {{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
-{{ $resolved := (includeTemplate "rule_engine.tmpl" (dict
-    "context" .
-    "seed" (dict
-      "taps" $packages.taps
-      "brews" $packages.brews
-      "casks" $packages.casks
-      "mas" $packages.mas)
-    "rules" $packages.rules
-    "listKeys" (list "taps" "brews" "casks")
-    "mapKeys" (list "mas")) | fromJson) -}}
-{{ $taps := $resolved.taps -}}
-{{ $brews := concat $resolved.brews ($packageCatalog.brew_formulas | default (list)) -}}
-{{ $casks := concat $resolved.casks ($packageCatalog.brew_casks | default (list)) -}}
-{{ $mas := $resolved.mas -}}
+{{ $taps := ($packageCatalog.brew_taps | default (list)) -}}
+{{ $brews := ($packageCatalog.brew_formulas | default (list)) -}}
+{{ $args := ($packageCatalog.brew_formula_args | default (dict)) -}}
+{{ $casks := ($packageCatalog.brew_casks | default (list)) -}}
+{{ $mas := dict -}}
 {{ range ($packageCatalog.mas_app_ids | default (list)) -}}
 {{   $id := (int .) -}}
-{{   $alreadyPresent := false -}}
-{{   range (keys $mas | sortAlpha | uniq) -}}
-{{     if contains (printf "id: %d" $id) (get $mas .) -}}
-{{       $alreadyPresent = true -}}
-{{     end -}}
-{{   end -}}
-{{   if not $alreadyPresent -}}
-{{     $_ := set $mas (printf "Catalog app %d" $id) (printf ", id: %d" $id) -}}
-{{   end -}}
+{{   $_ := set $mas (printf "Catalog app %d" $id) (printf ", id: %d" $id) -}}
 {{ end -}}
 
 max_attempts="${BREW_BUNDLE_MAX_ATTEMPTS:-3}"

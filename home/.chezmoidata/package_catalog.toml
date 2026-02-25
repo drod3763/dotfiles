@@ -1,10 +1,417 @@
 [[package_catalog.packages]]
-name = "claude-code"
+name = "tap-drod3763-tap"
 os = "mac"
 type = "common"
 target_class = "all"
-brew_cask_name = "claude-code"
-config_file_locations = [".claude", ".config/claude"]
+brew_tap_name = "drod3763/tap"
+
+[[package_catalog.packages]]
+name = "tap-felixkratz-formulae"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_tap_name = "felixkratz/formulae"
+
+[[package_catalog.packages]]
+name = "tap-nikitabobko-tap"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_tap_name = "nikitabobko/tap"
+
+[[package_catalog.packages]]
+name = "tap-oven-sh-bun"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_tap_name = "oven-sh/bun"
+
+[[package_catalog.packages]]
+name = "tap-waydabber-betterdisplay"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_tap_name = "waydabber/betterdisplay"
+
+[[package_catalog.packages]]
+name = "act"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "act"
+
+[[package_catalog.packages]]
+name = "actionlint"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "actionlint"
+
+[[package_catalog.packages]]
+name = "age"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "age"
+
+[[package_catalog.packages]]
+name = "awscli"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "awscli"
+
+[[package_catalog.packages]]
+name = "azure-cli"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "azure-cli"
+
+[[package_catalog.packages]]
+name = "bat"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "bat"
+
+[[package_catalog.packages]]
+name = "bat-extras"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "bat-extras"
+
+[[package_catalog.packages]]
+name = "bats-core"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "bats-core"
+
+[[package_catalog.packages]]
+name = "caddy"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "caddy"
+
+[[package_catalog.packages]]
+name = "chezmoi"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "chezmoi"
+
+[[package_catalog.packages]]
+name = "docker-compose"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "docker-compose"
+
+[[package_catalog.packages]]
+name = "docker-credential-helper-ecr"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "docker-credential-helper-ecr"
+brew_formula_args = ", link: false"
+
+[[package_catalog.packages]]
+name = "dotnet@8"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "dotnet@8"
+
+[[package_catalog.packages]]
+name = "eza"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "eza"
+
+[[package_catalog.packages]]
+name = "fd"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "fd"
+
+[[package_catalog.packages]]
+name = "felixkratz/formulae/borders"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "felixkratz/formulae/borders"
+
+[[package_catalog.packages]]
+name = "ffmpeg"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_formula_name = "ffmpeg"
+
+[[package_catalog.packages]]
+name = "fx"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "fx"
+
+[[package_catalog.packages]]
+name = "fzf"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "fzf"
+
+[[package_catalog.packages]]
+name = "gdu"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "gdu"
+
+[[package_catalog.packages]]
+name = "gh"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "gh"
+
+[[package_catalog.packages]]
+name = "git"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "git"
+
+[[package_catalog.packages]]
+name = "git-delta"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "git-delta"
+
+[[package_catalog.packages]]
+name = "gitleaks"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "gitleaks"
+
+[[package_catalog.packages]]
+name = "glow"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "glow"
+
+[[package_catalog.packages]]
+name = "go"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "go"
+
+[[package_catalog.packages]]
+name = "helm"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "helm"
+
+[[package_catalog.packages]]
+name = "imagemagick"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_formula_name = "imagemagick"
+
+[[package_catalog.packages]]
+name = "jq"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "jq"
+
+[[package_catalog.packages]]
+name = "kubectx"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "kubectx"
+
+[[package_catalog.packages]]
+name = "kubernetes-cli"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "kubernetes-cli"
+brew_formula_args = ", link: false"
+
+[[package_catalog.packages]]
+name = "lastpass-cli"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "lastpass-cli"
+
+[[package_catalog.packages]]
+name = "less"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "less"
+
+[[package_catalog.packages]]
+name = "libheif"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_formula_name = "libheif"
+
+[[package_catalog.packages]]
+name = "mas"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "mas"
+
+[[package_catalog.packages]]
+name = "mcfly"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "mcfly"
+
+[[package_catalog.packages]]
+name = "mermaid-cli"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "mermaid-cli"
+
+[[package_catalog.packages]]
+name = "micro"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "micro"
+
+[[package_catalog.packages]]
+name = "mise"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "mise"
+
+[[package_catalog.packages]]
+name = "mkcert"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_formula_name = "mkcert"
+
+[[package_catalog.packages]]
+name = "mosh"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "mosh"
+
+[[package_catalog.packages]]
+name = "opencode"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "opencode"
+
+[[package_catalog.packages]]
+name = "oven-sh/bun/bun"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "oven-sh/bun/bun"
+
+[[package_catalog.packages]]
+name = "p7zip"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "p7zip"
+
+[[package_catalog.packages]]
+name = "pandoc"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "pandoc"
+
+[[package_catalog.packages]]
+name = "procs"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "procs"
+
+[[package_catalog.packages]]
+name = "pulumi"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "pulumi"
+
+[[package_catalog.packages]]
+name = "python"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "python"
+
+[[package_catalog.packages]]
+name = "rar"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "rar"
+
+[[package_catalog.packages]]
+name = "ripgrep"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "ripgrep"
+
+[[package_catalog.packages]]
+name = "rsync"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "rsync"
+
+[[package_catalog.packages]]
+name = "saml2aws"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "saml2aws"
+
+[[package_catalog.packages]]
+name = "sd"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "sd"
+
+[[package_catalog.packages]]
+name = "shellcheck"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "shellcheck"
 
 [[package_catalog.packages]]
 name = "tailscale"
@@ -14,11 +421,190 @@ target_class = "all"
 brew_formula_name = "tailscale"
 
 [[package_catalog.packages]]
-name = "saml2aws"
+name = "taplo"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "taplo"
+
+[[package_catalog.packages]]
+name = "thefuck"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "thefuck"
+
+[[package_catalog.packages]]
+name = "tilt"
 os = "mac"
 type = "work"
-target_class = "host"
-brew_formula_name = "saml2aws"
+target_class = "all"
+brew_formula_name = "tilt"
+
+[[package_catalog.packages]]
+name = "treefmt"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "treefmt"
+
+[[package_catalog.packages]]
+name = "up"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "up"
+
+[[package_catalog.packages]]
+name = "uv"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "uv"
+
+[[package_catalog.packages]]
+name = "xdg-ninja"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "xdg-ninja"
+
+[[package_catalog.packages]]
+name = "yazi"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "yazi"
+
+[[package_catalog.packages]]
+name = "ykman"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "ykman"
+
+[[package_catalog.packages]]
+name = "yq"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "yq"
+
+[[package_catalog.packages]]
+name = "yt-dlp"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "yt-dlp"
+
+[[package_catalog.packages]]
+name = "zoxide"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "zoxide"
+
+[[package_catalog.packages]]
+name = "1password"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "1password"
+config_file_locations = [".config/1Password"]
+
+[[package_catalog.packages]]
+name = "1password-cli"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "1password-cli"
+
+[[package_catalog.packages]]
+name = "affinity"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "affinity"
+
+[[package_catalog.packages]]
+name = "alfred"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "alfred"
+config_file_locations = ["Library/Application Support/Alfred"]
+
+[[package_catalog.packages]]
+name = "antigravity"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "antigravity"
+
+[[package_catalog.packages]]
+name = "bartender"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "bartender"
+config_file_locations = ["Library/Application Support/Bartender"]
+
+[[package_catalog.packages]]
+name = "betterdisplay"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "betterdisplay"
+
+[[package_catalog.packages]]
+name = "betterzip"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "betterzip"
+
+[[package_catalog.packages]]
+name = "beyond-compare"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "beyond-compare"
+
+[[package_catalog.packages]]
+name = "boop"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "boop"
+
+[[package_catalog.packages]]
+name = "brave-browser"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "brave-browser"
+
+[[package_catalog.packages]]
+name = "bruno"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "bruno"
+
+[[package_catalog.packages]]
+name = "chrysalis"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "chrysalis"
+
+[[package_catalog.packages]]
+name = "claude-code"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "claude-code"
+config_file_locations = [".claude", ".config/claude"]
 
 [[package_catalog.packages]]
 name = "cursor"
@@ -29,8 +615,439 @@ brew_cask_name = "cursor"
 config_file_locations = [".cursor"]
 
 [[package_catalog.packages]]
-name = "amphetamine"
+name = "cursor-cli"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "cursor-cli"
+config_file_locations = [".cursor"]
+
+[[package_catalog.packages]]
+name = "default-folder-x"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "default-folder-x"
+
+[[package_catalog.packages]]
+name = "devtoys"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "devtoys"
+
+[[package_catalog.packages]]
+name = "discord"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "discord"
+
+[[package_catalog.packages]]
+name = "displaylink"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "displaylink"
+
+[[package_catalog.packages]]
+name = "docker"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "docker"
+
+[[package_catalog.packages]]
+name = "docker-desktop"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "docker-desktop"
+
+[[package_catalog.packages]]
+name = "dropbox"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "dropbox"
+
+[[package_catalog.packages]]
+name = "elgato-stream-deck"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "elgato-stream-deck"
+
+[[package_catalog.packages]]
+name = "font-monaspace"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "font-monaspace"
+
+[[package_catalog.packages]]
+name = "font-new-york"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "font-new-york"
+
+[[package_catalog.packages]]
+name = "font-sf-compact"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "font-sf-compact"
+
+[[package_catalog.packages]]
+name = "font-sf-mono"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "font-sf-mono"
+
+[[package_catalog.packages]]
+name = "font-sf-mono-for-powerline"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "font-sf-mono-for-powerline"
+
+[[package_catalog.packages]]
+name = "font-sf-pro"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "font-sf-pro"
+
+[[package_catalog.packages]]
+name = "font-sn-pro"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "font-sn-pro"
+
+[[package_catalog.packages]]
+name = "ghostty"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "ghostty"
+config_file_locations = [".config/ghostty"]
+
+[[package_catalog.packages]]
+name = "gitkraken"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "gitkraken"
+
+[[package_catalog.packages]]
+name = "hammerspoon"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "hammerspoon"
+config_file_locations = [".config/hammerspoon"]
+
+[[package_catalog.packages]]
+name = "hazel"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "hazel"
+config_file_locations = ["Library/Application Support/Hazel"]
+
+[[package_catalog.packages]]
+name = "homerow"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "homerow"
+
+[[package_catalog.packages]]
+name = "iina"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "iina"
+
+[[package_catalog.packages]]
+name = "istat-menus"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "istat-menus"
+
+[[package_catalog.packages]]
+name = "itsycal"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "itsycal"
+
+[[package_catalog.packages]]
+name = "ivpn"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "ivpn"
+
+[[package_catalog.packages]]
+name = "jetbrains-toolbox"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "jetbrains-toolbox"
+
+[[package_catalog.packages]]
+name = "jump"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "jump"
+
+[[package_catalog.packages]]
+name = "komet"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "komet"
+
+[[package_catalog.packages]]
+name = "ledger-live"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "ledger-live"
+
+[[package_catalog.packages]]
+name = "mac-mouse-fix"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "mac-mouse-fix"
+
+[[package_catalog.packages]]
+name = "macs-fan-control"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "macs-fan-control"
+
+[[package_catalog.packages]]
+name = "marvin"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "marvin"
+
+[[package_catalog.packages]]
+name = "mountain-duck"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "mountain-duck"
+
+[[package_catalog.packages]]
+name = "mouseless"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "mouseless"
+
+[[package_catalog.packages]]
+name = "mouseless@preview"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "mouseless@preview"
+
+[[package_catalog.packages]]
+name = "nikitabobko/tap/aerospace"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "nikitabobko/tap/aerospace"
+config_file_locations = [".config/aerospace"]
+
+[[package_catalog.packages]]
+name = "notion"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "notion"
+
+[[package_catalog.packages]]
+name = "openin-helper"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "openin-helper"
+when_stat = "/Applications/OpenIn.app"
+
+[[package_catalog.packages]]
+name = "parallels"
+os = "mac"
+type = "common"
+target_class = "host"
+brew_cask_name = "parallels"
+
+[[package_catalog.packages]]
+name = "popclip"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "popclip"
+config_file_locations = [
+  "Library/Application Support/PopClip",
+  "Library/Preferences/com.pilotmoon.popclip.plist",
+]
+
+[[package_catalog.packages]]
+name = "ricoh-theta"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "ricoh-theta"
+
+[[package_catalog.packages]]
+name = "sensei"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "sensei"
+
+[[package_catalog.packages]]
+name = "soulver"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "soulver"
+
+[[package_catalog.packages]]
+name = "soundsource"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "soundsource"
+
+[[package_catalog.packages]]
+name = "spotify"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "spotify"
+
+[[package_catalog.packages]]
+name = "suspicious-package"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "suspicious-package"
+
+[[package_catalog.packages]]
+name = "swish"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "swish"
+
+[[package_catalog.packages]]
+name = "windscribe"
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "windscribe"
+
+[[package_catalog.packages]]
+name = "zed"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "zed"
+config_file_locations = [".config/zed"]
+
+[[package_catalog.packages]]
+name = "zen"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "zen"
+
+[[package_catalog.packages]]
+name = "mas-497799835"
+os = "mac"
+type = "work"
+target_class = "all"
+mas_app_id = 497799835
+
+[[package_catalog.packages]]
+name = "mas-567740330"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 567740330
+
+[[package_catalog.packages]]
+name = "mas-937984704"
 os = "mac"
 type = "work"
 target_class = "all"
 mas_app_id = 937984704
+
+[[package_catalog.packages]]
+name = "mas-993487541"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 993487541
+
+[[package_catalog.packages]]
+name = "mas-1157491961"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 1157491961
+
+[[package_catalog.packages]]
+name = "mas-1171346381"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 1171346381
+
+[[package_catalog.packages]]
+name = "mas-1193539993"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 1193539993
+
+[[package_catalog.packages]]
+name = "mas-1528890965"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 1528890965
+
+[[package_catalog.packages]]
+name = "mas-1554235898"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 1554235898
+
+[[package_catalog.packages]]
+name = "mas-1622835804"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 1622835804
+
+[[package_catalog.packages]]
+name = "mas-1643649331"
+os = "mac"
+type = "common"
+target_class = "all"
+mas_app_id = 1643649331
