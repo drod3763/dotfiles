@@ -70,6 +70,48 @@
 {{- $ok = false -}}
 {{- end -}}
 {{- end -}}
+{{- if and $ok (hasKey $rule "when_active_cask") -}}
+{{- if not (has $rule.when_active_cask ($ctx.activeCasks | default (list))) -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_not_active_cask") -}}
+{{- if has $rule.when_not_active_cask ($ctx.activeCasks | default (list)) -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_active_casks") -}}
+{{- $matched := false -}}
+{{- range $rule.when_active_casks -}}
+{{- if has . ($ctx.activeCasks | default (list)) -}}
+{{- $matched = true -}}
+{{- end -}}
+{{- end -}}
+{{- if not $matched -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_active_brew") -}}
+{{- if not (has $rule.when_active_brew ($ctx.activeBrews | default (list))) -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_not_active_brew") -}}
+{{- if has $rule.when_not_active_brew ($ctx.activeBrews | default (list)) -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
+{{- if and $ok (hasKey $rule "when_active_brews") -}}
+{{- $matched := false -}}
+{{- range $rule.when_active_brews -}}
+{{- if has . ($ctx.activeBrews | default (list)) -}}
+{{- $matched = true -}}
+{{- end -}}
+{{- end -}}
+{{- if not $matched -}}
+{{- $ok = false -}}
+{{- end -}}
+{{- end -}}
 
 {{- if $ok -}}
 {{- if hasKey $rule $valueKey -}}

@@ -1,6 +1,8 @@
 {{ $iFlag := (ternary "-i" "--interactive" (eq .chezmoi.os "darwin")) -}}
 {{ $lnFlag := (ternary "-sf" "--symbolic --force" (eq .chezmoi.os "darwin")) -}}
 {{ $loginFlag := (ternary "-l" "" (eq .chezmoi.os "darwin")) -}}
+{{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
+{{ $activePackageNames := ($packageCatalog.active_packages | default (list)) -}}
 
 {{ $aliases := merge (dict) .aliases.common -}}
 {{ $aliases = merge $aliases (dict
@@ -13,6 +15,30 @@
     "seed" $aliases
     "rules" .aliases.rules
     "valueKey" "values") | fromJson) -}}
+
+{{ $aliasOwners := dict -}}
+{{ range (keys $aliases | sortAlpha | uniq) -}}
+{{   $_ := set $aliasOwners . "base" -}}
+{{ end -}}
+
+{{ range ($activePackageNames | sortAlpha | uniq) -}}
+{{   $packageName := . -}}
+{{   $templateName := printf "packages/%s/aliases.tmpl" $packageName -}}
+{{   $sourcePath := joinPath $.chezmoi.sourceDir ".chezmoitemplates" $templateName -}}
+{{   if stat $sourcePath -}}
+{{     $packageData := includeTemplate $templateName $ | mustFromJson -}}
+{{     $packageAliases := ($packageData.aliases | default (dict)) -}}
+{{     range (keys $packageAliases | sortAlpha | uniq) -}}
+{{       $key := . -}}
+{{       $owner := (get $aliasOwners $key | default "") -}}
+{{       if and (ne $owner "") (ne $owner $packageName) -}}
+{{         fail (printf "duplicate alias key %q from package %q already owned by %q" $key $packageName $owner) -}}
+{{       end -}}
+{{       $_ := set $aliasOwners $key $packageName -}}
+{{       $_ := set $aliases $key (get $packageAliases $key) -}}
+{{     end -}}
+{{   end -}}
+{{ end -}}
 
 {{ if lookPath "fzf" -}}
 {{   $aliases = merge $aliases (dict

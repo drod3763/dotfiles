@@ -28,6 +28,13 @@
         "1password_settings.json") -}}
 {{- end }}
 
+{{- if eq .chezmoi.os "darwin" -}}
+    {{- $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
+    {{- range ($packageCatalog.inactive_config_paths | default (list)) -}}
+        {{- $ignore = concat $ignore (list .) -}}
+    {{- end -}}
+{{- end }}
+
 {{- if and (eq .chezmoi.os "darwin" "linux") (ne .shell "zsh") -}}
     {{- $ignore = concat $ignore (list
         ".p10k.zsh"

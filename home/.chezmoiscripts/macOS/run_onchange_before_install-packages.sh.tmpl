@@ -28,6 +28,7 @@ fi
 
 {{ $packages := .packages.macos -}}
 {{ $args := merge (dict) $packages.brew_args -}}
+{{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
 {{ $resolved := (includeTemplate "rule_engine.tmpl" (dict
     "context" .
     "seed" (dict
@@ -39,9 +40,21 @@ fi
     "listKeys" (list "taps" "brews" "casks")
     "mapKeys" (list "mas")) | fromJson) -}}
 {{ $taps := $resolved.taps -}}
-{{ $brews := $resolved.brews -}}
-{{ $casks := $resolved.casks -}}
+{{ $brews := concat $resolved.brews ($packageCatalog.brew_formulas | default (list)) -}}
+{{ $casks := concat $resolved.casks ($packageCatalog.brew_casks | default (list)) -}}
 {{ $mas := $resolved.mas -}}
+{{ range ($packageCatalog.mas_app_ids | default (list)) -}}
+{{   $id := (int .) -}}
+{{   $alreadyPresent := false -}}
+{{   range (keys $mas | sortAlpha | uniq) -}}
+{{     if contains (printf "id: %d" $id) (get $mas .) -}}
+{{       $alreadyPresent = true -}}
+{{     end -}}
+{{   end -}}
+{{   if not $alreadyPresent -}}
+{{     $_ := set $mas (printf "Catalog app %d" $id) (printf ", id: %d" $id) -}}
+{{   end -}}
+{{ end -}}
 
 max_attempts="${BREW_BUNDLE_MAX_ATTEMPTS:-3}"
 attempt=1

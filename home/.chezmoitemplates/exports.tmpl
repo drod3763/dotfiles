@@ -1,9 +1,36 @@
 {{ $exports := merge (dict) .exports.common -}}
 {{ $openai := .onepassword.items.openai_key -}}
 {{ $awsCreds := .onepassword.items.aws_credentials -}}
+{{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
+{{ $activePackageNames := ($packageCatalog.active_packages | default (list)) -}}
 {{ $exports = merge $exports (dict
     "DOTFILES" .chezmoi.sourceDir
     "OPENAI_API_KEY" (includeTemplate "onepassword_field.tmpl" (dict "item" $openai.item "vault" $openai.vault "field_id" $openai.fields.credential))) -}}
+
+{{ $exportOwners := dict -}}
+{{ range (keys $exports | sortAlpha | uniq) -}}
+{{   $_ := set $exportOwners . "base" -}}
+{{ end -}}
+
+{{ range ($activePackageNames | sortAlpha | uniq) -}}
+{{   $packageName := . -}}
+{{   $templateName := printf "packages/%s/exports.tmpl" $packageName -}}
+{{   $sourcePath := joinPath $.chezmoi.sourceDir ".chezmoitemplates" $templateName -}}
+{{   if stat $sourcePath -}}
+{{     $packageData := includeTemplate $templateName $ | mustFromJson -}}
+{{     $packageExports := ($packageData.exports | default (dict)) -}}
+{{     range (keys $packageExports | sortAlpha | uniq) -}}
+{{       $key := . -}}
+{{       $owner := (get $exportOwners $key | default "") -}}
+{{       if and (ne $owner "") (ne $owner $packageName) -}}
+{{         fail (printf "duplicate export key %q from package %q already owned by %q" $key $packageName $owner) -}}
+{{       end -}}
+{{       $_ := set $exportOwners $key $packageName -}}
+{{       $_ := set $exports $key (get $packageExports $key) -}}
+{{     end -}}
+{{   end -}}
+{{ end -}}
+
 {{ $exports = (includeTemplate "rule_engine.tmpl" (dict
     "context" .
     "seed" $exports

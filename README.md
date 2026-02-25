@@ -63,6 +63,7 @@ The installation script respects the following environment variables:
 - **Sleep Prevention:** Uses `caffeinate` during installation to prevent sleep interruptions.
 - **Progress Feedback:** Provides clear status updates during long-running tasks.
 - **Structured Template Data:** Uses domain-scoped `chezmoidata` files under `home/.chezmoidata/` for reusable catalogs (exports, packages, aliases, functions, MCP, 1Password mappings).
+- **Package-Aware Config:** Derives app config/env inclusion from package rules so machine profiles only materialize relevant app settings.
 
 ## Formatting
 
@@ -90,7 +91,8 @@ Shell script logic tests use `bats-core` with CLI mocks.
 Shared template data is split by domain in `home/.chezmoidata/*.toml`.
 
 - `exports.toml` - environment export rules
-- `packages.toml` - package catalogs and install rules
+- `packages.toml` - legacy package install rules and migration bridge data
+- `package_catalog.toml` - package objects used for package-centric install/config behavior (pilot migration)
 - `aliases.toml` - alias catalog and conditional overlays
 - `functions.toml` - function toggles/rules
 - `mcp.toml` - shared MCP server definitions
@@ -105,3 +107,14 @@ Templates avoid hardcoded secrets and use centralized mappings from `home/.chezm
 - On macOS with 1Password app installed, chezmoi uses `onepassword.mode = "account"`; otherwise it falls back to `"service"` mode.
 - Service account token (`OP_SERVICE_ACCOUNT_TOKEN`) is optional and primarily for headless/CI/service-mode workflows.
 - Age identities are bootstrapped from `home/.chezmoidata/onepassword.toml` (`[[onepassword.age_identities]]`) into `~/.config/chezmoi/age-identities/` before apply.
+
+## Package-Centric Configuration
+
+Package behavior is moving to `home/.chezmoidata/package_catalog.toml` as package objects.
+
+- Each package declares lifecycle metadata (`os`, `type`, `target_class`) and install identifiers (`brew_formula_name`, `brew_cask_name`, `mas_app_id`, `linux_pkg_name`).
+- Config path inclusion/exclusion is derived from package `config_file_locations` via `home/.chezmoiignore`.
+- Package aliases, exports, and functions are inferred from package templates under `home/.chezmoitemplates/packages/<name>/`.
+- Active package sets are computed by `home/.chezmoitemplates/package_catalog_resolver.tmpl` and consumed by install/config templates.
+
+This supports a single-file package lifecycle workflow while keeping package-specific shell/config logic co-located with each package.

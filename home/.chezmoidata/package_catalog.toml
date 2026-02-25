@@ -1,0 +1,36 @@
+[[package_catalog.packages]]
+name = "claude-code"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "claude-code"
+config_file_locations = [".claude", ".config/claude"]
+
+[[package_catalog.packages]]
+name = "tailscale"
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "tailscale"
+
+[[package_catalog.packages]]
+name = "saml2aws"
+os = "mac"
+type = "work"
+target_class = "host"
+brew_formula_name = "saml2aws"
+
+[[package_catalog.packages]]
+name = "cursor"
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "cursor"
+config_file_locations = [".cursor"]
+
+[[package_catalog.packages]]
+name = "amphetamine"
+os = "mac"
+type = "work"
+target_class = "all"
+mas_app_id = 937984704

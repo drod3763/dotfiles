@@ -1,6 +1,5 @@
 [exports.common]
 CLAUDE_CODE_USE_BEDROCK = "0"
-CLAUDE_CONFIG_DIR = "${XDG_CONFIG_HOME}/claude"
 DATAGRIP_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/datagrip"
 GPG_TTY = "$TTY"
 INPUTRC = "${XDG_CONFIG_HOME}/readline/inputrc"

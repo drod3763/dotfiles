@@ -45,14 +45,6 @@ when_tool = "osascript"
 notify_me = true
 
 [[functions.rules]]
-id = "work-saml2aws"
-when_os = "darwin"
-when_not_personal = true
-when_tool = "saml2aws"
-[functions.rules.values]
-loginarcus = true
-
-[[functions.rules]]
 id = "work-aws-k8s"
 when_os = "darwin"
 when_not_personal = true

@@ -174,6 +174,9 @@ render_with_mocked_brew_paths() {
 
   run grep -q 'brew "awscli"' "${rendered_file}"
   [ "${status}" -eq 0 ]
+
+  run grep -q 'mas "Amphetamine", id: 937984704' "${rendered_file}"
+  [ "${status}" -eq 0 ]
 }
 
 @test "GIVEN transient machine EXPECT mas and not-transient casks are omitted" {

@@ -68,13 +68,6 @@ brewup = "brew update && brew upgrade && brew upgrade --cask && brew cleanup"
 bcu = "brew update && brew upgrade --cask --greedy && brew cleanup"
 
 [[aliases.rules]]
-id = "darwin-tailscale"
-when_os = "darwin"
-when_tool = "tailscale"
-[aliases.rules.values]
-tsfix = "sudo ./tailscaled install-system-daemon"
-
-[[aliases.rules]]
 id = "darwin-work-zap"
 when_os = "darwin"
 when_not_personal = true
@@ -94,4 +87,3 @@ when_os = "linux"
 when_tool = "bcompare"
 [aliases.rules.values]
 pdiff = "QT_GRAPHICSSYSTEM=native DIFFPROG=bcompare pacdiff"
-

@@ -1,8 +1,5 @@
 [packages.macos]
-taps = [
-  "nikitabobko/tap",
-  "waydabber/betterdisplay",
-]
+taps = ["nikitabobko/tap", "waydabber/betterdisplay"]
 brews = [
   "age",
   "bat",
@@ -107,13 +104,7 @@ casks = [
 id = "personal"
 when_personal = true
 taps = ["drod3763/tap"]
-brews = [
-  "ffmpeg",
-  "libheif",
-  "imagemagick",
-  "mkcert",
-  "rar",
-]
+brews = ["ffmpeg", "libheif", "imagemagick", "mkcert", "rar"]
 casks = [
   "affinity",
   "antigravity",
@@ -137,11 +128,7 @@ casks = [
 [[packages.macos.rules]]
 id = "work"
 when_not_personal = true
-taps = [
-  "drod3763/tap",
-  "felixkratz/formulae",
-  "oven-sh/bun",
-]
+taps = ["drod3763/tap", "felixkratz/formulae", "oven-sh/bun"]
 brews = [
   "act",
   "actionlint",
@@ -190,3 +177,61 @@ casks = ["openin-helper"]
 id = "not-transient"
 when_not_transient = true
 casks = ["parallels"]
+
+[[packages.macos.config_paths]]
+id = "onepassword"
+casks = ["1password"]
+paths = [".config/1Password"]
+
+[[packages.macos.config_paths]]
+id = "alfred"
+casks = ["alfred"]
+paths = ["Library/Application Support/Alfred"]
+
+[[packages.macos.config_paths]]
+id = "bartender"
+casks = ["bartender"]
+paths = ["Library/Application Support/Bartender"]
+
+[[packages.macos.config_paths]]
+id = "hazel"
+casks = ["hazel"]
+paths = ["Library/Application Support/Hazel"]
+
+[[packages.macos.config_paths]]
+id = "popclip"
+casks = ["popclip"]
+paths = [
+  "Library/Application Support/PopClip",
+  "Library/Preferences/com.pilotmoon.popclip.plist",
+]
+
+[[packages.macos.config_paths]]
+id = "claude"
+casks = ["claude-code"]
+paths = [".claude", ".config/claude"]
+
+[[packages.macos.config_paths]]
+id = "cursor"
+casks = ["cursor", "cursor-cli"]
+paths = [".cursor"]
+
+[[packages.macos.config_paths]]
+id = "aerospace"
+casks = ["nikitabobko/tap/aerospace"]
+paths = [".config/aerospace"]
+
+[[packages.macos.config_paths]]
+id = "ghostty"
+casks = ["ghostty"]
+paths = [".config/ghostty"]
+
+[[packages.macos.config_paths]]
+id = "hammerspoon"
+casks = ["hammerspoon"]
+paths = [".config/hammerspoon"]
+
+[[packages.macos.config_paths]]
+id = "zed"
+casks = ["zed"]
+paths = [".config/zed"]

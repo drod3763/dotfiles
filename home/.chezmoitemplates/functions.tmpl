@@ -11,6 +11,9 @@ z4h source --compile $DOTFILES/functions/bash_path_funcs/edpath
 z4h source --compile $DOTFILES/functions/bash_path_funcs/realpath_filter
 z4h source --compile $DOTFILES/functions/dmginstall */ -}}
 
+{{- $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
+{{- $activePackageNames := ($packageCatalog.active_packages | default (list)) -}}
+
 {{- $functionFlags := (includeTemplate "rule_engine.tmpl" (dict
   "context" .
   "seed" .functions.flags
@@ -245,16 +248,6 @@ notifyMe() {
 }
 {{ end }}
 
-{{ if (get $functionFlags "loginarcus") }}
-loginarcus() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force
-}
-
-loginarcussu() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a superuser
-}
-{{ end }}
-
 {{ if (get $functionFlags "switchprod") }}
 switchprod() {
   aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod --profile=arcus_prod
@@ -310,3 +303,11 @@ claude_bedrock() {
     echo "CLAUDE_CODE_USE_BEDROCK=0 (disabled)"
   fi
 }
+
+{{ range ($activePackageNames | sortAlpha | uniq) -}}
+{{   $templateName := printf "packages/%s/functions.tmpl" . -}}
+{{   $sourcePath := joinPath $.chezmoi.sourceDir ".chezmoitemplates" $templateName -}}
+{{   if stat $sourcePath -}}
+{{ includeTemplate $templateName $ }}
+{{   end -}}
+{{ end -}}

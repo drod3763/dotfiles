@@ -1,0 +1,61 @@
+{{- $out := dict
+  "active_packages" (list)
+  "brew_formulas" (list)
+  "brew_casks" (list)
+  "mas_app_ids" (list)
+  "linux_packages" (list)
+  "active_config_paths" (list)
+  "inactive_config_paths" (list) -}}
+{{- $ctx := . -}}
+
+{{- $packages := (.package_catalog.packages | default (list)) -}}
+{{- range $pkg := $packages -}}
+  {{- $active := true -}}
+  {{- $targetOS := $ctx.chezmoi.os -}}
+  {{- if eq $targetOS "darwin" -}}
+    {{- $targetOS = "mac" -}}
+  {{- end -}}
+
+  {{- $pkgOS := ($pkg.os | default "common") -}}
+  {{- if and $active (ne $pkgOS "common") (ne $pkgOS $targetOS) -}}
+    {{- $active = false -}}
+  {{- end -}}
+
+  {{- $pkgType := ($pkg.type | default "common") -}}
+  {{- if and $active (eq $pkgType "personal") (not $ctx.personal) -}}
+    {{- $active = false -}}
+  {{- end -}}
+  {{- if and $active (eq $pkgType "work") $ctx.personal -}}
+    {{- $active = false -}}
+  {{- end -}}
+
+  {{- $targetClass := ($pkg.target_class | default "all") -}}
+  {{- if and $active (eq $targetClass "host") $ctx.transient -}}
+    {{- $active = false -}}
+  {{- end -}}
+  {{- if and $active (eq $targetClass "vm") (not $ctx.transient) -}}
+    {{- $active = false -}}
+  {{- end -}}
+
+  {{- $configPaths := (get $pkg "config_file_locations" | default (list)) -}}
+  {{- if $active -}}
+    {{- $_ := set $out "active_packages" (concat ($out.active_packages | default (list)) (list $pkg.name)) -}}
+    {{- if hasKey $pkg "brew_formula_name" -}}
+      {{- $_ := set $out "brew_formulas" (concat ($out.brew_formulas | default (list)) (list $pkg.brew_formula_name)) -}}
+    {{- end -}}
+    {{- if hasKey $pkg "brew_cask_name" -}}
+      {{- $_ := set $out "brew_casks" (concat ($out.brew_casks | default (list)) (list $pkg.brew_cask_name)) -}}
+    {{- end -}}
+    {{- if hasKey $pkg "mas_app_id" -}}
+      {{- $_ := set $out "mas_app_ids" (concat ($out.mas_app_ids | default (list)) (list $pkg.mas_app_id)) -}}
+    {{- end -}}
+    {{- if hasKey $pkg "linux_pkg_name" -}}
+      {{- $_ := set $out "linux_packages" (concat ($out.linux_packages | default (list)) (list $pkg.linux_pkg_name)) -}}
+    {{- end -}}
+    {{- $_ := set $out "active_config_paths" (concat ($out.active_config_paths | default (list)) $configPaths) -}}
+  {{- else -}}
+    {{- $_ := set $out "inactive_config_paths" (concat ($out.inactive_config_paths | default (list)) $configPaths) -}}
+  {{- end -}}
+{{- end -}}
+
+{{ $out | toJson }}

@@ -1,0 +1,20 @@
+{{- $active := dict
+  "taps" (list)
+  "brews" (list)
+  "casks" (list) -}}
+{{- if and (eq .chezmoi.os "darwin") (hasKey . "packages") (hasKey .packages "macos") -}}
+{{- $packages := .packages.macos -}}
+{{- $resolved := (includeTemplate "rule_engine.tmpl" (dict
+  "context" .
+  "rules" $packages.rules
+  "seed" (dict
+    "taps" ($packages.taps | default (list))
+    "brews" ($packages.brews | default (list))
+    "casks" ($packages.casks | default (list)))
+  "listKeys" (list "taps" "brews" "casks")) | mustFromJson) -}}
+{{- $active = dict
+  "taps" (($resolved.taps | default (list)) | uniq)
+  "brews" (($resolved.brews | default (list)) | uniq)
+  "casks" (($resolved.casks | default (list)) | uniq) -}}
+{{- end -}}
+{{ $active | toJson }}
