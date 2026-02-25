@@ -1,0 +1,10 @@
+{{- $aliases := dict -}}
+{{- if lookPath "fzf" -}}
+{{-   $iFlag := (ternary "-i" "--interactive" (eq .chezmoi.os "darwin")) -}}
+{{-   $aliases = merge $aliases (dict
+      "cpf" (list "/bin/cp" $iFlag "$(fzf -i)" | join " ")
+      "mvf" (list "/bin/mv" $iFlag "$(fzf -i)" | join " ")
+      "rm"  (list "/bin/rm" $iFlag | join " ")
+      "rmf" (list "/bin/.rm" $iFlag "$(fzf -i)" | join " ")) -}}
+{{- end -}}
+{{- dict "aliases" $aliases | toJson -}}

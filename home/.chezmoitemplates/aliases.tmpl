@@ -40,25 +40,9 @@
 {{   end -}}
 {{ end -}}
 
-{{ if lookPath "fzf" -}}
-{{   $aliases = merge $aliases (dict
-      "cpf" (list "/bin/cp" $iFlag "$(fzf -i)" | join " ")
-      "mvf" (list "/bin/mv" $iFlag "$(fzf -i)" | join " ")
-      "rm"  (list "/bin/rm" $iFlag | join " ")
-      "rmf" (list "/bin/.rm" $iFlag "$(fzf -i)" | join " ")) -}}
-{{ end -}}
-
-{{ if lookPath "rsync" -}}
-{{   $aliases = merge $aliases (dict
-      "cp" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 \"$@\""
-      "cpr" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\""
-      "mv" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files \"$@\""
-      "mvwr" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\"") -}}
-{{ else -}}
 {{   $aliases = merge $aliases (dict
       "cp" (list "/bin/cp" $iFlag | join " ")
       "mv" (list "/bin/mv" $iFlag | join " ")) -}}
-{{ end -}}
 
 {{ if and (eq .chezmoi.os "linux") (lookPath "dbus-send") -}}
 {{   $aliases = merge $aliases (dict

@@ -17,42 +17,6 @@ when_shell = "bash"
 "..5" = "..4; .."
 
 [[aliases.rules]]
-id = "bat"
-when_tool = "bat"
-[aliases.rules.values]
-cat = "bat --style=plain --pager=never"
-catf = "bat $(fzf -i)"
-tac = "tac \"$@\" | bat --style=plain --pager=never"
-tacf = "tac \"$@\" | bat $(fzf -i)"
-
-[[aliases.rules]]
-id = "docker"
-when_tool = "docker"
-[aliases.rules.values]
-dk = "docker"
-dkclean = "docker system prune --all --force --volumes"
-dknuke = "docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes"
-dkstart = "docker start"
-dkstop = "docker stop"
-dkils = "docker image ls"
-dkirm = "docker image rm"
-dkps = "docker ps --all"
-dkrmcon = "docker rm $(docker ps --all --filter status=exited --quiet)"
-
-[[aliases.rules]]
-id = "docker-compose"
-when_tool = "docker-compose"
-[aliases.rules.values]
-dkc = "docker-compose"
-
-[[aliases.rules]]
-id = "eza"
-when_tool = "eza"
-[aliases.rules.values]
-ls = "eza --grid  --color auto --icons --all --sort type"
-ll = "eza --long --color always --icons --all --sort type"
-
-[[aliases.rules]]
 id = "ssh"
 when_tool = "ssh"
 [aliases.rules.values]
@@ -73,13 +37,6 @@ when_os = "darwin"
 when_not_personal = true
 [aliases.rules.values]
 zapfix = "sudo launchctl load -w /Library/LaunchDaemons/com.zscaler.service.plist"
-
-[[aliases.rules]]
-id = "darwin-saml2aws"
-when_os = "darwin"
-when_tool = "saml2aws"
-[aliases.rules.values]
-s2a = "AWS_SDK_LOAD_CONFIG=0 saml2aws"
 
 [[aliases.rules]]
 id = "linux-bcompare"

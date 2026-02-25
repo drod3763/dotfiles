@@ -8,12 +8,6 @@ when_tools = ["7z"]
 ex = true
 
 [[functions.rules]]
-id = "docker-helpers"
-when_tool = "docker"
-[functions.rules.values]
-docker_helpers = true
-
-[[functions.rules]]
 id = "pip-update"
 when_tool = "pip"
 [functions.rules.values]

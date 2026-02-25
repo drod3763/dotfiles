@@ -11,24 +11,10 @@ TERMINFO_DIRS = "${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
 WEBIDE_PROPERTIES = "${XDG_CONFIG_HOME}/jetbrains/webstorm"
 
 [[exports.rules]]
-id = "aws"
-when_tool = "aws"
-[exports.rules.values]
-AWS_SHARED_CREDENTIALS_FILE = "${XDG_CONFIG_HOME}/aws/credentials"
-AWS_CONFIG_FILE = "${XDG_CONFIG_HOME}/aws/config"
-
-[[exports.rules]]
 id = "adb"
 when_tool = "adb"
 [exports.rules.values]
 ANDROID_USER_HOME = "${XDG_DATA_HOME}/android"
-
-[[exports.rules]]
-id = "az"
-when_tool = "az"
-[exports.rules.values]
-AZURE_CONFIG_DIR = "${XDG_DATA_HOME}/azure"
-AZURE_DEVOPS_CACHE_DIR = "${XDG_CACHE_HOME}/azure-devops"
 
 [[exports.rules]]
 id = "bash"
@@ -51,23 +37,10 @@ when_tools = ["batdiff", "delta"]
 BATDIFF_USE_DELTA = "true"
 
 [[exports.rules]]
-id = "visual-zed"
-when_tool = "zed"
-[exports.rules.values]
-VISUAL = "zed --wait"
-
-[[exports.rules]]
 id = "visual-code"
 when_tool = "code"
 [exports.rules.values]
 VISUAL = "code -nw"
-
-[[exports.rules]]
-id = "docker"
-when_tool = "docker"
-[exports.rules.values]
-DOCKER_CONFIG = "${XDG_CONFIG_HOME}/docker"
-MACHINE_STORAGE_PATH = "${XDG_DATA_HOME}/docker-machine"
 
 [[exports.rules]]
 id = "npm"
@@ -122,12 +95,6 @@ id = "editor-default"
 EDITOR = "vi"
 
 [[exports.rules]]
-id = "go"
-when_tool = "go"
-[exports.rules.values]
-GOPATH = "${XDG_DATA_HOME}/go"
-
-[[exports.rules]]
 id = "omnisharp"
 when_tool = "omnisharp"
 [exports.rules.values]
@@ -144,12 +111,6 @@ id = "pwsh"
 when_tool = "pwsh"
 [exports.rules.values]
 POWERSHELL_TELEMETRY_OPTOUT = 1
-
-[[exports.rules]]
-id = "rg"
-when_tool = "rg"
-[exports.rules.values]
-RIPGREP_CONFIG_PATH = "${XDG_CONFIG_HOME}/ripgrep/config"
 
 [[exports.rules]]
 id = "ruby"

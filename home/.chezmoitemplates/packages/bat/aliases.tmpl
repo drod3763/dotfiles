@@ -1,0 +1,5 @@
+{{- dict "aliases" (dict
+  "cat" "bat --style=plain --pager=never"
+  "catf" "bat $(fzf -i)"
+  "tac" "tac \"$@\" | bat --style=plain --pager=never"
+  "tacf" "tac \"$@\" | bat $(fzf -i)") | toJson -}}

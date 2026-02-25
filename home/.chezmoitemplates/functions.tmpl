@@ -48,19 +48,6 @@ ex()
 }
 {{- end }}
 
-{{- /* Docker Helpers */}}
-{{- if (get $functionFlags "docker_helpers") }}
-function dkrbuild() {
-  docker build -t ${1} .
-}
-function dkrrun() {
-	docker run -it --name ${1} ${2}
-}
-function dkrrunmount() {
-	docker run -it --name ${1} --mount type=bind,source=${3},target=${4} ${2}
-}
-{{- end }}
-
 {{- /* Update pip packages */}}
 {{- if (get $functionFlags "pipu") }}
 function pipu() {
