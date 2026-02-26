@@ -115,7 +115,10 @@
 
 {{- if $ok -}}
 {{- if hasKey $rule $valueKey -}}
-{{- $out = merge $out (get $rule $valueKey) -}}
+{{- $values := (get $rule $valueKey | default (dict)) -}}
+{{- range (keys $values) -}}
+{{- $_ := set $out . (get $values .) -}}
+{{- end -}}
 {{- end -}}
 
 {{- range $listKey := $listKeys -}}
@@ -128,7 +131,11 @@
 {{- range $mapKey := $mapKeys -}}
 {{- if hasKey $rule $mapKey -}}
 {{- $existing := get $out $mapKey | default (dict) -}}
-{{- $_ := set $out $mapKey (merge $existing (get $rule $mapKey)) -}}
+{{- $incoming := (get $rule $mapKey | default (dict)) -}}
+{{- range (keys $incoming) -}}
+{{- $_ := set $existing . (get $incoming .) -}}
+{{- end -}}
+{{- $_ := set $out $mapKey $existing -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
