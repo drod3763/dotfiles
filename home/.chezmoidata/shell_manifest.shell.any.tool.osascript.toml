@@ -1,0 +1,18 @@
+[shell_manifest.entries.notify-darwin]
+priority = 246
+
+[shell_manifest.entries.notify-darwin.rules]
+when_os = ["darwin"]
+when_tool = "osascript"
+
+[shell_manifest.entries.notify-darwin.functions.notifyMe]
+kind = "literal"
+value = """
+notifyMe() {
+  if [ $? -eq 0 ]; then
+    osascript -e 'display notification "The command worked" with title "Success"'
+  else
+    osascript -e 'display notification "The command failed" with title "Failed"'
+  fi
+}
+"""

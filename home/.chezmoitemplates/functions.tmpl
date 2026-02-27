@@ -11,15 +11,6 @@ z4h source --compile $DOTFILES/functions/bash_path_funcs/edpath
 z4h source --compile $DOTFILES/functions/bash_path_funcs/realpath_filter
 z4h source --compile $DOTFILES/functions/dmginstall */ -}}
 
-{{- $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
-{{- $activePackageNames := ($packageCatalog.active_packages | default (list)) -}}
-
-{{- $functionFlags := (includeTemplate "rule_engine.tmpl" (dict
-  "context" .
-  "seed" .functions.flags
-  "rules" .functions.rules
-  "valueKey" "values") | fromJson) -}}
-
 {{- /* Create a new directory and change (cd) into it. */}}
 function mkd() {
     mkdir -p "$@" && cd "$_";
@@ -167,44 +158,8 @@ cd() { {{/* wrap `cd_`, add behaviors */}}
   builtin cd "$dest"
 }
 
-{{ if (get $functionFlags "notify_me") }}
-notifyMe() {
-  if [ $? -eq 0 ]; then
-    osascript -e 'display notification "The command worked" with title "Success"'
-  else
-    osascript -e 'display notification "The command failed" with title "Failed"'
-  fi
-}
-{{ end }}
+{{- $shellManifest := includeTemplate "shell_manifest_renderer.tmpl" . | mustFromJson -}}
+{{ range ($shellManifest.functions | default (list)) }}
+{{ . }}
 
-{{ if (get $functionFlags "switchprod") }}
-switchprod() {
-  aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod --profile=arcus_prod
-  export AWS_PROFILE="arcus_prod"
-  export ASPNETCORE_ENVIRONMENT="Production"
-}
-
-switchprodsu() {
-  aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod-su --profile=arcus_prod_su
-  export AWS_PROFILE="arcus_prod"
-  export ASPNETCORE_ENVIRONMENT="Production"
-}
-
-pgadmin() {
-  POD=$(kubectl get pods -n subscription-management --no-headers -o custom-columns=":metadata.name" | grep "mindbody-pgadmin-" | head -n 1)
-  if [ -z "$POD" ]; then
-    echo -e "\033[0;31mNo mindbody-pgadmin pods found.\033[0m"
-    return 1
-  fi
-
-  kubectl port-forward "$POD" 6001:5000 -n subscription-management
-}
-{{ end }}
-
-{{ range ($activePackageNames | sortAlpha | uniq) -}}
-{{   $templateName := printf "packages/%s/functions.tmpl" . -}}
-{{   $sourcePath := joinPath $.chezmoi.sourceDir ".chezmoitemplates" $templateName -}}
-{{   if stat $sourcePath -}}
-{{ includeTemplate $templateName $ }}
-{{   end -}}
 {{ end -}}

@@ -1,0 +1,21 @@
+[shell_manifest.entries.work-k8s]
+priority = 248
+
+[shell_manifest.entries.work-k8s.rules]
+when_os = ["darwin"]
+when_personal = "false"
+when_tool = "kubectl"
+
+[shell_manifest.entries.work-k8s.functions.pgadmin]
+kind = "literal"
+value = """
+pgadmin() {
+  POD=$(kubectl get pods -n subscription-management --no-headers -o custom-columns=\":metadata.name\" | grep \"mindbody-pgadmin-\" | head -n 1)
+  if [ -z \"$POD\" ]; then
+    echo -e "\\033[0;31mNo mindbody-pgadmin pods found.\\033[0m"
+    return 1
+  fi
+
+  kubectl port-forward \"$POD\" 6001:5000 -n subscription-management
+}
+"""

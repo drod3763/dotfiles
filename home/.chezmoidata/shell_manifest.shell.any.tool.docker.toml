@@ -1,0 +1,29 @@
+[shell_manifest.entries.docker-functions]
+priority = 250
+
+[shell_manifest.entries.docker-functions.rules]
+when_tool = "docker"
+
+[shell_manifest.entries.docker-functions.functions.dkrbuild]
+kind = "literal"
+value = """
+function dkrbuild() {
+  docker build -t ${1} .
+}
+"""
+
+[shell_manifest.entries.docker-functions.functions.dkrrun]
+kind = "literal"
+value = """
+function dkrrun() {
+  docker run -it --name ${1} ${2}
+}
+"""
+
+[shell_manifest.entries.docker-functions.functions.dkrrunmount]
+kind = "literal"
+value = """
+function dkrrunmount() {
+  docker run -it --name ${1} --mount type=bind,source=${3},target=${4} ${2}
+}
+"""

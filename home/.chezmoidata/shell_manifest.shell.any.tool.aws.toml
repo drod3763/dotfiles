@@ -9,3 +9,31 @@ when_tool = "aws"
 [shell_manifest.entries.darwin-work-aws.exports.AWS_REGION]
 kind = "literal"
 value = "us-west-2"
+
+[shell_manifest.entries.work-aws-k8s]
+priority = 247
+
+[shell_manifest.entries.work-aws-k8s.rules]
+when_os = ["darwin"]
+when_personal = "false"
+when_tool = "aws"
+
+[shell_manifest.entries.work-aws-k8s.functions.switchprod]
+kind = "literal"
+value = """
+switchprod() {
+  aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod --profile=arcus_prod
+  export AWS_PROFILE=\"arcus_prod\"
+  export ASPNETCORE_ENVIRONMENT=\"Production\"
+}
+"""
+
+[shell_manifest.entries.work-aws-k8s.functions.switchprodsu]
+kind = "literal"
+value = """
+switchprodsu() {
+  aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod-su --profile=arcus_prod_su
+  export AWS_PROFILE=\"arcus_prod\"
+  export ASPNETCORE_ENVIRONMENT=\"Production\"
+}
+"""

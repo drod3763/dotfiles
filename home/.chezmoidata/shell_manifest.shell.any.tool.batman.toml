@@ -1,0 +1,14 @@
+[shell_manifest.entries.batman]
+priority = 249
+
+[shell_manifest.entries.batman.rules]
+when_tool = "batman"
+
+[shell_manifest.entries.batman.functions.man]
+kind = "literal"
+value = """
+man() {
+  BAT_THEME="Monokai Extended" batman "$@"
+  return $?
+}
+"""

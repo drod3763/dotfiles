@@ -92,7 +92,6 @@ Shared template data is split by domain in `home/.chezmoidata/*.toml`.
 
 - `package_catalog.toml` - package objects used for package-centric install/config behavior
 - `shell_manifest*.toml` - split shell behavior manifest files (aliases, exports, functions, init)
-- `functions.toml` - function toggles/rules
 - `mcp.toml` - shared MCP server definitions
 - `onepassword.toml` - centralized item/vault mappings and field identifiers
 

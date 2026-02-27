@@ -1,0 +1,22 @@
+[shell_manifest.entries.saml2aws-functions]
+priority = 253
+
+[shell_manifest.entries.saml2aws-functions.rules]
+when_tool = "saml2aws"
+when_personal = "false"
+
+[shell_manifest.entries.saml2aws-functions.functions.loginarcus]
+kind = "literal"
+value = """
+loginarcus() {
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force
+}
+"""
+
+[shell_manifest.entries.saml2aws-functions.functions.loginarcussu]
+kind = "literal"
+value = """
+loginarcussu() {
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a superuser
+}
+"""
