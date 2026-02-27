@@ -1,0 +1,21 @@
+[shell_manifest.entries.mise-zsh]
+priority = 336
+
+[shell_manifest.entries.mise-zsh.rules]
+when_tool = "mise"
+when_shell = ["zsh"]
+
+[shell_manifest.entries.mise-zsh.init.mise]
+kind = "literal"
+value = "eval \"$(mise activate zsh)\""
+
+[shell_manifest.entries.mise-bash]
+priority = 337
+
+[shell_manifest.entries.mise-bash.rules]
+when_tool = "mise"
+when_shell = ["bash"]
+
+[shell_manifest.entries.mise-bash.init.mise]
+kind = "literal"
+value = "eval \"$(mise activate bash)\""

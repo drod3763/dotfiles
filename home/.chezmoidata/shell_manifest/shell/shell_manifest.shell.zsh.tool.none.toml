@@ -1,0 +1,13 @@
+[shell_manifest.entries.zsh-core]
+priority = 180
+
+[shell_manifest.entries.zsh-core.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zsh-core.aliases.reload]
+kind = "literal"
+value = "source ~/.zshrc"
+
+[shell_manifest.entries.zsh-core.aliases.clear]
+kind = "literal"
+value = "z4h-clear-screen-soft-bottom"

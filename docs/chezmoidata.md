@@ -2,8 +2,15 @@
 
 This directory is the source of truth for package selection and shell behavior.
 
-- `package_catalog.toml` controls package activation and install metadata.
-- `shell_manifest*.toml` controls shell behavior (`aliases`, `exports`, `functions`, `init`).
+- `home/.chezmoidata/package_catalog.toml` controls package activation and install metadata.
+- `home/.chezmoidata/shell_manifest/**/*.toml` controls shell behavior (`aliases`, `exports`, `functions`, `init`).
+
+Current shell manifest folder layout:
+
+- `home/.chezmoidata/shell_manifest/core/` - shared baseline entries
+- `home/.chezmoidata/shell_manifest/os/` - OS-scoped entries
+- `home/.chezmoidata/shell_manifest/shell/` - shell-scoped entries (zsh/bash)
+- `home/.chezmoidata/shell_manifest/tool/` - tool-scoped entries
 
 ## `package_catalog.toml` schema
 
@@ -34,7 +41,7 @@ Optional config linkage:
 
 - `config_file_locations`: paths used by `.chezmoiignore` to include/exclude config based on active/inactive packages.
 
-## `shell_manifest*.toml` schema
+## `shell_manifest/**/*.toml` schema
 
 Shell behavior is split across files but merged by chezmoi data.
 
@@ -77,7 +84,7 @@ Collision behavior:
 
 ## Walkthrough: add a new package with aliases/exports/functions/init
 
-1. Add package metadata to `package_catalog.toml`.
+1. Add package metadata to `home/.chezmoidata/package_catalog.toml`.
 
 Example:
 
@@ -92,7 +99,7 @@ when_tool = "mytool"
 config_file_locations = [".config/mytool"]
 ```
 
-2. Add shell behavior in a new manifest file, typically `shell_manifest.shell.any.tool.mytool.toml`.
+2. Add shell behavior in a new manifest file, typically `home/.chezmoidata/shell_manifest/tool/shell_manifest.shell.any.tool.mytool.toml`.
 
 ```toml
 [shell_manifest.entries.mytool]

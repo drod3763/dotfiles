@@ -19,12 +19,17 @@ value = "CLAUDE_CODE_USE_BEDROCK=1 command claude"
 kind = "literal"
 value = "${XDG_CONFIG_HOME}/claude"
 
-[shell_manifest.entries.bedrock-models.exports.ANTHROPIC_MODEL]
+[shell_manifest.entries.bedrock-models.exports.ANTHROPIC_DEFAULT_OPUS_MODEL]
 kind = "dynamic"
 resolver = "anthropic_model"
 omit_if_empty = true
 
-[shell_manifest.entries.bedrock-models.exports.ANTHROPIC_SMALL_FAST_MODEL]
+[shell_manifest.entries.bedrock-models.exports.ANTHROPIC_DEFAULT_HAIKU_MODEL]
 kind = "dynamic"
 resolver = "anthropic_small_fast_model"
+omit_if_empty = true
+
+[shell_manifest.entries.bedrock-models.exports.ANTHROPIC_DEFAULT_SONNET_MODEL]
+kind = "dynamic"
+resolver = "anthropic_default_sonnet_model"
 omit_if_empty = true
