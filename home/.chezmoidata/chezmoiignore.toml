@@ -1,0 +1,56 @@
+[chezmoiignore]
+base = [
+  "*.deb",
+  "*.tar.gz",
+  "1password_settings.json",
+  ".config/claude/.claude.json",
+  "functions",
+  "key.txt.age",
+  "install.sh",
+  "Makefile",
+  "README.md",
+  "vscode_settings.json",
+]
+
+not_darwin = [
+  ".AzureToolsForIntelliJ",
+  ".CFUserTextEncoding",
+  ".DS_Store",
+  ".IdentityService",
+  ".Trash",
+  ".chezmoiscripts/darwin/**",
+]
+
+not_linux = [
+  ".chezmoiscripts/linux/**",
+  ".config/paru",
+  ".config/kitty",
+  "1password_settings.json",
+]
+
+non_zsh_shell = [
+  ".p10k.zsh",
+  ".zshenv",
+  ".zshrc",
+]
+
+non_bash_shell = [
+  ".bashrc",
+  ".bash_profile",
+]
+
+not_windows = [
+  ".chezmoiscripts/windows/**",
+  "Documents",
+]
+
+windows = [
+  ".gitignore",
+  ".inputrc",
+  ".ssh/authorized_keys",
+  ".ssh/id_rsa",
+  ".ssh/id_rsa.pub",
+  ".tmux.conf",
+  ".vim",
+  ".vimrc",
+]

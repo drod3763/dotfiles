@@ -1,65 +1,29 @@
-{{- $ignore := list
-    "*.deb"
-    "*.tar.gz"
-    "1password_settings.json"
-    ".config/claude/.claude.json"
-    "functions"
-    "key.txt.age"
-    "install.sh"
-    "Makefile"
-    "README.md"
-    "vscode_settings.json" -}}
+{{- $ignoreData := (.chezmoiignore | default (dict)) -}}
+{{- $ignore := (get $ignoreData "base" | default (list)) -}}
 
 {{- if ne .chezmoi.os "darwin" }}
-    {{- $ignore = concat $ignore (list
-        ".AzureToolsForIntelliJ"
-        ".CFUserTextEncoding"
-        ".DS_Store"
-        ".IdentityService"
-        ".Trash"
-        ".chezmoiscripts/darwin/**") -}}
+    {{- $ignore = concat $ignore (get $ignoreData "not_darwin" | default (list)) -}}
 {{- end }}
 
 {{- if ne .chezmoi.os "linux" }}
-    {{- $ignore = concat $ignore (list
-        ".chezmoiscripts/linux/**"
-        ".config/paru"
-        ".config/kitty"
-        "1password_settings.json") -}}
+    {{- $ignore = concat $ignore (get $ignoreData "not_linux" | default (list)) -}}
 {{- end }}
 
-{{- if eq .chezmoi.os "darwin" -}}
-    {{- $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
-    {{- range ($packageCatalog.inactive_config_paths | default (list)) -}}
-        {{- $ignore = concat $ignore (list .) -}}
-    {{- end -}}
-{{- end }}
+{{- $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
+{{- range ($packageCatalog.inactive_config_paths | default (list)) -}}
+    {{- $ignore = concat $ignore (list .) -}}
+{{- end -}}
 
-{{- if and (eq .chezmoi.os "darwin" "linux") (ne .shell "zsh") -}}
-    {{- $ignore = concat $ignore (list
-        ".p10k.zsh"
-        ".zshenv"
-        ".zshrc") -}}
+{{- if and (or (eq .chezmoi.os "darwin") (eq .chezmoi.os "linux")) (ne .shell "zsh") -}}
+    {{- $ignore = concat $ignore (get $ignoreData "non_zsh_shell" | default (list)) -}}
 {{- else if ne .shell "bash" }}
-    {{- $ignore = concat $ignore (list
-        ".bashrc"
-        ".bash_profile") -}}
+    {{- $ignore = concat $ignore (get $ignoreData "non_bash_shell" | default (list)) -}}
 {{- end }}
 
 {{- if ne .chezmoi.os "windows" }}
-    {{- $ignore = concat $ignore (list
-        ".chezmoiscripts/windows/**"
-        "Documents") -}}
+    {{- $ignore = concat $ignore (get $ignoreData "not_windows" | default (list)) -}}
 {{- else }}
-    {{- $ignore = concat $ignore (list
-        ".gitignore"
-        ".inputrc"
-        ".ssh/authorized_keys"
-        ".ssh/id_rsa"
-        ".ssh/id_rsa.pub"
-        ".tmux.conf"
-        ".vim"
-        ".vimrc") -}}
+    {{- $ignore = concat $ignore (get $ignoreData "windows" | default (list)) -}}
 {{- end -}}
 
 {{- range ($ignore | sortAlpha | uniq) -}}
