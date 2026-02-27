@@ -1,11 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: Single Shell Manifest Source
-The repository SHALL provide one manifest file that declares aliases, exports, functions, and init snippets for shell behavior.
+The repository SHALL provide one shell-manifest source model that declares aliases, exports, functions, and init snippets for shell behavior.
 
-#### Scenario: Declare shell behavior in one file
+#### Scenario: Declare shell behavior in one manifest source
 - **WHEN** shell behavior is added or removed
-- **THEN** the change SHALL be made in `home/.chezmoidata/shell_manifest.toml`
+- **THEN** the change SHALL be made under `home/.chezmoidata/shell_manifest/`
 - **AND** shell render templates SHALL consume this manifest as the source for shell behavior
 
 #### Scenario: Keep manifest values static and typed
@@ -51,10 +51,10 @@ Rendered shell output SHALL be deterministic for identical inputs and SHALL appl
 - **THEN** the renderer SHALL append them in deterministic sorted order
 - **AND** output SHALL be reproducible for identical inputs
 
-### Requirement: Keep Install Metadata in Package Catalog
-Shell manifest adoption SHALL NOT change package installation metadata ownership.
+### Requirement: Co-Locate Install Metadata with Manifest Ownership
+Shell manifest adoption SHALL keep package installation metadata in manifest-owned data files.
 
 #### Scenario: Preserve package installation source
 - **WHEN** shell manifest rendering is implemented
-- **THEN** package installation metadata SHALL remain in `home/.chezmoidata/package_catalog.toml`
-- **AND** shell manifest changes SHALL not alter package install selection behavior by themselves
+- **THEN** package installation metadata SHALL be sourced from `package_catalog` blocks in files under `home/.chezmoidata/shell_manifest/`
+- **AND** shell manifest structure changes SHALL not alter package install selection behavior by themselves

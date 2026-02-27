@@ -3,18 +3,18 @@ This repository uses chezmoi templates to render shell aliases, exports, functio
 
 ## Goals / Non-Goals
 - Goals:
-  - Declare shell behavior in one file.
+  - Declare shell behavior in one manifest model.
   - Support rules on every element (aliases, exports, functions, init).
   - Preserve deterministic output and straightforward precedence.
   - Keep dynamic behavior explicit and safe through a resolver allowlist.
 - Non-Goals:
-  - Merge package installation metadata into this manifest.
+  - Redesign package installer behavior beyond metadata source relocation.
   - Store plaintext secrets in the manifest.
   - Introduce arbitrary code execution from manifest values.
 
 ## Decisions
-- Decision: Use one static manifest file `home/.chezmoidata/shell_manifest.toml` for shell behavior.
-  - Why: one place to add/remove behavior with minimal search cost.
+- Decision: Use one shell-manifest model rooted at `home/.chezmoidata/shell_manifest/` for shell behavior.
+  - Why: one place to add/remove behavior with minimal search cost while keeping ownership by domain.
 
 - Decision: Use typed values (`literal` and `dynamic`) instead of inline Go template expressions in data values.
   - Why: explicit intent, safer parsing, and clearer review.
@@ -25,8 +25,8 @@ This repository uses chezmoi templates to render shell aliases, exports, functio
 - Decision: Aliases/exports use last-writer-wins.
   - Why: simple conflict model that supports deliberate overrides.
 
-- Decision: Keep install metadata in `package_catalog.toml`.
-  - Why: avoids coupling package install lifecycle with shell rendering concerns.
+- Decision: Co-locate install metadata in per-domain manifest files using `package_catalog` blocks.
+  - Why: keeps install metadata near feature ownership while preserving resolver-driven install lifecycle.
 
 ## Rules and Ordering Model
 1. Evaluate entry rules.
