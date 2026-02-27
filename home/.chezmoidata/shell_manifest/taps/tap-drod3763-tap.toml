@@ -1,0 +1,5 @@
+[package_catalog.packages."tap-drod3763-tap"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_tap_name = "drod3763/tap"

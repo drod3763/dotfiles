@@ -1,0 +1,6 @@
+[package_catalog.packages."hammerspoon"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "hammerspoon"
+config_file_locations = [".config/hammerspoon"]

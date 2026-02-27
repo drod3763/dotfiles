@@ -1,0 +1,6 @@
+[package_catalog.packages."nikitabobko/tap/aerospace"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_cask_name = "nikitabobko/tap/aerospace"
+config_file_locations = [".config/aerospace"]

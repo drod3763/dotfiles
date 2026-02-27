@@ -2,7 +2,11 @@
 
 This directory is the source of truth for package selection and shell behavior.
 
-- `home/.chezmoidata/package_catalog.toml` controls package activation and install metadata.
+- Package activation/install metadata is embedded in:
+  - `home/.chezmoidata/shell_manifest/apps/*.toml` (one per cask)
+  - `home/.chezmoidata/shell_manifest/mas/*.toml` (one per MAS app)
+  - `home/.chezmoidata/shell_manifest/taps/*.toml` (one per tap)
+  - `home/.chezmoidata/shell_manifest/tool/*.toml` (formulas and tool-linked virtual packages)
 - `home/.chezmoidata/shell_manifest/**/*.toml` controls shell behavior (`aliases`, `exports`, `functions`, `init`).
 
 Current shell manifest folder layout:
@@ -10,10 +14,13 @@ Current shell manifest folder layout:
 - `home/.chezmoidata/shell_manifest/core/` - shared baseline entries
 - `home/.chezmoidata/shell_manifest/shell/` - shell-scoped entries (zsh/bash)
 - `home/.chezmoidata/shell_manifest/tool/` - tool-scoped entries, including OS-qualified tool/core-utils entries
+- `home/.chezmoidata/shell_manifest/apps/` - app/cask-scoped package catalog entries and app-owned shell entries
+- `home/.chezmoidata/shell_manifest/mas/` - MAS app package catalog entries
+- `home/.chezmoidata/shell_manifest/taps/` - Homebrew tap package catalog entries
 
-## `package_catalog.toml` schema
+## `package_catalog` schema
 
-Each package is a `[[package_catalog.packages]]` object.
+Each package is a `[package_catalog.packages."<name>"]` object.
 
 Core fields:
 
@@ -21,6 +28,7 @@ Core fields:
 - `os`: `common` | `mac` | `linux`.
 - `type`: `common` | `personal` | `work`.
 - `target_class`: `all` | `host` | `vm`.
+- `host_only` (optional): `true` skips package on transient/VM machines; defaults to `false`.
 
 Optional install fields:
 
@@ -83,13 +91,17 @@ Collision behavior:
 
 ## Walkthrough: add a new package with aliases/exports/functions/init
 
-1. Add package metadata to `home/.chezmoidata/package_catalog.toml`.
+1. Add package metadata to the appropriate folder:
+   - cask app: `home/.chezmoidata/shell_manifest/apps/<app>.toml`
+   - MAS app: `home/.chezmoidata/shell_manifest/mas/<app>.toml`
+   - tap: `home/.chezmoidata/shell_manifest/taps/<tap>.toml`
+   - tool/formula: `home/.chezmoidata/shell_manifest/tool/<tool>.toml`
+   Place the package block at the top of the file.
 
 Example:
 
 ```toml
-[[package_catalog.packages]]
-name = "mytool"
+[package_catalog.packages."mytool"]
 os = "mac"
 type = "common"
 target_class = "all"

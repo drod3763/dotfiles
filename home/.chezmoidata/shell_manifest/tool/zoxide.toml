@@ -1,3 +1,9 @@
+[package_catalog.packages."zoxide"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "zoxide"
+
 [shell_manifest.entries.zoxide-zsh]
 priority = 334
 

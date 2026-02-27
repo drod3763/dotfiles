@@ -48,11 +48,8 @@ while true; do
 tap "{{ . }}"
 {{ end -}}
 {{ range ($brews | sortAlpha | uniq) -}}
-{{ if eq . "felixkratz/formulae/borders" -}}
-brew "felixkratz/formulae/borders", restart_service: true
-{{ else -}}
-brew "{{ . }}"{{get $args . }}
-{{ end -}}
+{{- $arg := (get $args . | default "") -}}
+brew "{{ . }}"{{ if ne $arg "" }}, {{ $arg }}{{ end }}
 {{ end -}}
 {{ range ($casks | sortAlpha | uniq) -}}
 cask "{{ . }}"

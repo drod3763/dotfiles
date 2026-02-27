@@ -1,3 +1,9 @@
+[package_catalog.packages."ruby"]
+os = "common"
+type = "common"
+target_class = "all"
+when_any_tools = ["ruby", "bundle"]
+
 [shell_manifest.entries.ruby]
 priority = 249
 

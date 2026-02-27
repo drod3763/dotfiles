@@ -1,0 +1,5 @@
+[package_catalog.packages."libheif"]
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_formula_name = "libheif"

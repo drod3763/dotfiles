@@ -1,3 +1,9 @@
+[package_catalog.packages."z"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "z"
+
 [shell_manifest.entries.z]
 priority = 253
 

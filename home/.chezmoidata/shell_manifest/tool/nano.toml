@@ -1,3 +1,10 @@
+[package_catalog.packages."nano"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "nano"
+when_not_tool = "micro"
+
 [shell_manifest.entries.nano]
 priority = 300
 

@@ -11,7 +11,19 @@
   "inactive_config_paths" (list) -}}
 {{- $ctx := . -}}
 
-{{- $packages := (.package_catalog.packages | default (list)) -}}
+{{- $packagesRaw := (.package_catalog.packages | default (dict)) -}}
+{{- $packages := list -}}
+{{- if kindIs "map" $packagesRaw -}}
+  {{- range (keys $packagesRaw | sortAlpha | uniq) -}}
+    {{- $name := . -}}
+    {{- $pkg := (get $packagesRaw $name | default (dict)) -}}
+    {{- $packages = concat $packages (list (merge (dict "name" $name) $pkg)) -}}
+  {{- end -}}
+{{- else if kindIs "slice" $packagesRaw -}}
+  {{- $packages = $packagesRaw -}}
+{{- else -}}
+  {{- fail "package_catalog.packages must be a map or list" -}}
+{{- end -}}
 {{- range $pkg := $packages -}}
   {{- $active := true -}}
   {{- $targetOS := $ctx.chezmoi.os -}}
@@ -37,6 +49,11 @@
     {{- $active = false -}}
   {{- end -}}
   {{- if and $active (eq $targetClass "vm") (not $ctx.transient) -}}
+    {{- $active = false -}}
+  {{- end -}}
+
+  {{- $hostOnly := (get $pkg "host_only" | default false) -}}
+  {{- if and $active $hostOnly $ctx.transient -}}
     {{- $active = false -}}
   {{- end -}}
 

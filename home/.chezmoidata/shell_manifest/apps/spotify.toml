@@ -1,0 +1,5 @@
+[package_catalog.packages."spotify"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "spotify"

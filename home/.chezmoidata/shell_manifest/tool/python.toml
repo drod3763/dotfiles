@@ -1,3 +1,10 @@
+[package_catalog.packages."python"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "python"
+when_any_tools = ["pip", "pip3"]
+
 [shell_manifest.entries.python-env]
 priority = 255
 
@@ -24,3 +31,27 @@ value = "${HOME}/.python"
 [shell_manifest.entries.python-env.exports.PYTHONUSERBASE]
 kind = "literal"
 value = "${XDG_DATA_HOME}/python"
+
+[shell_manifest.entries.python-pipu]
+priority = 245
+
+[shell_manifest.entries.python-pipu.rules]
+when_tools_any = ["pip", "pip3"]
+
+[shell_manifest.entries.python-pipu.functions.pipu]
+kind = "literal"
+value = """
+function pipu() {
+  local pip_cmd=\"pip\"
+  if command -v pip3 >/dev/null 2>&1; then
+    pip_cmd=\"pip3\"
+  elif command -v pip >/dev/null 2>&1; then
+    pip_cmd=\"pip\"
+  else
+    echo \"pip/pip3 not found\" >&2
+    return 1
+  fi
+
+  \"${pip_cmd}\" list --outdated --format=freeze | grep -v '^\\-e' | cut -d = -f 1 | xargs -n1 \"${pip_cmd}\" install -U --user
+}
+"""

@@ -1,0 +1,5 @@
+[package_catalog.packages."ricoh-theta"]
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "ricoh-theta"

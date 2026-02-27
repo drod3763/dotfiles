@@ -1,3 +1,9 @@
+[package_catalog.packages."mise"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "mise"
+
 [shell_manifest.entries.mise-zsh]
 priority = 336
 

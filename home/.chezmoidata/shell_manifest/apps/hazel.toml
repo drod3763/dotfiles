@@ -1,0 +1,6 @@
+[package_catalog.packages."hazel"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "hazel"
+config_file_locations = ["Library/Application Support/Hazel"]

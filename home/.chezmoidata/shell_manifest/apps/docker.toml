@@ -1,0 +1,79 @@
+[package_catalog.packages."docker"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "docker"
+
+[shell_manifest.entries.docker-functions]
+priority = 250
+
+[shell_manifest.entries.docker-functions.rules]
+when_tool = "docker"
+
+[shell_manifest.entries.docker-functions.aliases.dk]
+kind = "literal"
+value = "docker"
+
+[shell_manifest.entries.docker-functions.aliases.dkclean]
+kind = "literal"
+value = "docker system prune --all --force --volumes"
+
+[shell_manifest.entries.docker-functions.aliases.dknuke]
+kind = "literal"
+value = "docker stop $(docker container ls --all --quiet) && docker system prune --all --force --volumes"
+
+[shell_manifest.entries.docker-functions.aliases.dkstart]
+kind = "literal"
+value = "docker start"
+
+[shell_manifest.entries.docker-functions.aliases.dkstop]
+kind = "literal"
+value = "docker stop"
+
+[shell_manifest.entries.docker-functions.aliases.dkils]
+kind = "literal"
+value = "docker image ls"
+
+[shell_manifest.entries.docker-functions.aliases.dkirm]
+kind = "literal"
+value = "docker image rm"
+
+[shell_manifest.entries.docker-functions.aliases.dkps]
+kind = "literal"
+value = "docker ps --all"
+
+[shell_manifest.entries.docker-functions.aliases.dkrmcon]
+kind = "literal"
+value = "docker rm $(docker ps --all --filter status=exited --quiet)"
+
+[shell_manifest.entries.docker-functions.exports.DOCKER_CONFIG]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/docker"
+
+[shell_manifest.entries.docker-functions.exports.MACHINE_STORAGE_PATH]
+kind = "literal"
+value = "${XDG_DATA_HOME}/docker-machine"
+
+[shell_manifest.entries.docker-functions.functions.dkrbuild]
+kind = "literal"
+value = """
+function dkrbuild() {
+  docker build -t ${1} .
+}
+"""
+
+[shell_manifest.entries.docker-functions.functions.dkrrun]
+kind = "literal"
+value = """
+function dkrrun() {
+  docker run -it --name ${1} ${2}
+}
+"""
+
+[shell_manifest.entries.docker-functions.functions.dkrrunmount]
+kind = "literal"
+value = """
+function dkrrunmount() {
+  docker run -it --name ${1} --mount type=bind,source=${3},target=${4} ${2}
+}
+"""

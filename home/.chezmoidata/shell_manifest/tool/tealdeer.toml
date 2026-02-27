@@ -1,3 +1,9 @@
+[package_catalog.packages."tealdeer"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "tldr"
+
 [shell_manifest.entries.tealdeer]
 priority = 250
 

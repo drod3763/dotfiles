@@ -1,0 +1,6 @@
+[package_catalog.packages."alfred"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "alfred"
+config_file_locations = ["Library/Application Support/Alfred"]

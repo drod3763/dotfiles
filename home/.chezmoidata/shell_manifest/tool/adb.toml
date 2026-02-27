@@ -1,3 +1,9 @@
+[package_catalog.packages."adb"]
+os = "linux"
+type = "common"
+target_class = "all"
+when_tool = "adb"
+
 [shell_manifest.entries.adb]
 priority = 241
 

@@ -1,3 +1,9 @@
+[package_catalog.packages."node-tooling"]
+os = "common"
+type = "common"
+target_class = "all"
+when_any_tools = ["node", "npm", "pnpm", "yarn"]
+
 [shell_manifest.entries.node-tooling]
 priority = 245
 

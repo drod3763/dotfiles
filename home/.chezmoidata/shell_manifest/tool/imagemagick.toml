@@ -1,18 +1,35 @@
-[shell_manifest.entries.imagemagick-functions]
+[package_catalog.packages."imagemagick"]
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_formula_name = "imagemagick"
+when_any_tools = ["convert", "magick"]
+
+[shell_manifest.entries.imagemagick-functions-magick]
 priority = 251
 
-[shell_manifest.entries.imagemagick-functions.rules]
-when_tools_any = ["convert", "magick"]
+[shell_manifest.entries.imagemagick-functions-magick.rules]
+when_tool = "magick"
 
-[shell_manifest.entries.imagemagick-functions.functions.fakeScan]
+[shell_manifest.entries.imagemagick-functions-magick.functions.fakeScan]
 kind = "literal"
 value = """
 function fakeScan() {
-  local img_cmd="convert"
-  if command -v magick >/dev/null 2>&1; then
-    img_cmd="magick"
-  fi
+  magick -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
+}
+"""
 
-  ${img_cmd} -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
+[shell_manifest.entries.imagemagick-functions-convert]
+priority = 252
+
+[shell_manifest.entries.imagemagick-functions-convert.rules]
+when_tool = "convert"
+when_not_tool = "magick"
+
+[shell_manifest.entries.imagemagick-functions-convert.functions.fakeScan]
+kind = "literal"
+value = """
+function fakeScan() {
+  convert -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
 }
 """

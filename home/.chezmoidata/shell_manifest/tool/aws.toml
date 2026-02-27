@@ -1,3 +1,10 @@
+[package_catalog.packages."awscli"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "awscli"
+when_tool = "aws"
+
 [shell_manifest.entries.darwin-work-aws]
 priority = 235
 

@@ -1,3 +1,9 @@
+[package_catalog.packages."saml2aws"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "saml2aws"
+
 [shell_manifest.entries.saml2aws-functions]
 priority = 253
 

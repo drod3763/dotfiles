@@ -1,9 +1,0 @@
-[shell_manifest.entries.visual-studio-code]
-priority = 310
-
-[shell_manifest.entries.visual-studio-code.rules]
-when_tool = "code"
-
-[shell_manifest.entries.visual-studio-code.exports.VISUAL]
-kind = "literal"
-value = "code -nw"

@@ -1,3 +1,9 @@
+[package_catalog.packages."gnupg"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "gpg"
+
 [shell_manifest.entries.gnupg]
 priority = 243
 

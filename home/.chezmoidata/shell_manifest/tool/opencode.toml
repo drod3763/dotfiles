@@ -1,3 +1,9 @@
+[package_catalog.packages."opencode"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "opencode"
+
 [shell_manifest.entries.opencode-api-key]
 priority = 226
 

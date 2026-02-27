@@ -1,0 +1,5 @@
+[package_catalog.packages."helm"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "helm"

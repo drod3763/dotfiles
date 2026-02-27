@@ -1,0 +1,5 @@
+[package_catalog.packages."ivpn"]
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "ivpn"

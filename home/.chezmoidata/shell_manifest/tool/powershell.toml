@@ -1,3 +1,9 @@
+[package_catalog.packages."powershell"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "pwsh"
+
 [shell_manifest.entries.powershell]
 priority = 247
 

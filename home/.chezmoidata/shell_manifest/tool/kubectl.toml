@@ -10,9 +10,9 @@ when_tool = "kubectl"
 kind = "literal"
 value = """
 pgadmin() {
-  POD=$(kubectl get pods -n subscription-management --no-headers -o custom-columns=\":metadata.name\" | grep \"mindbody-pgadmin-\" | head -n 1)
+  POD=$(kubectl get pods -n subscription-management --no-headers -o custom-columns=\":metadata.name\" | grep \"-pgadmin\" | head -n 1)
   if [ -z \"$POD\" ]; then
-    echo -e "\\033[0;31mNo mindbody-pgadmin pods found.\\033[0m"
+    echo -e "\\033[0;31mNo pgadmin pods found.\\033[0m"
     return 1
   fi
 

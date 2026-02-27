@@ -94,7 +94,10 @@ Schema reference and onboarding guide:
 
 - `docs/chezmoidata.md`
 
-- `package_catalog.toml` - package objects used for package-centric install/config behavior
+- `shell_manifest/apps/*.toml` - one file per cask package catalog entry (plus app-owned shell entries)
+- `shell_manifest/mas/*.toml` - one file per Mac App Store package catalog entry
+- `shell_manifest/taps/*.toml` - one file per Homebrew tap package catalog entry
+- `shell_manifest/tool/*.toml` - tool/formula package entries plus tool-owned shell entries
 - `shell_manifest/**/*.toml` - split shell behavior manifest files (aliases, exports, functions, init)
 - `mcp.toml` - shared MCP server definitions
 - `onepassword.toml` - centralized item/vault mappings and field identifiers
@@ -111,7 +114,7 @@ Templates avoid hardcoded secrets and use centralized mappings from `home/.chezm
 
 ## Package-Centric Configuration
 
-Package behavior is defined by `home/.chezmoidata/package_catalog.toml` + `home/.chezmoidata/shell_manifest/**/*.toml`.
+Package behavior is defined by package catalog entries embedded across `home/.chezmoidata/shell_manifest/{apps,mas,taps,tool}/*.toml` and shell entries across `home/.chezmoidata/shell_manifest/**/*.toml`.
 
 - Each package declares lifecycle metadata (`os`, `type`, `target_class`) and install identifiers (`brew_formula_name`, `brew_cask_name`, `mas_app_id`, `linux_pkg_name`).
 - Config path inclusion/exclusion is derived from package `config_file_locations` via `home/.chezmoiignore`.

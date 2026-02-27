@@ -1,3 +1,9 @@
+[package_catalog.packages."tilt"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "tilt"
+
 [shell_manifest.entries.tilt]
 priority = 257
 

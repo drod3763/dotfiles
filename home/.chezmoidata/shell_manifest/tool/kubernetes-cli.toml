@@ -1,0 +1,6 @@
+[package_catalog.packages."kubernetes-cli"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "kubernetes-cli"
+brew_formula_args = "link: false"

@@ -1,0 +1,6 @@
+[package_catalog.packages."parallels"]
+os = "mac"
+type = "common"
+target_class = "host"
+host_only = true
+brew_cask_name = "parallels"

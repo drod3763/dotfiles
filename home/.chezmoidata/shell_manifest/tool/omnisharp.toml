@@ -1,3 +1,9 @@
+[package_catalog.packages."omnisharp"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "omnisharp"
+
 [shell_manifest.entries.omnisharp]
 priority = 246
 

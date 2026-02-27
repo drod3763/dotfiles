@@ -1,0 +1,5 @@
+[package_catalog.packages."mermaid-cli"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "mermaid-cli"

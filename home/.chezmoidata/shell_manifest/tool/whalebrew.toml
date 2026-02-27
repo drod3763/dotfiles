@@ -1,3 +1,9 @@
+[package_catalog.packages."whalebrew"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "whalebrew"
+
 [shell_manifest.entries.whalebrew]
 priority = 252
 

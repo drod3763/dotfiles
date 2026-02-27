@@ -1,3 +1,9 @@
+[package_catalog.packages."tailscale"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "tailscale"
+
 [shell_manifest.entries.tailscale]
 priority = 320
 

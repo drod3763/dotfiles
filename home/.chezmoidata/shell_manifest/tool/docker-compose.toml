@@ -1,3 +1,9 @@
+[package_catalog.packages."docker-compose"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "docker-compose"
+
 [shell_manifest.entries.docker-compose]
 priority = 251
 

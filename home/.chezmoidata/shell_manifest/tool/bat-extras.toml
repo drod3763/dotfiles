@@ -1,0 +1,52 @@
+[package_catalog.packages."bat-extras"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "bat-extras"
+
+[package_catalog.packages."batman"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "batman"
+
+[package_catalog.packages."batdiff-delta"]
+os = "common"
+type = "common"
+target_class = "all"
+when_tools = ["batdiff", "delta"]
+
+[shell_manifest.entries.batman]
+priority = 249
+
+[shell_manifest.entries.batman.rules]
+when_tool = "batman"
+
+[shell_manifest.entries.batman.functions.man]
+kind = "literal"
+value = """
+man() {
+  BAT_THEME="Monokai Extended" batman "$@"
+  return $?
+}
+"""
+
+[shell_manifest.entries.batdiff-delta]
+priority = 254
+
+[shell_manifest.entries.batdiff-delta.rules]
+when_tools_all = ["batdiff", "delta"]
+
+[shell_manifest.entries.batdiff-delta.exports.BATDIFF_USE_DELTA]
+kind = "literal"
+value = "true"
+
+[shell_manifest.entries.batpipe-init]
+priority = 331
+
+[shell_manifest.entries.batpipe-init.rules]
+when_tool = "batpipe"
+
+[shell_manifest.entries.batpipe-init.init.batpipe]
+kind = "literal"
+value = "eval \"$(batpipe)\""

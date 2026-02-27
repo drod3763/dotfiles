@@ -1,0 +1,6 @@
+[package_catalog.packages."popclip"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "popclip"
+config_file_locations = ["Library/Application Support/PopClip", "Library/Preferences/com.pilotmoon.popclip.plist"]
