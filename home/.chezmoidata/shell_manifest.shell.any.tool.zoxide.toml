@@ -1,0 +1,21 @@
+[shell_manifest.entries.zoxide-zsh]
+priority = 334
+
+[shell_manifest.entries.zoxide-zsh.rules]
+when_tool = "zoxide"
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zoxide-zsh.init.zoxide]
+kind = "literal"
+value = "eval \"$(zoxide init zsh)\""
+
+[shell_manifest.entries.zoxide-bash]
+priority = 335
+
+[shell_manifest.entries.zoxide-bash.rules]
+when_tool = "zoxide"
+when_shell = ["bash"]
+
+[shell_manifest.entries.zoxide-bash.init.zoxide]
+kind = "literal"
+value = "eval \"$(zoxide init bash)\""

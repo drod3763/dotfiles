@@ -39,3 +39,11 @@ value = "..3; .."
 [shell_manifest.entries.bash-nav.aliases."..5"]
 kind = "literal"
 value = "..4; .."
+
+[shell_manifest.entries.bash-nav.init.iterm2]
+kind = "literal"
+value = '''
+if [ -f "${HOME}/.iterm2_shell_integration.bash" ]; then
+  . "${HOME}/.iterm2_shell_integration.bash"
+fi
+'''

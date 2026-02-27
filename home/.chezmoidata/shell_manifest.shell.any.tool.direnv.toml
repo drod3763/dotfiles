@@ -1,0 +1,21 @@
+[shell_manifest.entries.direnv-zsh]
+priority = 332
+
+[shell_manifest.entries.direnv-zsh.rules]
+when_tool = "direnv"
+when_shell = ["zsh"]
+
+[shell_manifest.entries.direnv-zsh.init.direnv]
+kind = "literal"
+value = "eval \"$(direnv hook zsh)\""
+
+[shell_manifest.entries.direnv-bash]
+priority = 333
+
+[shell_manifest.entries.direnv-bash.rules]
+when_tool = "direnv"
+when_shell = ["bash"]
+
+[shell_manifest.entries.direnv-bash.init.direnv]
+kind = "literal"
+value = "eval \"$(direnv hook bash)\""

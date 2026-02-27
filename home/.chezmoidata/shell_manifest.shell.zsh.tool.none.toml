@@ -11,3 +11,15 @@ value = "source ~/.zshrc"
 [shell_manifest.entries.zsh-core.aliases.clear]
 kind = "literal"
 value = "z4h-clear-screen-soft-bottom"
+
+[shell_manifest.entries.zsh-core.init.iterm2]
+kind = "literal"
+value = '''
+if [ -f "${HOME}/.iterm2_shell_integration.zsh" ]; then
+  if [ -n "${_Z4H_TMUX_CMD}" ] && [ -f "$(dirname "${_Z4H_TMUX_CMD}")/../../../z4h.zsh" ]; then
+    z4h source --compile "${HOME}/.iterm2_shell_integration.zsh"
+  else
+    . "${HOME}/.iterm2_shell_integration.zsh"
+  fi
+fi
+'''

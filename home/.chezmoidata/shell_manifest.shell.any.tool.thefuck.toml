@@ -1,0 +1,9 @@
+[shell_manifest.entries.thefuck-init]
+priority = 330
+
+[shell_manifest.entries.thefuck-init.rules]
+when_tool = "fuck"
+
+[shell_manifest.entries.thefuck-init.init.thefuck]
+kind = "literal"
+value = "eval $(thefuck --alias)"

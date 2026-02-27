@@ -1,0 +1,9 @@
+[shell_manifest.entries.batpipe-init]
+priority = 331
+
+[shell_manifest.entries.batpipe-init.rules]
+when_tool = "batpipe"
+
+[shell_manifest.entries.batpipe-init.init.batpipe]
+kind = "literal"
+value = "eval \"$(batpipe)\""
