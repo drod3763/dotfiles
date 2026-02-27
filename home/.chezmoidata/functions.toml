@@ -1,30 +1,6 @@
 [functions.flags]
 
 [[functions.rules]]
-id = "pip-update"
-when_tool = "pip"
-[functions.rules.values]
-pipu = true
-
-[[functions.rules]]
-id = "fake-scan"
-when_tool = "convert"
-[functions.rules.values]
-fake_scan = true
-
-[[functions.rules]]
-id = "fake-scan-magick"
-when_tool = "magick"
-[functions.rules.values]
-fake_scan = true
-
-[[functions.rules]]
-id = "man-batman"
-when_tool = "batman"
-[functions.rules.values]
-batman_man = true
-
-[[functions.rules]]
 id = "notify-darwin"
 when_os = "darwin"
 when_tool = "osascript"

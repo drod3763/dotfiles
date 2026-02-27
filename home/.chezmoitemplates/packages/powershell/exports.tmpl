@@ -1,0 +1,6 @@
+{{- $exports := dict -}}
+{{- if lookPath "pwsh" -}}
+{{-   $exports = merge $exports (dict
+      "POWERSHELL_TELEMETRY_OPTOUT" "1") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

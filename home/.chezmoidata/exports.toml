@@ -15,108 +15,9 @@ HISTFILE = "${XDG_STATE_HOME}/bash/history"
 LSCOLORS = "GxFxCxDxBxegedabagaced"
 
 [[exports.rules]]
-id = "visual-code"
-when_tool = "code"
-[exports.rules.values]
-VISUAL = "code -nw"
-
-[[exports.rules]]
-id = "npm"
-when_tool = "npm"
-[exports.rules.values]
-NPM_CONFIG_USERCONFIG = "${XDG_CONFIG_HOME}/npm/npmrc"
-
-[[exports.rules]]
-id = "gpg"
-when_tool = "gpg"
-[exports.rules.values]
-GNUPGHOME = "${XDG_DATA_HOME}/gnupg"
-
-[[exports.rules]]
-id = "java"
-when_tool = "java"
-[exports.rules.values]
-_JAVA_OPTIONS = "-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
-GRADLE_USER_HOME = "${XDG_DATA_HOME}/gradle"
-
-[[exports.rules]]
-id = "editor-micro"
-when_tool = "micro"
-[exports.rules.values]
-EDITOR = "micro"
-MICRO_TRUECOLOR = "1"
-
-[[exports.rules]]
-id = "editor-micro-homebrew"
-when_os = "darwin"
-when_stat = "/opt/homebrew/bin/micro"
-[exports.rules.values]
-EDITOR = "micro"
-MICRO_TRUECOLOR = "1"
-
-[[exports.rules]]
-id = "editor-micro-local"
-when_stat = "/usr/local/bin/micro"
-[exports.rules.values]
-EDITOR = "micro"
-MICRO_TRUECOLOR = "1"
-
-[[exports.rules]]
-id = "editor-nano"
-when_tool = "nano"
-[exports.rules.values]
-EDITOR = "nano"
-
-[[exports.rules]]
 id = "editor-default"
 [exports.rules.values]
 EDITOR = "vi"
-
-[[exports.rules]]
-id = "omnisharp"
-when_tool = "omnisharp"
-[exports.rules.values]
-OMNISHARPHOME = "${XDG_CONFIG_HOME}/omnisharp"
-
-[[exports.rules]]
-id = "nuget"
-when_tool = "nuget"
-[exports.rules.values]
-NUGET_PACKAGES = "${XDG_CACHE_HOME}/NuGetPackages"
-
-[[exports.rules]]
-id = "pwsh"
-when_tool = "pwsh"
-[exports.rules.values]
-POWERSHELL_TELEMETRY_OPTOUT = 1
-
-[[exports.rules]]
-id = "ruby"
-when_tool = "ruby"
-[exports.rules.values]
-GEM_HOME = "${XDG_DATA_HOME}/gem"
-GEM_SPEC_CACHE = "${XDG_CACHE_HOME}/gem"
-
-[[exports.rules]]
-id = "bundle"
-when_tool = "bundle"
-[exports.rules.values]
-BUNDLE_USER_CACHE = "${XDG_CACHE_HOME}/bundle"
-BUNDLE_USER_CONFIG = "${XDG_CONFIG_HOME}/bundle"
-BUNDLE_USER_PLUGIN = "${XDG_DATA_HOME}/bundle"
-
-[[exports.rules]]
-id = "tldr"
-when_tool = "tldr"
-[exports.rules.values]
-TEALDEER_CONFIG_DIR = "${HOME}/.config/tealdeer"
-
-[[exports.rules]]
-id = "volta"
-when_tool = "volta"
-[exports.rules.values]
-VOLTA_FEATURE_PNPM = 1
-VOLTA_HOME = "${XDG_DATA_HOME}/volta"
 
 [[exports.rules]]
 id = "darwin"
@@ -132,20 +33,6 @@ when_tool = "brew"
 HOMEBREW_NO_ANALYTICS = 1
 
 [[exports.rules]]
-id = "darwin-whalebrew"
-when_os = "darwin"
-when_tool = "whalebrew"
-[exports.rules.values]
-WHALEBREW_CONFIG_DIR = "${XDG_CONFIG_HOME}/whalebrew"
-
-[[exports.rules]]
-id = "darwin-z"
-when_os = "darwin"
-when_tool = "z"
-[exports.rules.values]
-_ZO_DATA_DIR = "${XDG_DATA_HOME}"
-
-[[exports.rules]]
 id = "darwin-work"
 when_os = "darwin"
 when_not_personal = true
@@ -154,17 +41,3 @@ AWS_PROFILE = "arcus_dev"
 AWS_REGION = "us-west-2"
 AWS_SDK_LOAD_CONFIG = 1
 TILT_NAMESPACE = "derick-rodriguez"
-
-[[exports.rules]]
-id = "linux-diff-delta"
-when_os = "linux"
-when_tool = "delta"
-[exports.rules.values]
-DIFFPROG = "delta --dark --line-numbers --side-by-side --no-gitconfig"
-
-[[exports.rules]]
-id = "linux-diff-bcompare"
-when_os = "linux"
-when_tool = "bcompare"
-[exports.rules.values]
-DIFFPROG = "bcompare"

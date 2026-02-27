@@ -1,0 +1,6 @@
+{{- $exports := dict -}}
+{{- if and (eq .chezmoi.os "darwin") (lookPath "z") -}}
+{{-   $exports = merge $exports (dict
+      "_ZO_DATA_DIR" "${XDG_DATA_HOME}") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

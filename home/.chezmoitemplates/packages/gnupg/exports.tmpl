@@ -1,0 +1,6 @@
+{{- $exports := dict -}}
+{{- if lookPath "gpg" -}}
+{{-   $exports = merge $exports (dict
+      "GNUPGHOME" "${XDG_DATA_HOME}/gnupg") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

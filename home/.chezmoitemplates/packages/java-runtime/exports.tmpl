@@ -1,0 +1,7 @@
+{{- $exports := dict -}}
+{{- if lookPath "java" -}}
+{{-   $exports = merge $exports (dict
+      "_JAVA_OPTIONS" "-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
+      "GRADLE_USER_HOME" "${XDG_DATA_HOME}/gradle") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

@@ -1,0 +1,6 @@
+{{- $exports := dict -}}
+{{- if and (eq .chezmoi.os "linux") (lookPath "bcompare") -}}
+{{-   $exports = merge $exports (dict
+      "DIFFPROG" "bcompare") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

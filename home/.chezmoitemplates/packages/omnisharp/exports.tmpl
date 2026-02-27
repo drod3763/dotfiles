@@ -1,0 +1,6 @@
+{{- $exports := dict -}}
+{{- if lookPath "omnisharp" -}}
+{{-   $exports = merge $exports (dict
+      "OMNISHARPHOME" "${XDG_CONFIG_HOME}/omnisharp") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

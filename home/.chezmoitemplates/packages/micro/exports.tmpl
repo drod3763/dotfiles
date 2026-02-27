@@ -1,0 +1,7 @@
+{{- $exports := dict -}}
+{{- if or (lookPath "micro") (stat "/opt/homebrew/bin/micro") (stat "/usr/local/bin/micro") -}}
+{{-   $exports = merge $exports (dict
+      "EDITOR" "micro"
+      "MICRO_TRUECOLOR" "1") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

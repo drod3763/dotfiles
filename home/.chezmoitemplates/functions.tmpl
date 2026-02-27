@@ -20,14 +20,6 @@ z4h source --compile $DOTFILES/functions/dmginstall */ -}}
   "rules" .functions.rules
   "valueKey" "values") | fromJson) -}}
 
-{{- /* Update pip packages */}}
-{{- if (get $functionFlags "pipu") }}
-function pipu() {
-	pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U --user
-}
-# export -f pipu
-{{- end }}
-
 {{- /* Create a new directory and change (cd) into it. */}}
 function mkd() {
     mkdir -p "$@" && cd "$_";
@@ -87,20 +79,6 @@ tad() {
 function listusers () {
 	dscl . list /Users | grep -v ^_.*
 }
-
-{{- /* Use ImageMagick convert to fake a scanned pdf. The order is important. the density argument applies to input.pdf
-and resize and rotate to output.pdf. Source: https://gist.github.com/andyrbell/25c8632e15d17c83a54602f6acde2724
-Note: You may need ghostscript installed on mac (brew install gs) */}}
-{{- if (get $functionFlags "fake_scan") }}
-function fakeScan() {
-	local img_cmd="convert"
-	if command -v magick >/dev/null 2>&1; then
-		img_cmd="magick"
-	fi
-
-	${img_cmd} -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
-}
-{{- end }}
 
 {{- /* Stolen from the nextdns guys https://nextdns.io/install. Can use this to tailer my scripts per machine..... */}}
 function detect_os() {
@@ -189,14 +167,6 @@ cd() { {{/* wrap `cd_`, add behaviors */}}
   builtin cd "$dest"
 }
 
-{{- /* Fix theme for flag highlights in manpages */}}
-{{ if (get $functionFlags "batman_man") }}
-man() {
-  BAT_THEME="Monokai Extended" batman "$@"
-  return $?
-}
-{{ end }}
-
 {{ if (get $functionFlags "notify_me") }}
 notifyMe() {
   if [ $? -eq 0 ]; then
@@ -230,38 +200,6 @@ pgadmin() {
   kubectl port-forward "$POD" 6001:5000 -n subscription-management
 }
 {{ end }}
-
-claude_bedrock() {
-  local mode="${1:-toggle}"
-
-  case "$mode" in
-    on|1|true)
-      export CLAUDE_CODE_USE_BEDROCK="1"
-      ;;
-    off|0|false)
-      export CLAUDE_CODE_USE_BEDROCK="0"
-      ;;
-    status)
-      ;;
-    toggle)
-      if [[ "${CLAUDE_CODE_USE_BEDROCK:-0}" == "1" ]]; then
-        export CLAUDE_CODE_USE_BEDROCK="0"
-      else
-        export CLAUDE_CODE_USE_BEDROCK="1"
-      fi
-      ;;
-    *)
-      echo "Usage: claude_bedrock [on|off|toggle|status]" >&2
-      return 1
-      ;;
-  esac
-
-  if [[ "${CLAUDE_CODE_USE_BEDROCK:-0}" == "1" ]]; then
-    echo "CLAUDE_CODE_USE_BEDROCK=1 (enabled)"
-  else
-    echo "CLAUDE_CODE_USE_BEDROCK=0 (disabled)"
-  fi
-}
 
 {{ range ($activePackageNames | sortAlpha | uniq) -}}
 {{   $templateName := printf "packages/%s/functions.tmpl" . -}}

@@ -308,6 +308,90 @@ target_class = "all"
 brew_formula_name = "micro"
 
 [[package_catalog.packages]]
+name = "node-tooling"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "gnupg"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "java-runtime"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "nano"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "omnisharp"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "dotnet-sdk"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "powershell"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "ruby"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "tealdeer"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "volta"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "whalebrew"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "z"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "delta"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
+name = "bcompare"
+os = "common"
+type = "common"
+target_class = "all"
+
+[[package_catalog.packages]]
 name = "mise"
 os = "mac"
 type = "work"
@@ -980,6 +1064,13 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_cask_name = "zen"
+
+[[package_catalog.packages]]
+name = "visual-studio-code"
+os = "mac"
+type = "common"
+target_class = "all"
+when_stat = "/Applications/Visual Studio Code.app"
 
 [[package_catalog.packages]]
 name = "Xcode"

@@ -1,0 +1,7 @@
+{{- $exports := dict -}}
+{{- if lookPath "volta" -}}
+{{-   $exports = merge $exports (dict
+      "VOLTA_FEATURE_PNPM" "1"
+      "VOLTA_HOME" "${XDG_DATA_HOME}/volta") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}

@@ -1,0 +1,6 @@
+{{- if lookPath "batman" }}
+man() {
+  BAT_THEME="Monokai Extended" batman "$@"
+  return $?
+}
+{{- end }}

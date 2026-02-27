@@ -1,8 +1,8 @@
 [aliases.common]
 clear = "z4h-clear-screen-soft-bottom"
-cp = "/bin/cp -i"
+cp = "/bin/cp --interactive"
 ln = "ln --symbolic --force"
-mv = "/bin/mv -i"
+mv = "/bin/mv --interactive"
 reload = "source ~/.zshrc"
 restart = "exec zsh"
 secretscan = "${DOTFILES}/scripts/check_secrets.sh"
@@ -14,7 +14,9 @@ wtfport = "lsof -i -P -n | grep LISTEN"
 id = "darwin-core"
 when_os = "darwin"
 [aliases.rules.values]
+cp = "/bin/cp -i"
 ln = "ln -sf"
+mv = "/bin/mv -i"
 
 [[aliases.rules]]
 id = "bash-reload-restart"

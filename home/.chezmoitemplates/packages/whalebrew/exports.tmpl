@@ -1,0 +1,6 @@
+{{- $exports := dict -}}
+{{- if and (eq .chezmoi.os "darwin") (lookPath "whalebrew") -}}
+{{-   $exports = merge $exports (dict
+      "WHALEBREW_CONFIG_DIR" "${XDG_CONFIG_HOME}/whalebrew") -}}
+{{- end -}}
+{{- dict "exports" $exports | toJson -}}
