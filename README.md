@@ -90,6 +90,10 @@ Shell script logic tests use `bats-core` with CLI mocks.
 
 Shared template data is split by domain in `home/.chezmoidata/*.toml`.
 
+Schema reference and onboarding guide:
+
+- `home/.chezmoidata/README.md`
+
 - `package_catalog.toml` - package objects used for package-centric install/config behavior
 - `shell_manifest*.toml` - split shell behavior manifest files (aliases, exports, functions, init)
 - `mcp.toml` - shared MCP server definitions
@@ -107,11 +111,11 @@ Templates avoid hardcoded secrets and use centralized mappings from `home/.chezm
 
 ## Package-Centric Configuration
 
-Package behavior is moving to `home/.chezmoidata/package_catalog.toml` as package objects.
+Package behavior is defined by `home/.chezmoidata/package_catalog.toml` + `home/.chezmoidata/shell_manifest*.toml`.
 
 - Each package declares lifecycle metadata (`os`, `type`, `target_class`) and install identifiers (`brew_formula_name`, `brew_cask_name`, `mas_app_id`, `linux_pkg_name`).
 - Config path inclusion/exclusion is derived from package `config_file_locations` via `home/.chezmoiignore`.
-- Package aliases, exports, and functions are inferred from package templates under `home/.chezmoitemplates/packages/<name>/`.
-- Active package sets are computed by `home/.chezmoitemplates/package_catalog_resolver.tmpl` and consumed by install/config templates.
+- Shell aliases/exports/functions/init are declared via shell manifest entries in `home/.chezmoidata/shell_manifest*.toml`.
+- Active package sets are computed by `home/.chezmoitemplates/package_catalog_resolver.tmpl` and consumed by install/config templates and ignore resolution.
 
-This supports a single-file package lifecycle workflow while keeping package-specific shell/config logic co-located with each package.
+This supports a package-centric lifecycle with shell behavior defined in declarative manifest data.
