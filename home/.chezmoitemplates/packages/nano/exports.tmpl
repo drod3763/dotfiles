@@ -1,6 +1,4 @@
 {{- $exports := dict -}}
-{{- if and (lookPath "nano") (not (lookPath "micro")) -}}
-{{-   $exports = merge $exports (dict
-      "EDITOR" "nano") -}}
-{{- end -}}
+{{- $exports = merge $exports (dict
+    "EDITOR" "nano") -}}
 {{- dict "exports" $exports | toJson -}}

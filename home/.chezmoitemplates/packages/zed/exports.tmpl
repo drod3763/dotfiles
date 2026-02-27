@@ -1,2 +1,4 @@
-{{- dict "exports" (dict
-  "VISUAL" "zed --wait") | toJson -}}
+{{- $exports := dict -}}
+{{- $exports = merge $exports (dict
+    "VISUAL" "zed --wait") -}}
+{{- dict "exports" $exports | toJson -}}

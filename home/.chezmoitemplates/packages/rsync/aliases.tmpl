@@ -1,9 +1,7 @@
 {{- $aliases := dict -}}
-{{- if lookPath "rsync" -}}
-{{-   $aliases = merge $aliases (dict
-      "cp" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 \"$@\""
-      "cpr" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\""
-      "mv" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files \"$@\""
-      "mvwr" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\"") -}}
-{{- end -}}
+{{- $aliases = merge $aliases (dict
+    "cp" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 \"$@\""
+    "cpr" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\""
+    "mv" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files \"$@\""
+    "mvwr" "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\"") -}}
 {{- dict "aliases" $aliases | toJson -}}

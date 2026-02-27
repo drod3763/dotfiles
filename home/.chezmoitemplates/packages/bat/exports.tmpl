@@ -1,6 +1,4 @@
 {{- $exports := dict -}}
-{{- if lookPath "bat" -}}
-{{-   $exports = merge $exports (dict
-      "PAGER" "bat --color=always") -}}
-{{- end -}}
+{{- $exports = merge $exports (dict
+    "PAGER" "bat --color=always") -}}
 {{- dict "exports" $exports | toJson -}}

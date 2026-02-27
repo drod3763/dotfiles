@@ -52,6 +52,17 @@ render_with_overrides() {
   [ "${status}" -eq 0 ]
 }
 
+@test "GIVEN personal profile EXPECT work-scoped AWS and Tilt exports are excluded" {
+  exports_file="${TEST_TMPDIR}/exports-personal.sh"
+  render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/exports.tmpl" true false "${exports_file}"
+
+  run grep -q '^export AWS_PROFILE=' "${exports_file}"
+  [ "${status}" -eq 1 ]
+
+  run grep -q '^export TILT_NAMESPACE=' "${exports_file}"
+  [ "${status}" -eq 1 ]
+}
+
 @test "GIVEN transient context EXPECT resolver excludes host-only package" {
   host_json="${TEST_TMPDIR}/resolver-host.json"
   vm_json="${TEST_TMPDIR}/resolver-vm.json"

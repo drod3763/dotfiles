@@ -1,13 +1,8 @@
 {{- $exports := dict -}}
-{{- if lookPath "ruby" -}}
-{{-   $exports = merge $exports (dict
-      "GEM_HOME" "${XDG_DATA_HOME}/gem"
-      "GEM_SPEC_CACHE" "${XDG_CACHE_HOME}/gem") -}}
-{{- end -}}
-{{- if lookPath "bundle" -}}
-{{-   $exports = merge $exports (dict
-      "BUNDLE_USER_CACHE" "${XDG_CACHE_HOME}/bundle"
-      "BUNDLE_USER_CONFIG" "${XDG_CONFIG_HOME}/bundle"
-      "BUNDLE_USER_PLUGIN" "${XDG_DATA_HOME}/bundle") -}}
-{{- end -}}
+{{- $exports = merge $exports (dict
+    "GEM_HOME" "${XDG_DATA_HOME}/gem"
+    "GEM_SPEC_CACHE" "${XDG_CACHE_HOME}/gem"
+    "BUNDLE_USER_CACHE" "${XDG_CACHE_HOME}/bundle"
+    "BUNDLE_USER_CONFIG" "${XDG_CONFIG_HOME}/bundle"
+    "BUNDLE_USER_PLUGIN" "${XDG_DATA_HOME}/bundle") -}}
 {{- dict "exports" $exports | toJson -}}

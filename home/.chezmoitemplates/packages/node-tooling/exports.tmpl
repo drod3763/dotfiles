@@ -1,6 +1,4 @@
 {{- $exports := dict -}}
-{{- if or (lookPath "node") (lookPath "npm") (lookPath "pnpm") (lookPath "yarn") -}}
-{{-   $exports = merge $exports (dict
-      "NPM_CONFIG_USERCONFIG" "${XDG_CONFIG_HOME}/npm/npmrc") -}}
-{{- end -}}
+{{- $exports = merge $exports (dict
+    "NPM_CONFIG_USERCONFIG" "${XDG_CONFIG_HOME}/npm/npmrc") -}}
 {{- dict "exports" $exports | toJson -}}

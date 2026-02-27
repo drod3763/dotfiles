@@ -1,2 +1,4 @@
-{{- dict "exports" (dict
-  "RIPGREP_CONFIG_PATH" "${XDG_CONFIG_HOME}/ripgrep/config") | toJson -}}
+{{- $exports := dict -}}
+{{- $exports = merge $exports (dict
+    "RIPGREP_CONFIG_PATH" "${XDG_CONFIG_HOME}/ripgrep/config") -}}
+{{- dict "exports" $exports | toJson -}}

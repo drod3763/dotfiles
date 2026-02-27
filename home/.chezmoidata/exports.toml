@@ -37,7 +37,4 @@ id = "darwin-work"
 when_os = "darwin"
 when_not_personal = true
 [exports.rules.values]
-AWS_PROFILE = "arcus_dev"
 AWS_REGION = "us-west-2"
-AWS_SDK_LOAD_CONFIG = 1
-TILT_NAMESPACE = "derick-rodriguez"

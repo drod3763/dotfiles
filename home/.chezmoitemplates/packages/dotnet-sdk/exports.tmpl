@@ -1,6 +1,4 @@
 {{- $exports := dict -}}
-{{- if lookPath "dotnet" -}}
-{{-   $exports = merge $exports (dict
-      "NUGET_PACKAGES" "${XDG_CACHE_HOME}/NuGetPackages") -}}
-{{- end -}}
+{{- $exports = merge $exports (dict
+    "NUGET_PACKAGES" "${XDG_CACHE_HOME}/NuGetPackages") -}}
 {{- dict "exports" $exports | toJson -}}

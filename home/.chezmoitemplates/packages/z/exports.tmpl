@@ -1,5 +1,5 @@
 {{- $exports := dict -}}
-{{- if and (eq .chezmoi.os "darwin") (lookPath "z") -}}
+{{- if eq .chezmoi.os "darwin" -}}
 {{-   $exports = merge $exports (dict
       "_ZO_DATA_DIR" "${XDG_DATA_HOME}") -}}
 {{- end -}}

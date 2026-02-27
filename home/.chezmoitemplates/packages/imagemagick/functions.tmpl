@@ -1,4 +1,3 @@
-{{- if or (lookPath "convert") (lookPath "magick") }}
 function fakeScan() {
   local img_cmd="convert"
   if command -v magick >/dev/null 2>&1; then
@@ -7,4 +6,3 @@ function fakeScan() {
 
   ${img_cmd} -density 90 ${1} -rotate 0.5 -attenuate 0.2 +noise Multiplicative -colorspace Gray scan_${1}
 }
-{{- end }}

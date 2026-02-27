@@ -52,6 +52,7 @@ name = "adb"
 os = "linux"
 type = "common"
 target_class = "all"
+when_tool = "adb"
 
 [[package_catalog.packages]]
 name = "age"
@@ -66,6 +67,7 @@ os = "mac"
 type = "work"
 target_class = "all"
 brew_formula_name = "awscli"
+when_tool = "aws"
 
 [[package_catalog.packages]]
 name = "azure-cli"
@@ -73,6 +75,7 @@ os = "mac"
 type = "work"
 target_class = "all"
 brew_formula_name = "azure-cli"
+when_tool = "az"
 
 [[package_catalog.packages]]
 name = "bat"
@@ -80,6 +83,7 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "bat"
+when_tool = "bat"
 
 [[package_catalog.packages]]
 name = "bat-extras"
@@ -87,6 +91,20 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "bat-extras"
+
+[[package_catalog.packages]]
+name = "batman"
+os = "common"
+type = "common"
+target_class = "all"
+when_tool = "batman"
+
+[[package_catalog.packages]]
+name = "batdiff-delta"
+os = "common"
+type = "common"
+target_class = "all"
+when_tools = ["batdiff", "delta"]
 
 [[package_catalog.packages]]
 name = "bats-core"
@@ -172,6 +190,7 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "fzf"
+when_tool = "fzf"
 
 [[package_catalog.packages]]
 name = "gdu"
@@ -221,6 +240,7 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "go"
+when_tool = "go"
 
 [[package_catalog.packages]]
 name = "helm"
@@ -235,6 +255,7 @@ os = "mac"
 type = "personal"
 target_class = "all"
 brew_formula_name = "imagemagick"
+when_any_tools = ["convert", "magick"]
 
 [[package_catalog.packages]]
 name = "jq"
@@ -306,90 +327,106 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "micro"
+when_tool = "micro"
 
 [[package_catalog.packages]]
 name = "node-tooling"
 os = "common"
 type = "common"
 target_class = "all"
+when_any_tools = ["node", "npm", "pnpm", "yarn"]
 
 [[package_catalog.packages]]
 name = "gnupg"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "gpg"
 
 [[package_catalog.packages]]
 name = "java-runtime"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "java"
 
 [[package_catalog.packages]]
 name = "nano"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "nano"
+when_not_tool = "micro"
 
 [[package_catalog.packages]]
 name = "omnisharp"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "omnisharp"
 
 [[package_catalog.packages]]
 name = "dotnet-sdk"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "dotnet"
 
 [[package_catalog.packages]]
 name = "powershell"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "pwsh"
 
 [[package_catalog.packages]]
 name = "ruby"
 os = "common"
 type = "common"
 target_class = "all"
+when_any_tools = ["ruby", "bundle"]
 
 [[package_catalog.packages]]
 name = "tealdeer"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "tldr"
 
 [[package_catalog.packages]]
 name = "volta"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "volta"
 
 [[package_catalog.packages]]
 name = "whalebrew"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "whalebrew"
 
 [[package_catalog.packages]]
 name = "z"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "z"
 
 [[package_catalog.packages]]
 name = "delta"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "delta"
 
 [[package_catalog.packages]]
 name = "bcompare"
 os = "common"
 type = "common"
 target_class = "all"
+when_tool = "bcompare"
 
 [[package_catalog.packages]]
 name = "mise"
@@ -432,6 +469,7 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "p7zip"
+when_tools = ["7z", "unrar"]
 
 [[package_catalog.packages]]
 name = "pandoc"
@@ -460,6 +498,7 @@ os = "mac"
 type = "work"
 target_class = "all"
 brew_formula_name = "python"
+when_any_tools = ["pip", "pip3"]
 
 [[package_catalog.packages]]
 name = "rar"
@@ -474,6 +513,7 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "ripgrep"
+when_tool = "rg"
 
 [[package_catalog.packages]]
 name = "rsync"
@@ -481,6 +521,7 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "rsync"
+when_tool = "rsync"
 
 [[package_catalog.packages]]
 name = "saml2aws"
@@ -1057,6 +1098,7 @@ type = "common"
 target_class = "all"
 brew_cask_name = "zed"
 config_file_locations = [".config/zed"]
+when_tool = "zed"
 
 [[package_catalog.packages]]
 name = "zen"
@@ -1071,6 +1113,8 @@ os = "mac"
 type = "common"
 target_class = "all"
 when_stat = "/Applications/Visual Studio Code.app"
+when_tool = "code"
+when_not_tool = "zed"
 
 [[package_catalog.packages]]
 name = "Xcode"

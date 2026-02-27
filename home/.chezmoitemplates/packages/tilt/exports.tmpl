@@ -1,6 +1,6 @@
 {{- $exports := dict -}}
-{{- if and (lookPath "batdiff") (lookPath "delta") -}}
+{{- if not .personal -}}
 {{-   $exports = merge $exports (dict
-      "BATDIFF_USE_DELTA" "true") -}}
+      "TILT_NAMESPACE" "derick-rodriguez") -}}
 {{- end -}}
 {{- dict "exports" $exports | toJson -}}

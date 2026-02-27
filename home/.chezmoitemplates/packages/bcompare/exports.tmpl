@@ -1,5 +1,5 @@
 {{- $exports := dict -}}
-{{- if and (eq .chezmoi.os "linux") (lookPath "bcompare") -}}
+{{- if eq .chezmoi.os "linux" -}}
 {{-   $exports = merge $exports (dict
       "DIFFPROG" "bcompare") -}}
 {{- end -}}

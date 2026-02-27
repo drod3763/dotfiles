@@ -1,6 +1,4 @@
 {{- $exports := dict -}}
-{{- if lookPath "adb" -}}
-{{-   $exports = merge $exports (dict
-      "ANDROID_USER_HOME" "${XDG_DATA_HOME}/android") -}}
-{{- end -}}
+{{- $exports = merge $exports (dict
+    "ANDROID_USER_HOME" "${XDG_DATA_HOME}/android") -}}
 {{- dict "exports" $exports | toJson -}}

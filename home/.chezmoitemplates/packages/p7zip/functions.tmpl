@@ -1,6 +1,10 @@
-{{- if and (lookPath "7z") (lookPath "unrar") }}
 ex()
 {
+  if ! command -v 7z >/dev/null 2>&1 || ! command -v unrar >/dev/null 2>&1 ; then
+    echo "ex() requires both 7z and unrar"
+    return 1
+  fi
+
   if [ -f $1 ] ; then
     case $1 in
       *.tar.bz2)   tar xjf $1   ;;
@@ -23,4 +27,3 @@ ex()
     echo "'$1' is not a valid file"
   fi
 }
-{{- end }}

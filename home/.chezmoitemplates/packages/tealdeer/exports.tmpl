@@ -1,6 +1,4 @@
 {{- $exports := dict -}}
-{{- if lookPath "tldr" -}}
-{{-   $exports = merge $exports (dict
-      "TEALDEER_CONFIG_DIR" "${HOME}/.config/tealdeer") -}}
-{{- end -}}
+{{- $exports = merge $exports (dict
+    "TEALDEER_CONFIG_DIR" "${HOME}/.config/tealdeer") -}}
 {{- dict "exports" $exports | toJson -}}

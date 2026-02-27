@@ -46,6 +46,38 @@
     {{- end -}}
   {{- end -}}
 
+  {{- if and $active (hasKey $pkg "when_tool") -}}
+    {{- if not (lookPath $pkg.when_tool) -}}
+      {{- $active = false -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- if and $active (hasKey $pkg "when_not_tool") -}}
+    {{- if lookPath $pkg.when_not_tool -}}
+      {{- $active = false -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- if and $active (hasKey $pkg "when_tools") -}}
+    {{- range ($pkg.when_tools | default (list)) -}}
+      {{- if not (lookPath .) -}}
+        {{- $active = false -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- if and $active (hasKey $pkg "when_any_tools") -}}
+    {{- $matched := false -}}
+    {{- range ($pkg.when_any_tools | default (list)) -}}
+      {{- if lookPath . -}}
+        {{- $matched = true -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if not $matched -}}
+      {{- $active = false -}}
+    {{- end -}}
+  {{- end -}}
+
   {{- $configPaths := (get $pkg "config_file_locations" | default (list)) -}}
   {{- if $active -}}
     {{- $_ := set $out "active_packages" (concat ($out.active_packages | default (list)) (list $pkg.name)) -}}
