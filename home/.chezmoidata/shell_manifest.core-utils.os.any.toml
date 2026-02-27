@@ -1,0 +1,18 @@
+[shell_manifest.entries.core-utils-any]
+priority = 100
+
+[shell_manifest.entries.core-utils-any.aliases.sudo]
+kind = "literal"
+value = "sudo "
+
+[shell_manifest.entries.core-utils-any.aliases.tailcat]
+kind = "literal"
+value = "tail --lines=+0"
+
+[shell_manifest.entries.core-utils-any.aliases.wtfport]
+kind = "literal"
+value = "lsof -i -P -n | grep LISTEN"
+
+[shell_manifest.entries.core-utils-any.aliases.secretscan]
+kind = "literal"
+value = "${DOTFILES}/scripts/check_secrets.sh"

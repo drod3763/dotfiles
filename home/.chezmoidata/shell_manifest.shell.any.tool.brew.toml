@@ -1,0 +1,22 @@
+[shell_manifest.entries.darwin-brew]
+priority = 240
+
+[shell_manifest.entries.darwin-brew.rules]
+when_os = ["darwin"]
+when_tool = "brew"
+
+[shell_manifest.entries.darwin-brew.aliases.bls]
+kind = "literal"
+value = "brew leaves --installed-on-request"
+
+[shell_manifest.entries.darwin-brew.aliases.brewup]
+kind = "literal"
+value = "brew update && brew upgrade && brew upgrade --cask && brew cleanup"
+
+[shell_manifest.entries.darwin-brew.aliases.bcu]
+kind = "literal"
+value = "brew update && brew upgrade --cask --greedy && brew cleanup"
+
+[shell_manifest.entries.darwin-brew.exports.HOMEBREW_NO_ANALYTICS]
+kind = "literal"
+value = "1"

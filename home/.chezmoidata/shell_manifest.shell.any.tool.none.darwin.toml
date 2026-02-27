@@ -1,0 +1,9 @@
+[shell_manifest.entries.darwin-shell]
+priority = 230
+
+[shell_manifest.entries.darwin-shell.rules]
+when_os = ["darwin"]
+
+[shell_manifest.entries.darwin-shell.exports.BASH_SILENCE_DEPRECATION_WARNING]
+kind = "literal"
+value = "1"

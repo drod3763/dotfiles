@@ -1,0 +1,11 @@
+[shell_manifest.entries.darwin-work-aws]
+priority = 235
+
+[shell_manifest.entries.darwin-work-aws.rules]
+when_os = ["darwin"]
+when_personal = "false"
+when_tool = "aws"
+
+[shell_manifest.entries.darwin-work-aws.exports.AWS_REGION]
+kind = "literal"
+value = "us-west-2"

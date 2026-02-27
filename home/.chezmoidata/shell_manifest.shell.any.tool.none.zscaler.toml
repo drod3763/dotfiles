@@ -1,0 +1,11 @@
+[shell_manifest.entries.zscaler-zapfix]
+priority = 260
+
+[shell_manifest.entries.zscaler-zapfix.rules]
+when_os = ["darwin"]
+when_personal = "false"
+when_stat = "/Library/LaunchDaemons/com.zscaler.service.plist"
+
+[shell_manifest.entries.zscaler-zapfix.aliases.zapfix]
+kind = "literal"
+value = "sudo launchctl load -w /Library/LaunchDaemons/com.zscaler.service.plist"

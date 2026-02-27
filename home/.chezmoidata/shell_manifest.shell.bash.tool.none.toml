@@ -1,0 +1,41 @@
+[shell_manifest.entries.bash-nav]
+priority = 200
+
+[shell_manifest.entries.bash-nav.rules]
+when_shell = ["bash"]
+
+[shell_manifest.entries.bash-nav.exports.CLICOLOR]
+kind = "literal"
+value = "1"
+
+[shell_manifest.entries.bash-nav.exports.HISTFILE]
+kind = "literal"
+value = "${XDG_STATE_HOME}/bash/history"
+
+[shell_manifest.entries.bash-nav.exports.LSCOLORS]
+kind = "literal"
+value = "GxFxCxDxBxegedabagaced"
+
+[shell_manifest.entries.bash-nav.aliases."-- -"]
+kind = "literal"
+value = "cd -"
+
+[shell_manifest.entries.bash-nav.aliases.".."]
+kind = "literal"
+value = "cd .."
+
+[shell_manifest.entries.bash-nav.aliases."..2"]
+kind = "literal"
+value = "..; .."
+
+[shell_manifest.entries.bash-nav.aliases."..3"]
+kind = "literal"
+value = "..2; .."
+
+[shell_manifest.entries.bash-nav.aliases."..4"]
+kind = "literal"
+value = "..3; .."
+
+[shell_manifest.entries.bash-nav.aliases."..5"]
+kind = "literal"
+value = "..4; .."

@@ -1,0 +1,17 @@
+[shell_manifest.entries.darwin-core]
+priority = 110
+
+[shell_manifest.entries.darwin-core.rules]
+when_os = ["darwin"]
+
+[shell_manifest.entries.darwin-core.aliases.cp]
+kind = "literal"
+value = "/bin/cp -i"
+
+[shell_manifest.entries.darwin-core.aliases.ln]
+kind = "literal"
+value = "ln -sf"
+
+[shell_manifest.entries.darwin-core.aliases.mv]
+kind = "literal"
+value = "/bin/mv -i"

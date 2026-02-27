@@ -1,0 +1,17 @@
+[shell_manifest.entries.linux-core]
+priority = 110
+
+[shell_manifest.entries.linux-core.rules]
+when_os = ["linux"]
+
+[shell_manifest.entries.linux-core.aliases.cp]
+kind = "literal"
+value = "/bin/cp --interactive"
+
+[shell_manifest.entries.linux-core.aliases.ln]
+kind = "literal"
+value = "ln --symbolic --force"
+
+[shell_manifest.entries.linux-core.aliases.mv]
+kind = "literal"
+value = "/bin/mv --interactive"

@@ -1,4 +1,7 @@
-{{ $exports := merge (dict) .exports.common -}}
+{{ $exportsData := (get . "exports" | default (dict)) -}}
+{{ $exportCommon := (get $exportsData "common" | default (dict)) -}}
+{{ $exportRules := (get $exportsData "rules" | default (list)) -}}
+{{ $exports := merge (dict) $exportCommon -}}
 {{ $openai := .onepassword.items.openai_key -}}
 {{ $awsCreds := .onepassword.items.aws_credentials -}}
 {{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
@@ -6,6 +9,8 @@
 {{ $exports = merge $exports (dict
     "DOTFILES" .chezmoi.sourceDir
     "OPENAI_API_KEY" (includeTemplate "onepassword_field.tmpl" (dict "item" $openai.item "vault" $openai.vault "field_id" $openai.fields.credential))) -}}
+{{ $shellManifest := includeTemplate "shell_manifest_renderer.tmpl" . | mustFromJson -}}
+{{ $exports = merge $exports ($shellManifest.exports | default (dict)) -}}
 
 {{ $exportOwners := dict -}}
 {{ range (keys $exports | sortAlpha | uniq) -}}
@@ -22,7 +27,7 @@
 {{     range (keys $packageExports | sortAlpha | uniq) -}}
 {{       $key := . -}}
 {{       $owner := (get $exportOwners $key | default "") -}}
-{{       if and (ne $owner "") (ne $owner $packageName) -}}
+{{       if and (ne $owner "") (ne $owner "base") (ne $owner $packageName) -}}
 {{         fail (printf "duplicate export key %q from package %q already owned by %q" $key $packageName $owner) -}}
 {{       end -}}
 {{       $_ := set $exportOwners $key $packageName -}}
@@ -34,7 +39,7 @@
 {{ $exports = (includeTemplate "rule_engine.tmpl" (dict
     "context" .
     "seed" $exports
-    "rules" .exports.rules
+    "rules" $exportRules
     "valueKey" "values") | fromJson) -}}
 {{ $workAccountID := includeTemplate "onepassword_field.tmpl" (dict "item" $awsCreds.item "vault" $awsCreds.vault "field_id" $awsCreds.fields.arcus_dev_account_id) -}}
 {{ $awsRegion := (get $exports "AWS_REGION") | default "us-west-2" -}}

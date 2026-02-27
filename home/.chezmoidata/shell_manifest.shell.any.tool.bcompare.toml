@@ -1,0 +1,10 @@
+[shell_manifest.entries.linux-bcompare]
+priority = 280
+
+[shell_manifest.entries.linux-bcompare.rules]
+when_os = ["linux"]
+when_tool = "bcompare"
+
+[shell_manifest.entries.linux-bcompare.aliases.pdiff]
+kind = "literal"
+value = "QT_GRAPHICSSYSTEM=native DIFFPROG=bcompare pacdiff"

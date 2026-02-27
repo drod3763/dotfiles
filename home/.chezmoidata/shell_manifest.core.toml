@@ -1,0 +1,30 @@
+[shell_manifest.entries.base]
+priority = 100
+
+[shell_manifest.entries.base.rules]
+when_personal = "any"
+when_transient = "any"
+
+[shell_manifest.entries.base.exports.EDITOR]
+kind = "literal"
+value = "vi"
+
+[shell_manifest.entries.base.exports.GPG_TTY]
+kind = "literal"
+value = "$TTY"
+
+[shell_manifest.entries.base.exports.INPUTRC]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/readline/inputrc"
+
+[shell_manifest.entries.base.exports.LESSHISTFILE]
+kind = "literal"
+value = "${XDG_CACHE_HOME}/less/history"
+
+[shell_manifest.entries.base.exports.TERMINFO]
+kind = "literal"
+value = "${XDG_DATA_HOME}/terminfo"
+
+[shell_manifest.entries.base.exports.TERMINFO_DIRS]
+kind = "literal"
+value = "${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"

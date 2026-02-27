@@ -1,13 +1,8 @@
 {{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
 {{ $activePackageNames := ($packageCatalog.active_packages | default (list)) -}}
 
-{{ $aliases := merge (dict) .aliases.common -}}
-
-{{ $aliases = (includeTemplate "rule_engine.tmpl" (dict
-    "context" .
-    "seed" $aliases
-    "rules" .aliases.rules
-    "valueKey" "values") | fromJson) -}}
+{{ $shellManifest := includeTemplate "shell_manifest_renderer.tmpl" . | mustFromJson -}}
+{{ $aliases := merge (dict) ($shellManifest.aliases | default (dict)) -}}
 
 {{ $aliasOwners := dict -}}
 {{ range (keys $aliases | sortAlpha | uniq) -}}

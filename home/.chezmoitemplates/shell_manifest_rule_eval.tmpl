@@ -1,0 +1,104 @@
+{{- $ctx := .context -}}
+{{- $rules := (.rules | default (dict)) -}}
+{{- $active := true -}}
+
+{{- $whenPersonal := (printf "%v" (get $rules "when_personal" | default "any")) -}}
+{{- if and $active (eq $whenPersonal "true") (not $ctx.personal) -}}
+  {{- $active = false -}}
+{{- end -}}
+{{- if and $active (eq $whenPersonal "false") $ctx.personal -}}
+  {{- $active = false -}}
+{{- end -}}
+
+{{- $whenTransient := (printf "%v" (get $rules "when_transient" | default "any")) -}}
+{{- if and $active (eq $whenTransient "true") (not $ctx.transient) -}}
+  {{- $active = false -}}
+{{- end -}}
+{{- if and $active (eq $whenTransient "false") $ctx.transient -}}
+  {{- $active = false -}}
+{{- end -}}
+
+{{- $osRules := (get $rules "when_os" | default (list)) -}}
+{{- if and $active (gt (len $osRules) 0) (not (has $ctx.chezmoi.os $osRules)) -}}
+  {{- $active = false -}}
+{{- end -}}
+
+{{- $shellRules := (get $rules "when_shell" | default (list)) -}}
+{{- if and $active (gt (len $shellRules) 0) (not (has $ctx.shell $shellRules)) -}}
+  {{- $active = false -}}
+{{- end -}}
+
+{{- $whenTool := (get $rules "when_tool" | default "") -}}
+{{- if and $active (ne $whenTool "") (not (lookPath $whenTool)) -}}
+  {{- $active = false -}}
+{{- end -}}
+
+{{- $whenNotTool := (get $rules "when_not_tool" | default "") -}}
+{{- if and $active (ne $whenNotTool "") (lookPath $whenNotTool) -}}
+  {{- $active = false -}}
+{{- end -}}
+
+{{- $toolsAll := (get $rules "when_tools_all" | default (list)) -}}
+{{- if and $active (gt (len $toolsAll) 0) -}}
+  {{- range $tool := $toolsAll -}}
+    {{- if not (lookPath $tool) -}}
+      {{- $active = false -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $toolsAny := (get $rules "when_tools_any" | default (list)) -}}
+{{- if and $active (gt (len $toolsAny) 0) -}}
+  {{- $matched := false -}}
+  {{- range $tool := $toolsAny -}}
+    {{- if lookPath $tool -}}
+      {{- $matched = true -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $matched -}}
+    {{- $active = false -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $notTools := (get $rules "when_not_tools" | default (list)) -}}
+{{- if and $active (gt (len $notTools) 0) -}}
+  {{- range $tool := $notTools -}}
+    {{- if lookPath $tool -}}
+      {{- $active = false -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $whenStat := (get $rules "when_stat" | default "") -}}
+{{- if and $active (ne $whenStat "") (not (stat $whenStat)) -}}
+  {{- $active = false -}}
+{{- end -}}
+
+{{- $whenNotStat := (get $rules "when_not_stat" | default "") -}}
+{{- if and $active (ne $whenNotStat "") (stat $whenNotStat) -}}
+  {{- $active = false -}}
+{{- end -}}
+
+{{- $statsAll := (get $rules "when_stats_all" | default (list)) -}}
+{{- if and $active (gt (len $statsAll) 0) -}}
+  {{- range $path := $statsAll -}}
+    {{- if not (stat $path) -}}
+      {{- $active = false -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $statsAny := (get $rules "when_stats_any" | default (list)) -}}
+{{- if and $active (gt (len $statsAny) 0) -}}
+  {{- $matched := false -}}
+  {{- range $path := $statsAny -}}
+    {{- if stat $path -}}
+      {{- $matched = true -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $matched -}}
+    {{- $active = false -}}
+  {{- end -}}
+{{- end -}}
+
+{{ $active | toJson }}

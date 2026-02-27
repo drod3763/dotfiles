@@ -1,0 +1,9 @@
+[shell_manifest.entries.ssh]
+priority = 220
+
+[shell_manifest.entries.ssh.rules]
+when_tool = "ssh"
+
+[shell_manifest.entries.ssh.aliases.sshrm]
+kind = "literal"
+value = "ssh keygen -R"

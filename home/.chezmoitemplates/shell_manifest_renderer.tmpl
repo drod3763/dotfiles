@@ -1,0 +1,129 @@
+{{- $ctx := . -}}
+{{- if and (kindIs "map" .) (hasKey . "context") -}}
+  {{- $ctx = (get . "context") -}}
+{{- end -}}
+
+{{- $entriesRaw := ($ctx.shell_manifest.entries | default (dict)) -}}
+{{- $entryOrder := list -}}
+{{- $entryIndex := dict -}}
+{{- if kindIs "map" $entriesRaw -}}
+  {{- range (keys $entriesRaw | sortAlpha | uniq) -}}
+    {{- $entryKey := . -}}
+    {{- $entry := (get $entriesRaw $entryKey | default (dict)) -}}
+    {{- $entryID := (get $entry "id" | default $entryKey) -}}
+    {{- $priority := (int (get $entry "priority" | default 1000)) -}}
+    {{- $orderKey := printf "%08d:%s" $priority $entryID -}}
+    {{- $_ := set $entryIndex $orderKey (merge (dict "id" $entryID) $entry) -}}
+    {{- $entryOrder = concat $entryOrder (list $orderKey) -}}
+  {{- end -}}
+{{- else if kindIs "slice" $entriesRaw -}}
+  {{- range $idx, $entry := $entriesRaw -}}
+    {{- $entryID := (get $entry "id" | default (printf "entry-%d" $idx)) -}}
+    {{- $priority := (int (get $entry "priority" | default 1000)) -}}
+    {{- $orderKey := printf "%08d:%s:%08d" $priority $entryID $idx -}}
+    {{- $_ := set $entryIndex $orderKey (merge (dict "id" $entryID) $entry) -}}
+    {{- $entryOrder = concat $entryOrder (list $orderKey) -}}
+  {{- end -}}
+{{- else -}}
+  {{- fail "shell_manifest.entries must be a table or array" -}}
+{{- end -}}
+
+{{- $out := dict
+  "aliases" (dict)
+  "exports" (dict)
+  "functions" (list)
+  "init" (list)
+  "active_entries" (list) -}}
+
+{{- range ($entryOrder | sortAlpha | uniq) -}}
+  {{- $entry := (get $entryIndex . | default (dict)) -}}
+  {{- $entryRules := (get $entry "rules" | default (dict)) -}}
+  {{- $entryActive := (includeTemplate "shell_manifest_rule_eval.tmpl" (dict "context" $ctx "rules" $entryRules) | fromJson) -}}
+  {{- if not $entryActive -}}
+    {{- continue -}}
+  {{- end -}}
+
+  {{- $_ := set $out "active_entries" (concat ($out.active_entries | default (list)) (list (get $entry "id" | default ""))) -}}
+
+  {{- $aliases := (get $entry "aliases" | default (dict)) -}}
+  {{- range (keys $aliases | sortAlpha | uniq) -}}
+    {{- $key := . -}}
+    {{- $raw := (get $aliases $key) -}}
+    {{- $elem := $raw -}}
+    {{- if not (kindIs "map" $elem) -}}
+      {{- $elem = dict "kind" "literal" "value" (printf "%v" $raw) -}}
+    {{- end -}}
+    {{- $elemRules := (get $elem "rules" | default (dict)) -}}
+    {{- $elemActive := (includeTemplate "shell_manifest_rule_eval.tmpl" (dict "context" $ctx "rules" $elemRules) | fromJson) -}}
+    {{- if not $elemActive -}}
+      {{- continue -}}
+    {{- end -}}
+    {{- $kind := (get $elem "kind" | default "literal") -}}
+    {{- if ne $kind "literal" -}}
+      {{- fail (printf "unsupported manifest alias kind %q for key %q" $kind $key) -}}
+    {{- end -}}
+    {{- $_ := set $out.aliases $key (get $elem "value" | default "") -}}
+  {{- end -}}
+
+  {{- $exports := (get $entry "exports" | default (dict)) -}}
+  {{- range (keys $exports | sortAlpha | uniq) -}}
+    {{- $key := . -}}
+    {{- $raw := (get $exports $key) -}}
+    {{- $elem := $raw -}}
+    {{- if not (kindIs "map" $elem) -}}
+      {{- $elem = dict "kind" "literal" "value" (printf "%v" $raw) -}}
+    {{- end -}}
+    {{- $elemRules := (get $elem "rules" | default (dict)) -}}
+    {{- $elemActive := (includeTemplate "shell_manifest_rule_eval.tmpl" (dict "context" $ctx "rules" $elemRules) | fromJson) -}}
+    {{- if not $elemActive -}}
+      {{- continue -}}
+    {{- end -}}
+    {{- $kind := (get $elem "kind" | default "literal") -}}
+    {{- if ne $kind "literal" -}}
+      {{- fail (printf "unsupported manifest export kind %q for key %q" $kind $key) -}}
+    {{- end -}}
+    {{- $_ := set $out.exports $key (get $elem "value" | default "") -}}
+  {{- end -}}
+
+  {{- $functions := (get $entry "functions" | default (dict)) -}}
+  {{- range (keys $functions | sortAlpha | uniq) -}}
+    {{- $key := . -}}
+    {{- $raw := (get $functions $key) -}}
+    {{- $elem := $raw -}}
+    {{- if not (kindIs "map" $elem) -}}
+      {{- $elem = dict "kind" "literal" "value" (printf "%v" $raw) -}}
+    {{- end -}}
+    {{- $elemRules := (get $elem "rules" | default (dict)) -}}
+    {{- $elemActive := (includeTemplate "shell_manifest_rule_eval.tmpl" (dict "context" $ctx "rules" $elemRules) | fromJson) -}}
+    {{- if not $elemActive -}}
+      {{- continue -}}
+    {{- end -}}
+    {{- $kind := (get $elem "kind" | default "literal") -}}
+    {{- if ne $kind "literal" -}}
+      {{- fail (printf "unsupported manifest function kind %q for key %q" $kind $key) -}}
+    {{- end -}}
+    {{- $_ := set $out "functions" (concat ($out.functions | default (list)) (list (get $elem "value" | default ""))) -}}
+  {{- end -}}
+
+  {{- $init := (get $entry "init" | default (dict)) -}}
+  {{- range (keys $init | sortAlpha | uniq) -}}
+    {{- $key := . -}}
+    {{- $raw := (get $init $key) -}}
+    {{- $elem := $raw -}}
+    {{- if not (kindIs "map" $elem) -}}
+      {{- $elem = dict "kind" "literal" "value" (printf "%v" $raw) -}}
+    {{- end -}}
+    {{- $elemRules := (get $elem "rules" | default (dict)) -}}
+    {{- $elemActive := (includeTemplate "shell_manifest_rule_eval.tmpl" (dict "context" $ctx "rules" $elemRules) | fromJson) -}}
+    {{- if not $elemActive -}}
+      {{- continue -}}
+    {{- end -}}
+    {{- $kind := (get $elem "kind" | default "literal") -}}
+    {{- if ne $kind "literal" -}}
+      {{- fail (printf "unsupported manifest init kind %q for key %q" $kind $key) -}}
+    {{- end -}}
+    {{- $_ := set $out "init" (concat ($out.init | default (list)) (list (get $elem "value" | default ""))) -}}
+  {{- end -}}
+{{- end -}}
+
+{{ $out | toJson }}

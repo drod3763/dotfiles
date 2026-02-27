@@ -62,7 +62,7 @@ The installation script respects the following environment variables:
 - **Package Management:** Installs Homebrew packages, casks, and Mac App Store apps (via `mas`).
 - **Sleep Prevention:** Uses `caffeinate` during installation to prevent sleep interruptions.
 - **Progress Feedback:** Provides clear status updates during long-running tasks.
-- **Structured Template Data:** Uses domain-scoped `chezmoidata` files under `home/.chezmoidata/` for reusable catalogs (exports, packages, aliases, functions, MCP, 1Password mappings).
+- **Structured Template Data:** Uses domain-scoped `chezmoidata` files under `home/.chezmoidata/` for reusable catalogs (shell manifest, packages, functions, MCP, 1Password mappings).
 - **Package-Aware Config:** Derives app config/env inclusion from the package catalog so machine profiles only materialize relevant app settings.
 
 ## Formatting
@@ -90,9 +90,8 @@ Shell script logic tests use `bats-core` with CLI mocks.
 
 Shared template data is split by domain in `home/.chezmoidata/*.toml`.
 
-- `exports.toml` - environment export rules
 - `package_catalog.toml` - package objects used for package-centric install/config behavior
-- `aliases.toml` - alias catalog and conditional overlays
+- `shell_manifest*.toml` - split shell behavior manifest files (aliases, exports, functions, init)
 - `functions.toml` - function toggles/rules
 - `mcp.toml` - shared MCP server definitions
 - `onepassword.toml` - centralized item/vault mappings and field identifiers
