@@ -1,0 +1,26 @@
+[shell_manifest.entries.python-env]
+priority = 255
+
+[shell_manifest.entries.python-env.rules]
+when_os = ["darwin", "linux"]
+when_tools_any = ["python3", "python"]
+
+[shell_manifest.entries.python-env.exports.PYTHONPYCACHEPREFIX]
+kind = "literal"
+value = "${XDG_CACHE_HOME}/python"
+
+[shell_manifest.entries.python-env.exports.PYTHON_HOMES]
+kind = "literal"
+value = "(${HOME}/Library/Python/*)"
+
+[shell_manifest.entries.python-env.exports.PYTHON_HOME]
+kind = "literal"
+value = "${PYTHON_HOMES}[0]"
+
+[shell_manifest.entries.python-env.exports.PYTHONPATH]
+kind = "literal"
+value = "${HOME}/.python"
+
+[shell_manifest.entries.python-env.exports.PYTHONUSERBASE]
+kind = "literal"
+value = "${XDG_DATA_HOME}/python"

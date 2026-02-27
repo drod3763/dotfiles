@@ -1,0 +1,14 @@
+[shell_manifest.entries.linux-dbus-send]
+priority = 260
+
+[shell_manifest.entries.linux-dbus-send.rules]
+when_os = ["linux"]
+when_tool = "dbus-send"
+
+[shell_manifest.entries.linux-dbus-send.aliases.altt]
+kind = "literal"
+value = "dbus-send --session --type=method_call --print-reply --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)\" | grep -Po \"\\[.*\\]\""
+
+[shell_manifest.entries.linux-dbus-send.aliases.alttt]
+kind = "literal"
+value = "dbus-send --print-reply --type=method_call --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)\"|sed -n \"/string/s/\"\\|\\(\",\"\\)/\\n/gp\"|sed \"/^ \\|^\\[\\|^\\]/d\""

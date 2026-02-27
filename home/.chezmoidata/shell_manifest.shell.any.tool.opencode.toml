@@ -1,0 +1,9 @@
+[shell_manifest.entries.opencode-api-key]
+priority = 226
+
+[shell_manifest.entries.opencode-api-key.rules]
+when_tool = "opencode"
+
+[shell_manifest.entries.opencode-api-key.exports.OPENAI_API_KEY]
+kind = "dynamic"
+resolver = "openai_api_key"

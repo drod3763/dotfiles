@@ -2,13 +2,8 @@
 {{ $exportCommon := (get $exportsData "common" | default (dict)) -}}
 {{ $exportRules := (get $exportsData "rules" | default (list)) -}}
 {{ $exports := merge (dict) $exportCommon -}}
-{{ $openai := .onepassword.items.openai_key -}}
-{{ $awsCreds := .onepassword.items.aws_credentials -}}
 {{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
 {{ $activePackageNames := ($packageCatalog.active_packages | default (list)) -}}
-{{ $exports = merge $exports (dict
-    "DOTFILES" .chezmoi.sourceDir
-    "OPENAI_API_KEY" (includeTemplate "onepassword_field.tmpl" (dict "item" $openai.item "vault" $openai.vault "field_id" $openai.fields.credential))) -}}
 {{ $shellManifest := includeTemplate "shell_manifest_renderer.tmpl" . | mustFromJson -}}
 {{ $exports = merge $exports ($shellManifest.exports | default (dict)) -}}
 
@@ -41,33 +36,6 @@
     "seed" $exports
     "rules" $exportRules
     "valueKey" "values") | fromJson) -}}
-{{ $workAccountID := includeTemplate "onepassword_field.tmpl" (dict "item" $awsCreds.item "vault" $awsCreds.vault "field_id" $awsCreds.fields.arcus_dev_account_id) -}}
-{{ $awsRegion := (get $exports "AWS_REGION") | default "us-west-2" -}}
-{{ if and (not .personal) (ne $workAccountID "") -}}
-{{   $exports = merge $exports (dict
-      "ANTHROPIC_MODEL" (printf "arn:aws:bedrock:%s:%s:inference-profile/us.anthropic.claude-opus-4-6-v1" $awsRegion $workAccountID)
-      "ANTHROPIC_SMALL_FAST_MODEL" (printf "arn:aws:bedrock:%s:%s:application-inference-profile/haiku" $awsRegion $workAccountID)) -}}
-{{ end -}}
-
-{{ if lookPath "dotnet" -}}
-{{   $dotnetRoot := "/opt/homebrew/opt/dotnet/libexec" -}}
-{{   if stat "/opt/homebrew/opt/dotnet@8/libexec" -}}
-{{     $dotnetRoot = "/opt/homebrew/opt/dotnet@8/libexec" -}}
-{{   end -}}
-{{   $exports = merge $exports (dict
-      "DOTNET_CLI_HOME" "${XDG_CONFIG_HOME}/dotnet"
-      "DOTNET_CLI_TELEMETRY_OPTOUT" "true"
-      "DOTNET_ROOT" $dotnetRoot) -}}
-{{ end -}}
-
-{{ if and (eq .chezmoi.os "darwin") (stat "${HOME}/Library/Python/") -}}
-{{   $exports = merge $exports (dict
-      "PYTHONPYCACHEPREFIX" "${XDG_CACHE_HOME}/python"
-      "PYTHON_HOMES" "(${HOME}/Library/Python/*)"
-      "PYTHON_HOME" "${PYTHON_HOMES}[0]"
-      "PYTHONPATH" "${HOME}/.python"
-      "PYTHONUSERBASE" "${XDG_DATA_HOME}/python") -}}
-{{ end -}}
 
 {{ range (keys $exports | sortAlpha | uniq) -}}
 export {{ . }}={{ get $exports . | quote }}

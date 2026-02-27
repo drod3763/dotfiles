@@ -28,12 +28,6 @@
 {{   end -}}
 {{ end -}}
 
-{{ if and (eq .chezmoi.os "linux") (lookPath "dbus-send") -}}
-{{   $aliases = merge $aliases (dict
-      "altt" "dbus-send --session --type=method_call --print-reply --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, global.workspace_manager.get_active_workspace()).map(x => x.wm_class)\" | grep -Po \"\\[.*\\]\""
-      "alttt" "dbus-send --print-reply --type=method_call --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Eval string:\"global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null).filter(w => !w.is_skip_taskbar()).map(w => `${w.get_workspace().index()}. ${w.title}`)\"|sed -n \"/string/s/\"\\|\\(\",\"\\)/\\n/gp\"|sed \"/^ \\|^\\[\\|^\\]/d\"") -}}
-{{ end -}}
-
 {{ range (keys $aliases | sortAlpha | uniq) -}}
 alias {{ . }}='{{ get $aliases . }}'
 {{ end -}}

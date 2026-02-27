@@ -1,0 +1,18 @@
+[shell_manifest.entries.dotnet-env-tool]
+priority = 256
+
+[shell_manifest.entries.dotnet-env-tool.rules]
+when_tool = "dotnet"
+
+[shell_manifest.entries.dotnet-env-tool.exports.DOTNET_CLI_HOME]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/dotnet"
+
+[shell_manifest.entries.dotnet-env-tool.exports.DOTNET_CLI_TELEMETRY_OPTOUT]
+kind = "literal"
+value = "true"
+
+[shell_manifest.entries.dotnet-env-tool.exports.DOTNET_ROOT]
+kind = "dynamic"
+resolver = "dotnet_root"
+omit_if_empty = true

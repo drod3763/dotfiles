@@ -9,6 +9,10 @@ when_transient = "any"
 kind = "literal"
 value = "vi"
 
+[shell_manifest.entries.base.exports.DOTFILES]
+kind = "dynamic"
+resolver = "source_dir"
+
 [shell_manifest.entries.base.exports.GPG_TTY]
 kind = "literal"
 value = "$TTY"
