@@ -1,14 +1,9 @@
-[package_catalog.packages."dotnet-sdk"]
-os = "common"
-type = "common"
-target_class = "all"
-when_tool = "dotnet"
-
 [package_catalog.packages."dotnet@8"]
 os = "mac"
 type = "work"
 target_class = "all"
-brew_formula_name = "dotnet@8"
+use_mise = true
+mise_tool_name = "dotnet@8"
 
 [shell_manifest.entries.dotnet-env-tool]
 priority = 256

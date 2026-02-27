@@ -177,6 +177,18 @@ render_with_mocked_brew_paths() {
 
   run grep -q 'mas "Amphetamine", id: 937984704' "${rendered_file}"
   [ "${status}" -eq 0 ]
+
+  run grep -q 'brew "oven-sh/bun/bun"' "${rendered_file}"
+  [ "${status}" -eq 1 ]
+
+  run grep -q 'brew "dotnet@8"' "${rendered_file}"
+  [ "${status}" -eq 1 ]
+
+  run grep -q 'brew "go"' "${rendered_file}"
+  [ "${status}" -eq 1 ]
+
+  run grep -q 'brew "python"' "${rendered_file}"
+  [ "${status}" -eq 1 ]
 }
 
 @test "GIVEN transient machine EXPECT mas and not-transient casks are omitted" {

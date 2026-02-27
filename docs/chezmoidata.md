@@ -35,6 +35,8 @@ Optional install fields:
 - `brew_formula_name`
 - `brew_cask_name`
 - `brew_tap_name`
+- `use_mise` (optional bool): install package with `mise` instead of Homebrew.
+- `mise_tool_name` (optional string): explicit tool spec passed to `mise install`; defaults to brew name or package id.
 - `mas_app_id`, `mas_app_name`
 - `linux_pkg_name`
 

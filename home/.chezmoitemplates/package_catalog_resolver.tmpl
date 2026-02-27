@@ -4,6 +4,7 @@
   "brew_formulas" (list)
   "brew_formula_args" (dict)
   "brew_casks" (list)
+  "mise_packages" (list)
   "mas_app_ids" (list)
   "mas_app_names" (dict)
   "linux_packages" (list)
@@ -97,18 +98,36 @@
 
   {{- $configPaths := (get $pkg "config_file_locations" | default (list)) -}}
   {{- if $active -}}
+    {{- $useMise := (get $pkg "use_mise" | default false) -}}
+    {{- $misePackageAdded := false -}}
     {{- $_ := set $out "active_packages" (concat ($out.active_packages | default (list)) (list $pkg.name)) -}}
     {{- if hasKey $pkg "brew_formula_name" -}}
-      {{- $_ := set $out "brew_formulas" (concat ($out.brew_formulas | default (list)) (list $pkg.brew_formula_name)) -}}
-      {{- if hasKey $pkg "brew_formula_args" -}}
-        {{- $_ := set $out.brew_formula_args $pkg.brew_formula_name $pkg.brew_formula_args -}}
+      {{- if $useMise -}}
+        {{- $misePackage := (get $pkg "mise_tool_name" | default $pkg.brew_formula_name) -}}
+        {{- $_ := set $out "mise_packages" (concat ($out.mise_packages | default (list)) (list $misePackage)) -}}
+        {{- $misePackageAdded = true -}}
+      {{- else -}}
+        {{- $_ := set $out "brew_formulas" (concat ($out.brew_formulas | default (list)) (list $pkg.brew_formula_name)) -}}
+        {{- if hasKey $pkg "brew_formula_args" -}}
+          {{- $_ := set $out.brew_formula_args $pkg.brew_formula_name $pkg.brew_formula_args -}}
+        {{- end -}}
       {{- end -}}
     {{- end -}}
-    {{- if hasKey $pkg "brew_tap_name" -}}
+    {{- if and (not $useMise) (hasKey $pkg "brew_tap_name") -}}
       {{- $_ := set $out "brew_taps" (concat ($out.brew_taps | default (list)) (list $pkg.brew_tap_name)) -}}
     {{- end -}}
     {{- if hasKey $pkg "brew_cask_name" -}}
-      {{- $_ := set $out "brew_casks" (concat ($out.brew_casks | default (list)) (list $pkg.brew_cask_name)) -}}
+      {{- if $useMise -}}
+        {{- $misePackage := (get $pkg "mise_tool_name" | default $pkg.brew_cask_name) -}}
+        {{- $_ := set $out "mise_packages" (concat ($out.mise_packages | default (list)) (list $misePackage)) -}}
+        {{- $misePackageAdded = true -}}
+      {{- else -}}
+        {{- $_ := set $out "brew_casks" (concat ($out.brew_casks | default (list)) (list $pkg.brew_cask_name)) -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if and $useMise (not $misePackageAdded) -}}
+      {{- $misePackage := (get $pkg "mise_tool_name" | default $pkg.name) -}}
+      {{- $_ := set $out "mise_packages" (concat ($out.mise_packages | default (list)) (list $misePackage)) -}}
     {{- end -}}
     {{- if hasKey $pkg "mas_app_id" -}}
       {{- $masID := (int $pkg.mas_app_id) -}}

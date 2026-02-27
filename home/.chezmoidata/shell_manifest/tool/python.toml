@@ -2,7 +2,8 @@
 os = "mac"
 type = "work"
 target_class = "all"
-brew_formula_name = "python"
+use_mise = true
+mise_tool_name = "python"
 when_any_tools = ["pip", "pip3"]
 
 [shell_manifest.entries.python-env]

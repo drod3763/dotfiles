@@ -75,3 +75,38 @@ render_with_overrides() {
   run jq -e '.active_packages | index("parallels") == null' "${vm_json}"
   [ "${status}" -eq 0 ]
 }
+
+@test "GIVEN package uses mise EXPECT resolver routes package away from brew" {
+  resolver_json="${TEST_TMPDIR}/resolver-mise.json"
+  render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/package_catalog_resolver.tmpl" false false "${resolver_json}"
+
+  run jq -e '.mise_packages | index("bun") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.mise_packages | index("node") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.mise_packages | index("pnpm") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.mise_packages | index("dotnet@8") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.mise_packages | index("go") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.mise_packages | index("python") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.brew_formulas | index("oven-sh/bun/bun") == null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.brew_formulas | index("dotnet@8") == null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.brew_formulas | index("go") == null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.brew_formulas | index("python") == null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+}

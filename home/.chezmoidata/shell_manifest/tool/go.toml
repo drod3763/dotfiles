@@ -2,7 +2,8 @@
 os = "mac"
 type = "common"
 target_class = "all"
-brew_formula_name = "go"
+use_mise = true
+mise_tool_name = "go"
 when_tool = "go"
 
 [shell_manifest.entries.go]
