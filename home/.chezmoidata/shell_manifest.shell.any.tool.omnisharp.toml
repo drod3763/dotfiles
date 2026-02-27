@@ -1,0 +1,9 @@
+[shell_manifest.entries.omnisharp]
+priority = 246
+
+[shell_manifest.entries.omnisharp.rules]
+when_tool = "omnisharp"
+
+[shell_manifest.entries.omnisharp.exports.OMNISHARPHOME]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/omnisharp"

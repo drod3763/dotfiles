@@ -1,11 +1,6 @@
 {{ $paths := list
         "~/bin" -}}
 
-{{ if lookPath "volta" -}}
-{{      $paths = concat $paths (list
-        "$VOLTA_HOME/bin/" ) -}}
-{{ end -}}
-
 {{ $paths = concat $paths (list
     "$GOPATH/bin"
     "$DOTNET_CLI_HOME/.dotnet/tools" ) -}}

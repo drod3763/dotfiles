@@ -1,0 +1,25 @@
+[shell_manifest.entries.bat]
+priority = 315
+
+[shell_manifest.entries.bat.rules]
+when_tool = "bat"
+
+[shell_manifest.entries.bat.aliases.cat]
+kind = "literal"
+value = "bat --style=plain --pager=never"
+
+[shell_manifest.entries.bat.aliases.catf]
+kind = "literal"
+value = "bat $(fzf -i)"
+
+[shell_manifest.entries.bat.aliases.tac]
+kind = "literal"
+value = "tac \"$@\" | bat --style=plain --pager=never"
+
+[shell_manifest.entries.bat.aliases.tacf]
+kind = "literal"
+value = "tac \"$@\" | bat $(fzf -i)"
+
+[shell_manifest.entries.bat.exports.PAGER]
+kind = "literal"
+value = "bat --color=always"

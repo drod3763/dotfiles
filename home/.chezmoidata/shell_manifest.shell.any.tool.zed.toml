@@ -1,0 +1,9 @@
+[shell_manifest.entries.zed]
+priority = 320
+
+[shell_manifest.entries.zed.rules]
+when_tool = "zed"
+
+[shell_manifest.entries.zed.exports.VISUAL]
+kind = "literal"
+value = "zed --wait"

@@ -1,0 +1,25 @@
+[shell_manifest.entries.ruby]
+priority = 249
+
+[shell_manifest.entries.ruby.rules]
+when_tools_any = ["ruby", "bundle"]
+
+[shell_manifest.entries.ruby.exports.GEM_HOME]
+kind = "literal"
+value = "${XDG_DATA_HOME}/gem"
+
+[shell_manifest.entries.ruby.exports.GEM_SPEC_CACHE]
+kind = "literal"
+value = "${XDG_CACHE_HOME}/gem"
+
+[shell_manifest.entries.ruby.exports.BUNDLE_USER_CACHE]
+kind = "literal"
+value = "${XDG_CACHE_HOME}/bundle"
+
+[shell_manifest.entries.ruby.exports.BUNDLE_USER_CONFIG]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/bundle"
+
+[shell_manifest.entries.ruby.exports.BUNDLE_USER_PLUGIN]
+kind = "literal"
+value = "${XDG_DATA_HOME}/bundle"

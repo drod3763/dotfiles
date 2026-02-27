@@ -1,0 +1,21 @@
+[shell_manifest.entries.fzf]
+priority = 305
+
+[shell_manifest.entries.fzf.rules]
+when_tool = "fzf"
+
+[shell_manifest.entries.fzf.aliases.cpf]
+kind = "literal"
+value = "/bin/cp -i $(fzf -i)"
+
+[shell_manifest.entries.fzf.aliases.mvf]
+kind = "literal"
+value = "/bin/mv -i $(fzf -i)"
+
+[shell_manifest.entries.fzf.aliases.rm]
+kind = "literal"
+value = "/bin/rm -i"
+
+[shell_manifest.entries.fzf.aliases.rmf]
+kind = "literal"
+value = "/bin/.rm -i $(fzf -i)"

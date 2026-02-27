@@ -1,4 +1,0 @@
-{{- $exports := dict -}}
-{{- $exports = merge $exports (dict
-    "TEALDEER_CONFIG_DIR" "${HOME}/.config/tealdeer") -}}
-{{- dict "exports" $exports | toJson -}}

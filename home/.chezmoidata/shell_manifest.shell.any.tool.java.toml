@@ -1,0 +1,13 @@
+[shell_manifest.entries.java-runtime]
+priority = 244
+
+[shell_manifest.entries.java-runtime.rules]
+when_tool = "java"
+
+[shell_manifest.entries.java-runtime.exports._JAVA_OPTIONS]
+kind = "literal"
+value = "-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
+
+[shell_manifest.entries.java-runtime.exports.GRADLE_USER_HOME]
+kind = "literal"
+value = "${XDG_DATA_HOME}/gradle"

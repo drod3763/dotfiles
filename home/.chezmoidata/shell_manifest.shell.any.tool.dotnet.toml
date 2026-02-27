@@ -16,3 +16,13 @@ value = "true"
 kind = "dynamic"
 resolver = "dotnet_root"
 omit_if_empty = true
+
+[shell_manifest.entries.dotnet-sdk]
+priority = 258
+
+[shell_manifest.entries.dotnet-sdk.rules]
+when_tool = "dotnet"
+
+[shell_manifest.entries.dotnet-sdk.exports.NUGET_PACKAGES]
+kind = "literal"
+value = "${XDG_CACHE_HOME}/NuGetPackages"

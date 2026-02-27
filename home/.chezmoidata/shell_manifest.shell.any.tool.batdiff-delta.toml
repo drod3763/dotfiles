@@ -1,0 +1,9 @@
+[shell_manifest.entries.batdiff-delta]
+priority = 254
+
+[shell_manifest.entries.batdiff-delta.rules]
+when_tool = "batdiff"
+
+[shell_manifest.entries.batdiff-delta.exports.BATDIFF_USE_DELTA]
+kind = "literal"
+value = "true"

@@ -1,32 +1,5 @@
-{{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
-{{ $activePackageNames := ($packageCatalog.active_packages | default (list)) -}}
-
 {{ $shellManifest := includeTemplate "shell_manifest_renderer.tmpl" . | mustFromJson -}}
 {{ $aliases := merge (dict) ($shellManifest.aliases | default (dict)) -}}
-
-{{ $aliasOwners := dict -}}
-{{ range (keys $aliases | sortAlpha | uniq) -}}
-{{   $_ := set $aliasOwners . "base" -}}
-{{ end -}}
-
-{{ range ($activePackageNames | sortAlpha | uniq) -}}
-{{   $packageName := . -}}
-{{   $templateName := printf "packages/%s/aliases.tmpl" $packageName -}}
-{{   $sourcePath := joinPath $.chezmoi.sourceDir ".chezmoitemplates" $templateName -}}
-{{   if stat $sourcePath -}}
-{{     $packageData := includeTemplate $templateName $ | mustFromJson -}}
-{{     $packageAliases := ($packageData.aliases | default (dict)) -}}
-{{     range (keys $packageAliases | sortAlpha | uniq) -}}
-{{       $key := . -}}
-{{       $owner := (get $aliasOwners $key | default "") -}}
-{{       if and (ne $owner "") (ne $owner "base") (ne $owner $packageName) -}}
-{{         fail (printf "duplicate alias key %q from package %q already owned by %q" $key $packageName $owner) -}}
-{{       end -}}
-{{       $_ := set $aliasOwners $key $packageName -}}
-{{       $_ := set $aliases $key (get $packageAliases $key) -}}
-{{     end -}}
-{{   end -}}
-{{ end -}}
 
 {{ range (keys $aliases | sortAlpha | uniq) -}}
 alias {{ . }}='{{ get $aliases . }}'

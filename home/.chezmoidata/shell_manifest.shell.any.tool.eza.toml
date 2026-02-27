@@ -1,0 +1,13 @@
+[shell_manifest.entries.eza]
+priority = 300
+
+[shell_manifest.entries.eza.rules]
+when_tool = "eza"
+
+[shell_manifest.entries.eza.aliases.ls]
+kind = "literal"
+value = "eza --grid  --color auto --icons --all --sort type"
+
+[shell_manifest.entries.eza.aliases.ll]
+kind = "literal"
+value = "eza --long --color always --icons --all --sort type"

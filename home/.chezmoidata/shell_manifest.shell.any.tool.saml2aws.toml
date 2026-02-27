@@ -5,6 +5,16 @@ priority = 253
 when_tool = "saml2aws"
 when_personal = "false"
 
+[shell_manifest.entries.saml2aws-aliases]
+priority = 252
+
+[shell_manifest.entries.saml2aws-aliases.rules]
+when_tool = "saml2aws"
+
+[shell_manifest.entries.saml2aws-aliases.aliases.s2a]
+kind = "literal"
+value = "AWS_SDK_LOAD_CONFIG=0 saml2aws"
+
 [shell_manifest.entries.saml2aws-functions.functions.loginarcus]
 kind = "literal"
 value = """

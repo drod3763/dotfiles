@@ -1,4 +1,0 @@
-{{- $exports := dict -}}
-{{- $exports = merge $exports (dict
-    "GOPATH" "${XDG_DATA_HOME}/go") -}}
-{{- dict "exports" $exports | toJson -}}

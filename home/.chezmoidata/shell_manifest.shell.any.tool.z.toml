@@ -1,0 +1,10 @@
+[shell_manifest.entries.z]
+priority = 253
+
+[shell_manifest.entries.z.rules]
+when_os = ["darwin"]
+when_tool = "z"
+
+[shell_manifest.entries.z.exports._ZO_DATA_DIR]
+kind = "literal"
+value = "${XDG_DATA_HOME}"

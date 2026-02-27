@@ -1,0 +1,9 @@
+[shell_manifest.entries.nano]
+priority = 300
+
+[shell_manifest.entries.nano.rules]
+when_tool = "nano"
+
+[shell_manifest.entries.nano.exports.EDITOR]
+kind = "literal"
+value = "nano"

@@ -1,0 +1,9 @@
+[shell_manifest.entries.ripgrep]
+priority = 248
+
+[shell_manifest.entries.ripgrep.rules]
+when_tool = "rg"
+
+[shell_manifest.entries.ripgrep.exports.RIPGREP_CONFIG_PATH]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/ripgrep/config"

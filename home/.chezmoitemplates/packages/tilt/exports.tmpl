@@ -1,6 +1,0 @@
-{{- $exports := dict -}}
-{{- if not .personal -}}
-{{-   $exports = merge $exports (dict
-      "TILT_NAMESPACE" "derick-rodriguez") -}}
-{{- end -}}
-{{- dict "exports" $exports | toJson -}}

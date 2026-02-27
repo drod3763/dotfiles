@@ -6,6 +6,35 @@ when_os = ["darwin"]
 when_personal = "false"
 when_tool = "aws"
 
+[shell_manifest.entries.awscli]
+priority = 234
+
+[shell_manifest.entries.awscli.rules]
+when_tool = "aws"
+
+[shell_manifest.entries.awscli.exports.AWS_SHARED_CREDENTIALS_FILE]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/aws/credentials"
+
+[shell_manifest.entries.awscli.exports.AWS_CONFIG_FILE]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/aws/config"
+
+[shell_manifest.entries.awscli-work]
+priority = 235
+
+[shell_manifest.entries.awscli-work.rules]
+when_tool = "aws"
+when_personal = "false"
+
+[shell_manifest.entries.awscli-work.exports.AWS_PROFILE]
+kind = "literal"
+value = "arcus_dev"
+
+[shell_manifest.entries.awscli-work.exports.AWS_SDK_LOAD_CONFIG]
+kind = "literal"
+value = "1"
+
 [shell_manifest.entries.darwin-work-aws.exports.AWS_REGION]
 kind = "literal"
 value = "us-west-2"

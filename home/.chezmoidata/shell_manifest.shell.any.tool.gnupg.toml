@@ -1,0 +1,9 @@
+[shell_manifest.entries.gnupg]
+priority = 243
+
+[shell_manifest.entries.gnupg.rules]
+when_tool = "gpg"
+
+[shell_manifest.entries.gnupg.exports.GNUPGHOME]
+kind = "literal"
+value = "${XDG_DATA_HOME}/gnupg"

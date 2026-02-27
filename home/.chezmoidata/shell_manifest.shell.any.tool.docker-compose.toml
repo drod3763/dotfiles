@@ -1,0 +1,9 @@
+[shell_manifest.entries.docker-compose]
+priority = 251
+
+[shell_manifest.entries.docker-compose.rules]
+when_tool = "docker-compose"
+
+[shell_manifest.entries.docker-compose.aliases.dkc]
+kind = "literal"
+value = "docker-compose"

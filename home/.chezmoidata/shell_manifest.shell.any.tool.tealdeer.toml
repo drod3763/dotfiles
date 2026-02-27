@@ -1,0 +1,9 @@
+[shell_manifest.entries.tealdeer]
+priority = 250
+
+[shell_manifest.entries.tealdeer.rules]
+when_tool = "tldr"
+
+[shell_manifest.entries.tealdeer.exports.TEALDEER_CONFIG_DIR]
+kind = "literal"
+value = "${HOME}/.config/tealdeer"

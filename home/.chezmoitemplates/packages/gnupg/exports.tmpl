@@ -1,4 +1,0 @@
-{{- $exports := dict -}}
-{{- $exports = merge $exports (dict
-    "GNUPGHOME" "${XDG_DATA_HOME}/gnupg") -}}
-{{- dict "exports" $exports | toJson -}}

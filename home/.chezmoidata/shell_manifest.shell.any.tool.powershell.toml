@@ -1,0 +1,9 @@
+[shell_manifest.entries.powershell]
+priority = 247
+
+[shell_manifest.entries.powershell.rules]
+when_tool = "pwsh"
+
+[shell_manifest.entries.powershell.exports.POWERSHELL_TELEMETRY_OPTOUT]
+kind = "literal"
+value = "1"

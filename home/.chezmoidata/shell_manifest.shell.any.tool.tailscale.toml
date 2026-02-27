@@ -1,0 +1,9 @@
+[shell_manifest.entries.tailscale]
+priority = 320
+
+[shell_manifest.entries.tailscale.rules]
+when_tool = "tailscaled"
+
+[shell_manifest.entries.tailscale.aliases.tsfix]
+kind = "literal"
+value = "sudo ./tailscaled install-system-daemon"

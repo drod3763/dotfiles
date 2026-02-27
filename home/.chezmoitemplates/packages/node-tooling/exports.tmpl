@@ -1,4 +1,0 @@
-{{- $exports := dict -}}
-{{- $exports = merge $exports (dict
-    "NPM_CONFIG_USERCONFIG" "${XDG_CONFIG_HOME}/npm/npmrc") -}}
-{{- dict "exports" $exports | toJson -}}

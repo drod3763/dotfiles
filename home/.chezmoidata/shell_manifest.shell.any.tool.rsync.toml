@@ -1,0 +1,21 @@
+[shell_manifest.entries.rsync]
+priority = 310
+
+[shell_manifest.entries.rsync.rules]
+when_tool = "rsync"
+
+[shell_manifest.entries.rsync.aliases.cp]
+kind = "literal"
+value = "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 \"$@\""
+
+[shell_manifest.entries.rsync.aliases.cpr]
+kind = "literal"
+value = "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\""
+
+[shell_manifest.entries.rsync.aliases.mv]
+kind = "literal"
+value = "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --remove-source-files \"$@\""
+
+[shell_manifest.entries.rsync.aliases.mvwr]
+kind = "literal"
+value = "$(which rsync) --archive -hh --partial --info=stats1,progress2 --modify-window=1 --recursive \"$@\""

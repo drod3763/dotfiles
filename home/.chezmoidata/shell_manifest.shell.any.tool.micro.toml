@@ -1,0 +1,13 @@
+[shell_manifest.entries.micro]
+priority = 305
+
+[shell_manifest.entries.micro.rules]
+when_tool = "micro"
+
+[shell_manifest.entries.micro.exports.EDITOR]
+kind = "literal"
+value = "micro"
+
+[shell_manifest.entries.micro.exports.MICRO_TRUECOLOR]
+kind = "literal"
+value = "1"

@@ -1,6 +1,0 @@
-{{- $exports := dict -}}
-{{- if eq .chezmoi.os "darwin" -}}
-{{-   $exports = merge $exports (dict
-      "WHALEBREW_CONFIG_DIR" "${XDG_CONFIG_HOME}/whalebrew") -}}
-{{- end -}}
-{{- dict "exports" $exports | toJson -}}

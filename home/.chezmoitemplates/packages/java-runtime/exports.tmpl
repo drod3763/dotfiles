@@ -1,5 +1,0 @@
-{{- $exports := dict -}}
-{{- $exports = merge $exports (dict
-    "_JAVA_OPTIONS" "-Djava.util.prefs.userRoot=${XDG_CONFIG_HOME}/java"
-    "GRADLE_USER_HOME" "${XDG_DATA_HOME}/gradle") -}}
-{{- dict "exports" $exports | toJson -}}

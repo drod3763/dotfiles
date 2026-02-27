@@ -1,0 +1,9 @@
+[shell_manifest.entries.node-tooling]
+priority = 245
+
+[shell_manifest.entries.node-tooling.rules]
+when_tools_any = ["node", "npm", "pnpm", "yarn"]
+
+[shell_manifest.entries.node-tooling.exports.NPM_CONFIG_USERCONFIG]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/npm/npmrc"

@@ -1,0 +1,10 @@
+[shell_manifest.entries.delta]
+priority = 256
+
+[shell_manifest.entries.delta.rules]
+when_os = ["linux"]
+when_tool = "delta"
+
+[shell_manifest.entries.delta.exports.DIFFPROG]
+kind = "literal"
+value = "delta --dark --line-numbers --side-by-side --no-gitconfig"

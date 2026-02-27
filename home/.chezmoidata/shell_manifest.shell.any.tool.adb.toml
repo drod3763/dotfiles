@@ -1,0 +1,9 @@
+[shell_manifest.entries.adb]
+priority = 241
+
+[shell_manifest.entries.adb.rules]
+when_tool = "adb"
+
+[shell_manifest.entries.adb.exports.ANDROID_USER_HOME]
+kind = "literal"
+value = "${XDG_DATA_HOME}/android"

@@ -1,0 +1,10 @@
+[shell_manifest.entries.tilt]
+priority = 257
+
+[shell_manifest.entries.tilt.rules]
+when_tool = "tilt"
+when_personal = "false"
+
+[shell_manifest.entries.tilt.exports.TILT_NAMESPACE]
+kind = "literal"
+value = "derick-rodriguez"

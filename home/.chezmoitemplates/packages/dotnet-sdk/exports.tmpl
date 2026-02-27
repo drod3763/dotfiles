@@ -1,4 +1,0 @@
-{{- $exports := dict -}}
-{{- $exports = merge $exports (dict
-    "NUGET_PACKAGES" "${XDG_CACHE_HOME}/NuGetPackages") -}}
-{{- dict "exports" $exports | toJson -}}

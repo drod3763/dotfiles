@@ -1,0 +1,10 @@
+[shell_manifest.entries.whalebrew]
+priority = 252
+
+[shell_manifest.entries.whalebrew.rules]
+when_os = ["darwin"]
+when_tool = "whalebrew"
+
+[shell_manifest.entries.whalebrew.exports.WHALEBREW_CONFIG_DIR]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/whalebrew"

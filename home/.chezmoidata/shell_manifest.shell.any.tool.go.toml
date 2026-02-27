@@ -1,0 +1,9 @@
+[shell_manifest.entries.go]
+priority = 242
+
+[shell_manifest.entries.go.rules]
+when_tool = "go"
+
+[shell_manifest.entries.go.exports.GOPATH]
+kind = "literal"
+value = "${XDG_DATA_HOME}/go"

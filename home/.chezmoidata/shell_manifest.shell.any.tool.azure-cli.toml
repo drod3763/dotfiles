@@ -1,0 +1,13 @@
+[shell_manifest.entries.azure-cli]
+priority = 240
+
+[shell_manifest.entries.azure-cli.rules]
+when_tool = "az"
+
+[shell_manifest.entries.azure-cli.exports.AZURE_CONFIG_DIR]
+kind = "literal"
+value = "${XDG_DATA_HOME}/azure"
+
+[shell_manifest.entries.azure-cli.exports.AZURE_DEVOPS_CACHE_DIR]
+kind = "literal"
+value = "${XDG_CACHE_HOME}/azure-devops"

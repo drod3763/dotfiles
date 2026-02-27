@@ -5,6 +5,20 @@ priority = 236
 when_personal = "false"
 when_tool = "claude"
 
+[shell_manifest.entries.claude-code]
+priority = 235
+
+[shell_manifest.entries.claude-code.rules]
+when_tool = "claude"
+
+[shell_manifest.entries.claude-code.aliases.claudebr]
+kind = "literal"
+value = "CLAUDE_CODE_USE_BEDROCK=1 command claude"
+
+[shell_manifest.entries.claude-code.exports.CLAUDE_CONFIG_DIR]
+kind = "literal"
+value = "${XDG_CONFIG_HOME}/claude"
+
 [shell_manifest.entries.bedrock-models.exports.ANTHROPIC_MODEL]
 kind = "dynamic"
 resolver = "anthropic_model"
