@@ -8,9 +8,8 @@ This directory is the source of truth for package selection and shell behavior.
 Current shell manifest folder layout:
 
 - `home/.chezmoidata/shell_manifest/core/` - shared baseline entries
-- `home/.chezmoidata/shell_manifest/os/` - OS-scoped entries
 - `home/.chezmoidata/shell_manifest/shell/` - shell-scoped entries (zsh/bash)
-- `home/.chezmoidata/shell_manifest/tool/` - tool-scoped entries
+- `home/.chezmoidata/shell_manifest/tool/` - tool-scoped entries, including OS-qualified tool/core-utils entries
 
 ## `package_catalog.toml` schema
 
@@ -99,7 +98,7 @@ when_tool = "mytool"
 config_file_locations = [".config/mytool"]
 ```
 
-2. Add shell behavior in a new manifest file, typically `home/.chezmoidata/shell_manifest/tool/shell_manifest.shell.any.tool.mytool.toml`.
+2. Add shell behavior in a new manifest file, typically `home/.chezmoidata/shell_manifest/tool/mytool.toml`.
 
 ```toml
 [shell_manifest.entries.mytool]
