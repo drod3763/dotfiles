@@ -75,7 +75,7 @@ for source in "${sources[@]}"; do
 
   identity="$(op item get "${item_id}" --vault "${vault_id}" --fields credential --reveal 2>/dev/null || true)"
   if [[ -z "${identity}" ]]; then
-    log "No credential returned for ${item_id}:${vault_id}; skipping."
+    log "No credential returned for ${item_id}:${vault_id}; continuing."
     continue
   fi
 
