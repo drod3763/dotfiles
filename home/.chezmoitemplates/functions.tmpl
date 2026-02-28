@@ -12,7 +12,6 @@ z4h source --compile $DOTFILES/functions/bash_path_funcs/realpath_filter
 z4h source --compile $DOTFILES/functions/dmginstall */ -}}
 
 {{- $shellManifest := includeTemplate "shell_manifest_renderer.tmpl" . | mustFromJson -}}
-{{ range ($shellManifest.functions | default (list)) }}
-{{ . }}
-
+{{- range ($shellManifest.functions | default (list)) }}
+{{- . -}}
 {{ end -}}

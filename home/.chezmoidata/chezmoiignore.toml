@@ -9,6 +9,7 @@ base = [
   "install.sh",
   "Makefile",
   "README.md",
+  "treefmt.toml",
   "vscode_settings.json",
 ]
 

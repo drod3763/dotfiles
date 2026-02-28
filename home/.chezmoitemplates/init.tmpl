@@ -1,5 +1,4 @@
 {{- $shellManifest := includeTemplate "shell_manifest_renderer.tmpl" . | mustFromJson -}}
-{{ range ($shellManifest.init | default (list)) }}
+{{- range ($shellManifest.init | default (list)) -}}
 {{ . }}
-
 {{ end -}}

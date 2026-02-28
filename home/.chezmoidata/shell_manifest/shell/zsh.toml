@@ -11,3 +11,15 @@ value = "source ~/.zshrc"
 [shell_manifest.entries.zsh-core.aliases.clear]
 kind = "literal"
 value = "z4h-clear-screen-soft-bottom"
+
+[shell_manifest.entries.zsh-core.functions.alias]
+kind = "literal"
+value = '''
+alias() {
+  if (( $# == 0 )); then
+    builtin alias | LC_ALL=C sort
+  else
+    builtin alias "$@"
+  fi
+}
+'''
