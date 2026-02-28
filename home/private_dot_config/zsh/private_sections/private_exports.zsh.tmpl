@@ -8,4 +8,4 @@ export XDG_DATA_HOME={{ $user_data_dir | quote }}
 export XDG_SHARE_HOME="${HOME}/.local/share"
 export XDG_RUNTIME_DIR="/run/user/${UID}"
 export XDG_STATE_HOME={{ $user_log_dir | quote }}
-{{- template "exports.tmpl" . -}}
+{{ template "exports.tmpl" . -}}

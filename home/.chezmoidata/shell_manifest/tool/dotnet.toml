@@ -9,7 +9,8 @@ mise_tool_name = "dotnet@8"
 priority = 256
 
 [shell_manifest.entries.dotnet-env-tool.rules]
-when_tool = "dotnet"
+when_tool = "mise"
+when_personal = "false"
 
 [shell_manifest.entries.dotnet-env-tool.exports.DOTNET_CLI_HOME]
 kind = "literal"
@@ -28,7 +29,8 @@ omit_if_empty = true
 priority = 258
 
 [shell_manifest.entries.dotnet-sdk.rules]
-when_tool = "dotnet"
+when_tool = "mise"
+when_personal = "false"
 
 [shell_manifest.entries.dotnet-sdk.exports.NUGET_PACKAGES]
 kind = "literal"

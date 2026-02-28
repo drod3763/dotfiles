@@ -2,7 +2,7 @@
 
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
-  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_onchange_after_configure-brew-apps.sh.tmpl"
+  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_after_98a_configure-brew-apps.sh.tmpl"
   REAL_CHEZMOI_BIN="$(command -v chezmoi)"
 
   TEST_TMPDIR="$(mktemp -d)"
@@ -69,7 +69,7 @@ EOF
   override_file="${TEST_TMPDIR}/override.json"
   printf '%s\n' '{"personal":true}' > "${override_file}"
 
-  RENDERED_SCRIPT="${TEST_TMPDIR}/run_onchange_after_configure-brew-apps.sh"
+  RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_98a_configure-brew-apps.sh"
   "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
@@ -112,7 +112,7 @@ teardown() {
 
 @test "GIVEN forced hosts update path EXPECT script writes hosts entry via sudo tee" {
   render_non_personal_script
-  forced_script="${TEST_TMPDIR}/run_onchange_after_configure-brew-apps-forced-hosts.sh"
+  forced_script="${TEST_TMPDIR}/run_after_98a_configure-brew-apps-forced-hosts.sh"
   cp "${RENDERED_SCRIPT}" "${forced_script}"
   printf '\nprintf %s\\n "127.0.0.1 corp.local" | with_sudo tee -a /etc/hosts >/dev/null\n' "'%s'" >> "${forced_script}"
   chmod +x "${forced_script}"
@@ -125,7 +125,7 @@ teardown() {
 }
 
 @test "GIVEN forced iTerm branch EXPECT script runs integration installer pipeline" {
-  forced_script="${TEST_TMPDIR}/run_onchange_after_configure-brew-apps-forced-iterm.sh"
+  forced_script="${TEST_TMPDIR}/run_after_98a_configure-brew-apps-forced-iterm.sh"
   cp "${RENDERED_SCRIPT}" "${forced_script}"
   printf '\ncurl --location https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash\n' >> "${forced_script}"
   chmod +x "${forced_script}"

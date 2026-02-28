@@ -15,7 +15,8 @@ when_any_tools = ["node", "npm", "pnpm", "yarn"]
 priority = 245
 
 [shell_manifest.entries.node-tooling.rules]
-when_tools_any = ["node", "npm", "pnpm", "yarn"]
+when_tool = "mise"
+when_personal = "false"
 
 [shell_manifest.entries.node-tooling.exports.NPM_CONFIG_USERCONFIG]
 kind = "literal"
