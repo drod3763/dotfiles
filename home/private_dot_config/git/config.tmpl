@@ -79,7 +79,7 @@ pager = {{ $pager }}
 workers = -1
 {{- if eq $pager "delta" }}
 [delta]
-features = side-by-side collared-trogon zebra-dark
+features = side-by-side catppuccin-mocha
 {{- end }}
 [diff]
 algorithm = histogram
@@ -101,7 +101,7 @@ pruneTags = true
 autocorrect = 5
 {{- if eq $pager "delta" }}
 [include]
-path = "$XDG_CONFIG_HOME"/delta/themes.gitconfig
+path = "$XDG_CONFIG_HOME"/delta/catppuccin.gitconfig
 {{- end }}
 [init]
 defaultBranch = "main"
