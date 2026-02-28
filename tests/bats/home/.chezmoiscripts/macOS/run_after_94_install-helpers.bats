@@ -2,7 +2,7 @@
 
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
-  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_once_after_install-helpers.sh.tmpl"
+  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_after_94_install-helpers.sh.tmpl"
   REAL_CHEZMOI_BIN="$(command -v chezmoi)"
 
   TEST_TMPDIR="$(mktemp -d)"
@@ -22,8 +22,8 @@ EOF
   export MOCK_BREW_CALLS_FILE="${TEST_TMPDIR}/brew.calls"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
 
-  RENDERED_SCRIPT_RAW="${TEST_TMPDIR}/run_once_after_install-helpers.raw.sh"
-  RENDERED_SCRIPT="${TEST_TMPDIR}/run_once_after_install-helpers.sh"
+  RENDERED_SCRIPT_RAW="${TEST_TMPDIR}/run_after_94_install-helpers.raw.sh"
+  RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_94_install-helpers.sh"
   "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT_RAW}"
   sed "s|/Applications|${MOCK_APPS_DIR}|g" "${RENDERED_SCRIPT_RAW}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
@@ -71,7 +71,7 @@ teardown() {
 
 @test "GIVEN brew unavailable EXPECT script exits cleanly with skip message" {
   rm -f "${MOCK_BIN_DIR}/brew" "${MOCK_FALLBACK_HOME}/opt/homebrew/bin/brew"
-  no_brew_script="${TEST_TMPDIR}/run_once_after_install-helpers-no-brew.sh"
+  no_brew_script="${TEST_TMPDIR}/run_after_94_install-helpers-no-brew.sh"
   sed -e "s|/opt/homebrew|${MOCK_FALLBACK_HOME}/opt/homebrew|g" -e "s|/usr/local|${MOCK_FALLBACK_HOME}/usr/local|g" "${RENDERED_SCRIPT_RAW}" > "${no_brew_script}"
   chmod +x "${no_brew_script}"
 
