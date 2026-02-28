@@ -57,22 +57,22 @@ teardown() {
   run grep -q '^activate bash$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install --global bun$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^use --global bun$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install --global node$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^use --global node$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install --global pnpm$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^use --global pnpm$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install --global dotnet@8$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^use --global dotnet@8$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install --global go$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^use --global go$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -ne 0 ]
 
-  run grep -q '^install --global python$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^use --global python$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -ne 0 ]
 }
 
@@ -93,7 +93,7 @@ teardown() {
   run grep -q '^activate bash$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -ne 0 ]
 
-  run grep -q '^install --global bun$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^use --global bun$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 }
 

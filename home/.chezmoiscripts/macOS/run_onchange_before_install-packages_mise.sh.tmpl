@@ -21,6 +21,6 @@ if [[ -z "${MISE_SHELL:-}" ]]; then
 fi
 
 {{ range ($misePackages | sortAlpha | uniq) -}}
-mise install --global "{{ . }}"
+mise use --global "{{ . }}"
 {{ end -}}
 {{ end -}}
