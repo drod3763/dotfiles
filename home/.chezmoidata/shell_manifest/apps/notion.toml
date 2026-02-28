@@ -1,5 +1,5 @@
 [package_catalog.packages."notion"]
 os = "mac"
-type = "common"
+type = "work"
 target_class = "all"
 brew_cask_name = "notion"

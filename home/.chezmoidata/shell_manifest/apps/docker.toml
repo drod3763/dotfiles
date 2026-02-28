@@ -1,6 +1,6 @@
 [package_catalog.packages."docker"]
 os = "mac"
-type = "common"
+type = "work"
 target_class = "all"
 brew_cask_name = "docker"
 

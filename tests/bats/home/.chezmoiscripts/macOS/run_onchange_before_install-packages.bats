@@ -166,6 +166,15 @@ render_with_mocked_brew_paths() {
 
   run grep -q 'brew "awscli"' "${rendered_file}"
   [ "${status}" -eq 1 ]
+
+  run grep -q 'cask "brave-browser"' "${rendered_file}"
+  [ "${status}" -eq 1 ]
+
+  run grep -q 'cask "docker"' "${rendered_file}"
+  [ "${status}" -eq 1 ]
+
+  run grep -q 'cask "notion"' "${rendered_file}"
+  [ "${status}" -eq 1 ]
 }
 
 @test "GIVEN non-personal non-transient EXPECT work package set includes work brews" {
@@ -176,6 +185,15 @@ render_with_mocked_brew_paths() {
   [ "${status}" -eq 0 ]
 
   run grep -q 'mas "Amphetamine", id: 937984704' "${rendered_file}"
+  [ "${status}" -eq 0 ]
+
+  run grep -q 'cask "brave-browser"' "${rendered_file}"
+  [ "${status}" -eq 0 ]
+
+  run grep -q 'cask "docker"' "${rendered_file}"
+  [ "${status}" -eq 0 ]
+
+  run grep -q 'cask "notion"' "${rendered_file}"
   [ "${status}" -eq 0 ]
 
   run grep -q 'brew "oven-sh/bun/bun"' "${rendered_file}"
