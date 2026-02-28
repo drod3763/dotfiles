@@ -60,7 +60,7 @@ teardown() {
   run grep -q '^use --global bun$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^use --global node$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^use --global node@20$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
   run grep -q '^use --global pnpm$' "${MOCK_MISE_CALLS_FILE}"

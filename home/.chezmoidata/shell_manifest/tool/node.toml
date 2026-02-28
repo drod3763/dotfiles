@@ -3,7 +3,7 @@ os = "mac"
 type = "common"
 target_class = "all"
 use_mise = true
-mise_tool_name = "node"
+mise_tool_name = "node@20"
 
 [package_catalog.packages."node-tooling"]
 os = "common"

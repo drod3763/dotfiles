@@ -83,7 +83,7 @@ render_with_overrides() {
   run jq -e '.mise_packages | index("bun") != null' "${resolver_json}"
   [ "${status}" -eq 0 ]
 
-  run jq -e '.mise_packages | index("node") != null' "${resolver_json}"
+  run jq -e '.mise_packages | index("node@20") != null' "${resolver_json}"
   [ "${status}" -eq 0 ]
 
   run jq -e '.mise_packages | index("pnpm") != null' "${resolver_json}"
