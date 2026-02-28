@@ -92,10 +92,10 @@ render_with_overrides() {
   run jq -e '.mise_packages | index("dotnet@8") != null' "${resolver_json}"
   [ "${status}" -eq 0 ]
 
-  run jq -e '.mise_packages | index("go") != null' "${resolver_json}"
+  run jq -e '.mise_packages | index("go") == null' "${resolver_json}"
   [ "${status}" -eq 0 ]
 
-  run jq -e '.mise_packages | index("python") != null' "${resolver_json}"
+  run jq -e '.mise_packages | index("python") == null' "${resolver_json}"
   [ "${status}" -eq 0 ]
 
   run jq -e '.brew_formulas | index("oven-sh/bun/bun") == null' "${resolver_json}"

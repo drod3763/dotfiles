@@ -54,30 +54,30 @@ teardown() {
   run env -u MISE_SHELL bash "${RENDERED_SCRIPT}"
 
   [ "${status}" -eq 0 ]
-  run grep -q '^activate zsh$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^activate bash$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install bun$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^install --global bun$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install node$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^install --global node$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install pnpm$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^install --global pnpm$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install dotnet@8$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^install --global dotnet@8$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 
-  run grep -q '^install go$' "${MOCK_MISE_CALLS_FILE}"
-  [ "${status}" -eq 0 ]
+  run grep -q '^install --global go$' "${MOCK_MISE_CALLS_FILE}"
+  [ "${status}" -ne 0 ]
 
-  run grep -q '^install python$' "${MOCK_MISE_CALLS_FILE}"
-  [ "${status}" -eq 0 ]
+  run grep -q '^install --global python$' "${MOCK_MISE_CALLS_FILE}"
+  [ "${status}" -ne 0 ]
 }
 
-@test "GIVEN shell templatedata is bash EXPECT script activates mise for bash" {
-  render_with_shell "bash"
+@test "GIVEN shell templatedata is zsh EXPECT script still activates mise for bash" {
+  render_with_shell "zsh"
 
   run env -u MISE_SHELL bash "${RENDERED_SCRIPT}"
 
@@ -93,7 +93,7 @@ teardown() {
   run grep -q '^activate bash$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -ne 0 ]
 
-  run grep -q '^install bun$' "${MOCK_MISE_CALLS_FILE}"
+  run grep -q '^install --global bun$' "${MOCK_MISE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 }
 

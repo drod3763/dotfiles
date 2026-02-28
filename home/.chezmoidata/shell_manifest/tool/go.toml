@@ -1,11 +1,3 @@
-[package_catalog.packages."go"]
-os = "mac"
-type = "common"
-target_class = "all"
-use_mise = true
-mise_tool_name = "go"
-when_tool = "go"
-
 [shell_manifest.entries.go]
 priority = 242
 

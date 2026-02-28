@@ -4,17 +4,6 @@ set -euo pipefail
 
 {{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
 {{ $misePackages := ($packageCatalog.mise_packages | default (list)) -}}
-{{ $miseShell := (.shell | default "") -}}
-{{ if eq $miseShell "" -}}
-{{- if eq .chezmoi.os "darwin" -}}
-{{- $miseShell = "zsh" -}}
-{{- else -}}
-{{- $miseShell = "bash" -}}
-{{- end -}}
-{{ end -}}
-{{ if and (ne $miseShell "zsh") (ne $miseShell "bash") -}}
-{{- $miseShell = "bash" -}}
-{{ end -}}
 
 {{ if gt (len $misePackages) 0 -}}
 if ! command -v mise >/dev/null 2>&1; then
@@ -24,7 +13,7 @@ if ! command -v mise >/dev/null 2>&1; then
 fi
 
 if [[ -z "${MISE_SHELL:-}" ]]; then
-  if ! mise_activation="$(mise activate {{ $miseShell }})"; then
+  if ! mise_activation="$(mise activate bash)"; then
     echo "Failed to activate mise in this shell session." >&2
     exit 1
   fi
@@ -32,6 +21,6 @@ if [[ -z "${MISE_SHELL:-}" ]]; then
 fi
 
 {{ range ($misePackages | sortAlpha | uniq) -}}
-mise install "{{ . }}"
+mise install --global "{{ . }}"
 {{ end -}}
 {{ end -}}
