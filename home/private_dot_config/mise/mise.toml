@@ -1,0 +1,5 @@
+[tools]
+bun = "latest"
+dotnet = "8"
+node = "20"
+pnpm = "10"
