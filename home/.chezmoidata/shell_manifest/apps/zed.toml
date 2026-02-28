@@ -3,7 +3,6 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_cask_name = "zed"
-when_tool = "zed"
 config_file_locations = [".config/zed"]
 
 [shell_manifest.entries.zed]
