@@ -3,7 +3,6 @@ os = "mac"
 type = "personal"
 target_class = "all"
 brew_formula_name = "imagemagick"
-when_any_tools = ["convert", "magick"]
 
 [shell_manifest.entries.imagemagick-functions-magick]
 priority = 251

@@ -3,7 +3,6 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "ripgrep"
-when_tool = "rg"
 
 [shell_manifest.entries.ripgrep]
 priority = 248

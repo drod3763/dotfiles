@@ -3,7 +3,6 @@ os = "mac"
 type = "work"
 target_class = "all"
 brew_formula_name = "azure-cli"
-when_tool = "az"
 
 [shell_manifest.entries.azure-cli]
 priority = 240
