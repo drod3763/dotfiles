@@ -178,6 +178,9 @@ render_with_mocked_brew_paths() {
 
   run grep -q 'cask "zed"' "${rendered_file}"
   [ "${status}" -eq 0 ]
+
+  run grep -q 'cask "dropbox"' "${rendered_file}"
+  [ "${status}" -eq 0 ]
 }
 
 @test "GIVEN non-personal non-transient EXPECT work package set includes work brews" {
@@ -204,6 +207,9 @@ render_with_mocked_brew_paths() {
 
   run grep -q 'cask "zed"' "${rendered_file}"
   [ "${status}" -eq 0 ]
+
+  run grep -q 'cask "dropbox"' "${rendered_file}"
+  [ "${status}" -eq 1 ]
 
   run grep -q 'brew "oven-sh/bun/bun"' "${rendered_file}"
   [ "${status}" -eq 1 ]
