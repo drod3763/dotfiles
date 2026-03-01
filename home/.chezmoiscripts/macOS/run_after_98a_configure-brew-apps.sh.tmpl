@@ -30,6 +30,22 @@ if [[ ! -d "${HOME}/.config/yazi/flavors/catppuccin-mocha.yazi" ]]; then
 fi
 {{ end -}}
 
+# Enable Touch ID / Apple Watch for sudo via /etc/pam.d/sudo_local.
+if [[ -f /etc/pam.d/sudo_local.template ]]; then
+  if [[ ! -f /etc/pam.d/sudo_local ]]; then
+    with_sudo cp /etc/pam.d/sudo_local.template /etc/pam.d/sudo_local
+  fi
+
+  if [[ -f /etc/pam.d/sudo_local ]] &&
+    ! grep -qE '^[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so([[:space:]]|$)' /etc/pam.d/sudo_local; then
+    if grep -qE '^[[:space:]]*#?[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so([[:space:]]|$)' /etc/pam.d/sudo_local; then
+      with_sudo sed -E -i '' 's/^[[:space:]]*#?[[:space:]]*(auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so)/\1/' /etc/pam.d/sudo_local
+    else
+      printf '%s\n' 'auth       sufficient     pam_tid.so' | with_sudo tee -a /etc/pam.d/sudo_local >/dev/null
+    fi
+  fi
+fi
+
 {{ if not .personal -}}
 {{ $workDomain := .onepassword.items.work_domain -}}
 {{ $corpLocalDomain := includeTemplate "onepassword_url_label.tmpl" (dict "item" $workDomain.item "vault" $workDomain.vault "label" "corp_local_domain") -}}
