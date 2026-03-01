@@ -170,7 +170,7 @@ render_with_mocked_brew_paths() {
   run grep -q 'cask "brave-browser"' "${rendered_file}"
   [ "${status}" -eq 1 ]
 
-  run grep -q 'cask "docker"' "${rendered_file}"
+  run grep -q 'cask "docker-desktop"' "${rendered_file}"
   [ "${status}" -eq 1 ]
 
   run grep -q 'cask "notion"' "${rendered_file}"
@@ -199,7 +199,7 @@ render_with_mocked_brew_paths() {
   run grep -q 'cask "brave-browser"' "${rendered_file}"
   [ "${status}" -eq 0 ]
 
-  run grep -q 'cask "docker"' "${rendered_file}"
+  run grep -q 'cask "docker-desktop"' "${rendered_file}"
   [ "${status}" -eq 0 ]
 
   run grep -q 'cask "notion"' "${rendered_file}"

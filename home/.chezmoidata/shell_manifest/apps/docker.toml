@@ -2,7 +2,7 @@
 os = "mac"
 type = "work"
 target_class = "all"
-brew_cask_name = "docker"
+brew_cask_name = "docker-desktop"
 
 [shell_manifest.entries.docker-functions]
 priority = 250
