@@ -37,6 +37,18 @@ if [ "$(uname)" = "Darwin" ] && ! command -v git >/dev/null 2>&1; then
 	echo "Xcode Command Line Tools are now available." >&2
 fi
 
+# Accept Xcode license if required to avoid later install failures.
+if [ "$(uname)" = "Darwin" ] && command -v xcodebuild >/dev/null 2>&1; then
+	if ! xcodebuild -checkFirstLaunchStatus >/dev/null 2>&1; then
+		echo "Accepting Xcode license..." >&2
+		if ! sudo xcodebuild -license accept >/dev/null 2>&1; then
+			echo "Failed to accept Xcode license automatically." >&2
+			echo "Run: sudo xcodebuild -license accept" >&2
+			exit 1
+		fi
+	fi
+fi
+
 # Configure Git with placeholder values if not configured
 has_git_name=1
 has_git_email=1

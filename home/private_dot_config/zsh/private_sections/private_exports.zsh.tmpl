@@ -6,6 +6,10 @@ export XDG_CACHE_HOME={{ $user_cache_dir | quote }}
 export XDG_CONFIG_HOME="${HOME}/.config"
 export XDG_DATA_HOME={{ $user_data_dir | quote }}
 export XDG_SHARE_HOME="${HOME}/.local/share"
+{{- if eq .chezmoi.os "darwin" }}
+export XDG_RUNTIME_DIR=""
+{{- else }}
 export XDG_RUNTIME_DIR="/run/user/${UID}"
+{{- end }}
 export XDG_STATE_HOME={{ $user_log_dir | quote }}
 {{ template "exports.tmpl" . -}}

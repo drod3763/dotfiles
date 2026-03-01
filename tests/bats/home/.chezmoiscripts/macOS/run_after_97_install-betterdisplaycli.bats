@@ -76,7 +76,7 @@ teardown() {
   [[ "${status}" -ne 0 ]]
 }
 
-@test "GIVEN non-personal and formula already installed EXPECT install is not repeated" {
+@test "GIVEN non-personal and formula already installed EXPECT script reinstalls betterdisplaycli" {
   render_non_personal_script
   mkdir -p "${MOCK_APPS_DIR}/Xcode.app"
   export MOCK_BREW_HAS_BETTERDISPLAYCLI=1
@@ -84,8 +84,8 @@ teardown() {
   run bash "${RENDERED_SCRIPT}"
 
   [[ "${status}" -eq 0 ]]
-  run grep -q '^install betterdisplaycli$' "${MOCK_BREW_CALLS_FILE}"
-  [[ "${status}" -ne 0 ]]
+  run grep -q '^reinstall betterdisplaycli$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
 }
 
 @test "GIVEN non-personal and brew missing EXPECT script exits cleanly without install" {
