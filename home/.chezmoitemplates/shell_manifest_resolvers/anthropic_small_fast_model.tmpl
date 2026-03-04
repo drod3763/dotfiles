@@ -1,0 +1,10 @@
+{{- $resolved := "" -}}
+{{- if not .context.personal -}}
+  {{- $awsCreds := .context.onepassword.items.aws_credentials -}}
+  {{- $workAccountID := (includeTemplate "onepassword_field.tmpl" (dict "item" $awsCreds.item "vault" $awsCreds.vault "field_id" $awsCreds.fields.arcus_dev_account_id) | default "") -}}
+  {{- if ne $workAccountID "" -}}
+    {{- $awsRegion := (get .exports "AWS_REGION") | default "us-west-2" -}}
+    {{- $resolved = (printf "arn:aws:bedrock:%s:%s:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1" $awsRegion $workAccountID) -}}
+  {{- end -}}
+{{- end -}}
+{{- $resolved -}}

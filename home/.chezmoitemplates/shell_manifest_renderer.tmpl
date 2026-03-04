@@ -83,55 +83,14 @@
       {{- $_ := set $out.exports $key (get $elem "value" | default "") -}}
     {{- else if eq $kind "dynamic" -}}
       {{- $resolver := (get $elem "resolver" | default "") -}}
-      {{- $resolved := "" -}}
-      {{- if eq $resolver "source_dir" -}}
-        {{- $resolved = ($ctx.chezmoi.sourceDir | default "") -}}
-      {{- else if eq $resolver "openai_api_key" -}}
-        {{- $openai := $ctx.onepassword.items.openai_key -}}
-        {{- $resolved = (includeTemplate "onepassword_field.tmpl" (dict "item" $openai.item "vault" $openai.vault "field_id" $openai.fields.credential) | default "") -}}
-      {{- else if eq $resolver "anthropic_model" -}}
-        {{- if not $ctx.personal -}}
-          {{- $awsCreds := $ctx.onepassword.items.aws_credentials -}}
-          {{- $workAccountID := (includeTemplate "onepassword_field.tmpl" (dict "item" $awsCreds.item "vault" $awsCreds.vault "field_id" $awsCreds.fields.arcus_dev_account_id) | default "") -}}
-          {{- if ne $workAccountID "" -}}
-            {{- $awsRegion := (get $out.exports "AWS_REGION") | default "us-west-2" -}}
-            {{- $resolved = (printf "arn:aws:bedrock:%s:%s:inference-profile/us.anthropic.claude-opus-4-6-v1" $awsRegion $workAccountID) -}}
-          {{- end -}}
-        {{- end -}}
-      {{- else if eq $resolver "anthropic_small_fast_model" -}}
-        {{- if not $ctx.personal -}}
-          {{- $awsCreds := $ctx.onepassword.items.aws_credentials -}}
-          {{- $workAccountID := (includeTemplate "onepassword_field.tmpl" (dict "item" $awsCreds.item "vault" $awsCreds.vault "field_id" $awsCreds.fields.arcus_dev_account_id) | default "") -}}
-          {{- if ne $workAccountID "" -}}
-            {{- $awsRegion := (get $out.exports "AWS_REGION") | default "us-west-2" -}}
-            {{- $resolved = (printf "arn:aws:bedrock:%s:%s:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1" $awsRegion $workAccountID) -}}
-          {{- end -}}
-        {{- end -}}
-      {{- else if eq $resolver "anthropic_default_sonnet_model" -}}
-        {{- if not $ctx.personal -}}
-          {{- $awsCreds := $ctx.onepassword.items.aws_credentials -}}
-          {{- $workAccountID := (includeTemplate "onepassword_field.tmpl" (dict "item" $awsCreds.item "vault" $awsCreds.vault "field_id" $awsCreds.fields.arcus_dev_account_id) | default "") -}}
-          {{- if ne $workAccountID "" -}}
-            {{- $awsRegion := (get $out.exports "AWS_REGION") | default "us-west-2" -}}
-            {{- $resolved = (printf "arn:aws:bedrock:%s:%s:inference-profile/us.anthropic.claude-sonnet-4-6" $awsRegion $workAccountID) -}}
-          {{- end -}}
-        {{- end -}}
-      {{- else if eq $resolver "dotnet_root" -}}
-        {{- range (list
-            "/opt/homebrew/opt/dotnet@8/libexec"
-            "/opt/homebrew/opt/dotnet@9/libexec"
-            "/opt/homebrew/opt/dotnet/libexec"
-            "/usr/local/opt/dotnet@8/libexec"
-            "/usr/local/opt/dotnet@9/libexec"
-            "/usr/local/opt/dotnet/libexec"
-            "/usr/share/dotnet") -}}
-          {{- if and (eq $resolved "") (stat .) -}}
-            {{- $resolved = . -}}
-          {{- end -}}
-        {{- end -}}
-      {{- else -}}
-        {{- fail (printf "unsupported manifest export resolver %q for key %q" $resolver $key) -}}
+      {{- if eq $resolver "" -}}
+        {{- fail (printf "missing resolver for dynamic export key %q" $key) -}}
       {{- end -}}
+      {{- $resolved := (includeTemplate (printf "shell_manifest_resolvers/%s.tmpl" $resolver) (dict
+          "context" $ctx
+          "element" $elem
+          "exports" ($out.exports | default (dict))
+          "key" $key) | default "") -}}
       {{- if and (get $elem "omit_if_empty") (eq $resolved "") -}}
         {{- continue -}}
       {{- end -}}

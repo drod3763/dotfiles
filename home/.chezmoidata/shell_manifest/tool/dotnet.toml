@@ -25,6 +25,18 @@ kind = "dynamic"
 resolver = "dotnet_root"
 omit_if_empty = true
 
+[shell_manifest.entries.dotnet-env-tool.exports.VSS_NUGET_EXTERNAL_FEED_ENDPOINTS]
+kind = "dynamic"
+resolver = "onepassword"
+item_ref = "packaging_token"
+json_array_key = "endpointCredentials"
+omit_if_empty = true
+
+[shell_manifest.entries.dotnet-env-tool.exports.VSS_NUGET_EXTERNAL_FEED_ENDPOINTS.json_object]
+endpoint = "nuget_source_url"
+username = "username"
+password = "credential"
+
 [shell_manifest.entries.dotnet-sdk]
 priority = 258
 

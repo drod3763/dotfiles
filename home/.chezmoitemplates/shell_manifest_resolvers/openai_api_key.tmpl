@@ -1,0 +1,2 @@
+{{- $openai := .context.onepassword.items.openai_key -}}
+{{- includeTemplate "onepassword_field.tmpl" (dict "item" $openai.item "vault" $openai.vault "field_id" $openai.fields.credential) | default "" -}}

@@ -17,6 +17,17 @@ priority = 252
 [shell_manifest.entries.saml2aws-aliases.rules]
 when_tool = "saml2aws"
 
+[shell_manifest.entries.saml2aws-zsh]
+priority = 251
+
+[shell_manifest.entries.saml2aws-zsh.rules]
+when_tool = "saml2aws"
+when_shell = ["zsh"]
+
+[shell_manifest.entries.saml2aws-zsh.init.saml2aws-completion]
+kind = "literal"
+value = "eval \"$(saml2aws --completion-script-zsh)\""
+
 [shell_manifest.entries.saml2aws-aliases.aliases.s2a]
 kind = "literal"
 value = "AWS_SDK_LOAD_CONFIG=0 saml2aws"

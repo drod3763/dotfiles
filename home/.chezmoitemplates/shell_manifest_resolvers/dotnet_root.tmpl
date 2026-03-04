@@ -1,0 +1,14 @@
+{{- $resolved := "" -}}
+{{- range (list
+    "/opt/homebrew/opt/dotnet@8/libexec"
+    "/opt/homebrew/opt/dotnet@9/libexec"
+    "/opt/homebrew/opt/dotnet/libexec"
+    "/usr/local/opt/dotnet@8/libexec"
+    "/usr/local/opt/dotnet@9/libexec"
+    "/usr/local/opt/dotnet/libexec"
+    "/usr/share/dotnet") -}}
+  {{- if and (eq $resolved "") (stat .) -}}
+    {{- $resolved = . -}}
+  {{- end -}}
+{{- end -}}
+{{- $resolved -}}
