@@ -1,2 +1,3 @@
 [tools]
 go = "latest"
+"npm:@fission-ai/openspec" = "latest"
