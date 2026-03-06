@@ -39,5 +39,9 @@ echo "Installing playlist-tech tools..."
 
 # Install pipemind from private tap
 brew tap playlist-tech/tap
-brew install playlist-tech/tap/pipemind
+if brew list --formula pipemind >/dev/null 2>&1; then
+  echo "Skipping pipemind install: already installed."
+else
+  brew install playlist-tech/tap/pipemind
+fi
 {{ end -}}

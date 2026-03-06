@@ -47,6 +47,13 @@ cat > "${MOCK_BIN_DIR}/brew" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${1:-}" == "list" && "${2:-}" == "--formula" && "${3:-}" == "pipemind" ]]; then
+  if [[ -n "${MOCK_PIPEMIND_INSTALLED:-}" ]]; then
+    exit 0
+  fi
+  exit 1
+fi
+
 if [[ "${1:-}" == "tap" && -n "${MOCK_BREW_TAP_FAIL:-}" ]]; then
   exit 1
 fi
@@ -98,8 +105,24 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   run grep -q '^tap playlist-tech/tap$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
+  run grep -q '^list --formula pipemind$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
   run grep -q '^install playlist-tech/tap/pipemind$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN non-personal and pipemind already installed EXPECT script skips install" {
+  export MOCK_GH_AUTHENTICATED=1
+  export MOCK_PIPEMIND_INSTALLED=1
+  render_non_personal_script
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^list --formula pipemind$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^install playlist-tech/tap/pipemind$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 1 ]]
 }
 
 @test "GIVEN non-personal and authenticated gh EXPECT script skips gh auth login" {
