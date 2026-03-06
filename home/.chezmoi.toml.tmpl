@@ -98,7 +98,7 @@ args = ["--wait"]
 autoAdd = true
 [hooks.read-source-state.pre]
     command = "bash"
-    args = ["{{ .chezmoi.homeDir }}/.local/share/chezmoi/scripts/hooks/read-source-state-pre.sh"]
+    args = ["{{ .chezmoi.homeDir }}/.local/share/chezmoi/scripts/hooks/read-source-state-pre.sh", "{{ $onepasswordMode }}"]
 [[textconv]]
 pattern = "**/*.plist"
 command = "plutil"

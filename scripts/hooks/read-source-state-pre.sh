@@ -19,8 +19,18 @@ if ! command -v age >/dev/null 2>&1 && ! command -v rage >/dev/null 2>&1; then
   echo "age installed." >&2
 fi
 
+onepassword_mode="${1:-}"
+if [[ -z "${onepassword_mode}" ]]; then
+  onepassword_mode="service"
+  if [[ -n "${CHEZMOI_ONEPASSWORD_MODE:-}" ]]; then
+    onepassword_mode="${CHEZMOI_ONEPASSWORD_MODE}"
+  elif [[ -d "/Applications/1Password.app" ]]; then
+    onepassword_mode="account"
+  fi
+fi
+
 # Set up 1Password CLI service account token.
-if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
+if [[ "${onepassword_mode}" == "service" && -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
   if [[ -t 0 ]]; then
     echo "Enter 1Password service account token (or press Enter to skip):" >&2
     read -s -r op_token
@@ -34,4 +44,6 @@ if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
   else
     echo "Skipping 1Password service account setup (no interactive terminal)." >&2
   fi
+elif [[ "${onepassword_mode}" == "account" ]]; then
+  echo "Skipping 1Password service account setup (1Password account mode)." >&2
 fi

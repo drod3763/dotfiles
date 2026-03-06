@@ -35,6 +35,7 @@ EOF
   export MOCK_BREW_CALLS_FILE="${TEST_TMPDIR}/brew.calls"
   export PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin"
   export OP_SERVICE_ACCOUNT_TOKEN="dummy-token"
+  export CHEZMOI_ONEPASSWORD_MODE="service"
 }
 
 teardown() {
@@ -71,4 +72,14 @@ teardown() {
 
   [ "${status}" -eq 0 ]
   [[ "${output}" == *"Skipping 1Password service account setup (no interactive terminal)."* ]]
+}
+
+@test "GIVEN account mode EXPECT hook skips service account token prompt" {
+  unset OP_SERVICE_ACCOUNT_TOKEN
+  export CHEZMOI_ONEPASSWORD_MODE="account"
+
+  run bash "${HOOK_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Skipping 1Password service account setup (1Password account mode)."* ]]
 }
