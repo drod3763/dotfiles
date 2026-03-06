@@ -13,9 +13,11 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/drod3763/dotfiles/main/i
 ```
 
 This will:
-1. Bootstrap prerequisites (Xcode CLI tools/Homebrew/1Password CLI as needed).
+
+1. Bootstrap base prerequisites (Xcode CLI tools/Homebrew as needed).
 2. Install `chezmoi` locally if missing.
 3. Initialize with this repository and apply configuration.
+4. During `chezmoi apply`, run a pre-read hook that installs `1password-cli` and `age` when needed.
 
 ### Advanced Installation (Clone & Run)
 
@@ -34,6 +36,7 @@ cd ~/.local/share/chezmoi
 By default, the installation script runs quietly. To see detailed output from `chezmoi` operations:
 
 **Via script:**
+
 ```bash
 ./install.sh --verbose
 # or
@@ -41,6 +44,7 @@ By default, the installation script runs quietly. To see detailed output from `c
 ```
 
 **Via curl:**
+
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/drod3763/dotfiles/main/install.sh)" -- --verbose
 # or set the environment variable
@@ -51,10 +55,10 @@ VERBOSE=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/drod3763/dotfi
 
 The installation script respects the following environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VERBOSE` | Set to `1` or `true` to enable verbose output from `chezmoi` | `false` |
-| `OP_SERVICE_ACCOUNT_TOKEN` | Optional 1Password Service Account token for headless/service-mode secret injection | (Interactive prompt) |
+| Variable                   | Description                                                                         | Default                                |
+| -------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------- |
+| `VERBOSE`                  | Set to `1` or `true` to enable verbose output from `chezmoi`                        | `false`                                |
+| `OP_SERVICE_ACCOUNT_TOKEN` | Optional 1Password Service Account token for headless/service-mode secret injection | (Interactive prompt during apply hook) |
 
 ## Features
 
@@ -73,6 +77,7 @@ This repo includes multi-language formatting via `treefmt` configuration at `hom
 - Nix-based run (if available): `nix run .#treefmt`
 
 Configured formatters include:
+
 - `nixpkgs-fmt` for Nix
 - `taplo` for TOML (including `home/private_dot_config/git/config.tmpl` via a dedicated formatter rule)
 - `shfmt` for shell scripts

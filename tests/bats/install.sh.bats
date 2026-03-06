@@ -199,15 +199,13 @@ teardown() {
   [ "${status}" -eq 0 ]
 }
 
-@test "GIVEN missing op and age EXPECT install script installs required brew packages" {
+@test "GIVEN missing op and age EXPECT install script defers dependency install to hooks" {
   rm -f "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age"
 
   run bash "${INSTALL_SCRIPT}"
 
   [ "${status}" -eq 0 ]
-  run grep -q '^install --cask 1password-cli$' "${MOCK_BREW_CALLS_FILE}"
-  [ "${status}" -eq 0 ]
-  run grep -q '^install age$' "${MOCK_BREW_CALLS_FILE}"
+  run test ! -s "${MOCK_BREW_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 }
 
@@ -250,24 +248,6 @@ teardown() {
   [ "${status}" -eq 0 ]
   run grep -q '^init --source=' "${MOCK_CHEZMOI_CALLS_FILE}"
   [ "${status}" -eq 0 ]
-}
-
-@test "GIVEN token unset EXPECT installer prompts and continues when skipped" {
-  unset OP_SERVICE_ACCOUNT_TOKEN
-
-  run bash "${INSTALL_SCRIPT}" <<<""
-
-  [ "${status}" -eq 0 ]
-  [[ "${output}" == *"Skipping 1Password service account setup."* ]]
-}
-
-@test "GIVEN token unset and provided EXPECT installer acknowledges token setup" {
-  unset OP_SERVICE_ACCOUNT_TOKEN
-
-  run bash "${INSTALL_SCRIPT}" <<<"token-value"
-
-  [ "${status}" -eq 0 ]
-  [[ "${output}" == *"1Password service account token set."* ]]
 }
 
 @test "GIVEN Darwin and missing xcode tools EXPECT installer runs xcode-select --install" {
