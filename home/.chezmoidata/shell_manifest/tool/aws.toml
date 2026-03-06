@@ -68,7 +68,7 @@ kind = "literal"
 value = """
 switchprodsu() {
   aws eks update-kubeconfig --name=arcus-prod-aws-eksCluster-7981131 --alias=aws-arcus-prod-su --profile=arcus_prod_su
-  export AWS_PROFILE=\"arcus_prod\"
+  export AWS_PROFILE=\"arcus_prod_su\"
   export ASPNETCORE_ENVIRONMENT=\"Production\"
 }
 """

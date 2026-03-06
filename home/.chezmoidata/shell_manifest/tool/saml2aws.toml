@@ -36,7 +36,7 @@ value = "AWS_SDK_LOAD_CONFIG=0 saml2aws"
 kind = "literal"
 value = """
 loginarcus() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force --profile default
 }
 """
 
@@ -44,6 +44,38 @@ loginarcus() {
 kind = "literal"
 value = """
 loginarcussu() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a superuser
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a superuser --profile default_su
+}
+"""
+
+[shell_manifest.entries.saml2aws-functions.functions.logininternaltools]
+kind = "literal"
+value = """
+logininternaltools() {
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a internaltools --profile internaltools
+}
+"""
+
+[shell_manifest.entries.saml2aws-functions.functions.logininternaltoolssu]
+kind = "literal"
+value = """
+logininternaltoolssu() {
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a internaltools_superuser --profile internaltools_su
+}
+"""
+
+[shell_manifest.entries.saml2aws-functions.functions.loginaccelerator]
+kind = "literal"
+value = """
+loginaccelerator() {
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a accelerator --profile accelerator
+}
+"""
+
+[shell_manifest.entries.saml2aws-functions.functions.loginacceleratorsu]
+kind = "literal"
+value = """
+loginacceleratorsu() {
+  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a accelerator_superuser --profile accelerator_su
 }
 """
