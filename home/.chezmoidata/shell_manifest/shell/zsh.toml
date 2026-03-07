@@ -4,6 +4,10 @@ priority = 180
 [shell_manifest.entries.zsh-core.rules]
 when_shell = ["zsh"]
 
+[shell_manifest.entries.zsh-core.init.bashcompinit]
+kind = "literal"
+value = "autoload -Uz bashcompinit && bashcompinit"
+
 [shell_manifest.entries.zsh-core.aliases.reload]
 kind = "literal"
 value = "source ~/.zshrc"

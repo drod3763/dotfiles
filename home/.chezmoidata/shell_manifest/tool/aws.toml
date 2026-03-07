@@ -50,7 +50,7 @@ when_shell = ["zsh"]
 
 [shell_manifest.entries.awscli-zsh.init.aws-completion]
 kind = "literal"
-value = "autoload -Uz bashcompinit && bashcompinit && complete -C \"$(command -v aws_completer)\" aws"
+value = "complete -C \"$(command -v aws_completer)\" aws"
 
 [shell_manifest.entries.darwin-work-aws.exports.AWS_REGION]
 kind = "literal"
