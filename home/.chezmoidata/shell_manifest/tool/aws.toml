@@ -41,6 +41,17 @@ value = "arcus_dev"
 kind = "literal"
 value = "1"
 
+[shell_manifest.entries.awscli-zsh]
+priority = 233
+
+[shell_manifest.entries.awscli-zsh.rules]
+when_tool = "aws"
+when_shell = ["zsh"]
+
+[shell_manifest.entries.awscli-zsh.init.aws-completion]
+kind = "literal"
+value = "autoload -Uz bashcompinit && bashcompinit && complete -C \"$(command -v aws_completer)\" aws"
+
 [shell_manifest.entries.darwin-work-aws.exports.AWS_REGION]
 kind = "literal"
 value = "us-west-2"
