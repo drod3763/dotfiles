@@ -1,5 +1,5 @@
 [package_catalog.packages."chrysalis"]
 os = "mac"
-type = "personal"
+type = "common"
 target_class = "all"
 brew_cask_name = "chrysalis"
