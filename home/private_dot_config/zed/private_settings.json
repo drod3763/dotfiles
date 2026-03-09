@@ -14,8 +14,8 @@
   "edit_predictions": {
     "provider": "none"
   },
-  "icon_theme": "Catppuccin Mocha",
-  "ui_font_family": "PragmataPro Liga",
+  "icon_theme": "Catppuccin Frappé",
+  "ui_font_family": "PragmataPro VF Mono Liga",
   "agent_servers": {
     "OpenCode": {
       "type": "custom",
@@ -42,7 +42,7 @@
       "milliseconds": 1000
     }
   },
-  "buffer_font_family": "PragmataPro Mono Liga",
+  "buffer_font_family": "PragmataPro VF Mono Liga",
   "buffer_font_size": 16,
   "file_types": {
     "Dockerfile": ["Dockerfile*"],
@@ -53,7 +53,7 @@
     "coloring": "indent_aware",
     "background_coloring": "indent_aware"
   },
-  "theme": "Catppuccin Macchiato",
+  "theme": "Catppuccin Frappé",
   "telemetry": {
     "diagnostics": false,
     "metrics": false

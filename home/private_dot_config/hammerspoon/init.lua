@@ -40,18 +40,13 @@ WarpMouse = hs.loadSpoon("WarpMouse")
 WarpMouse.margin = 8  -- optionally set how far past a screen edge the mouse should warp, default is 2 pixels
 WarpMouse:start()
 
-spoon.SpoonInstall:andUse("WarpMouse", {
-    repo = "WarpMouse",
-    margin = 8,
-    start = true,
-})
-
 spoon.SpoonInstall:andUse("PaperWM", {
     repo = "PaperWM",
     config = { screen_margin = 16, window_gap = 2 },
     start = true,
     fn = function(pwm)
-        pwm.window_filter:setAppFilter("Zen",{ rejectTitles = "Picture-in-Picture"})
+        pwm.window_filter:setAppFilter("Zen", { rejectTitles = "Picture-in-Picture"})
+        pwm.scroll_window = { "cmd", "alt" }
     end,
     hotkeys = {
     -- switch to a new focused window in tiled grid
