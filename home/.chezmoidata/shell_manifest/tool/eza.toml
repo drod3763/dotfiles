@@ -12,7 +12,7 @@ when_tool = "eza"
 
 [shell_manifest.entries.eza.aliases.ls]
 kind = "literal"
-value = "eza --grid  --color auto --icons --all --sort type"
+value = "eza --grid --color auto --icons --all --sort type"
 
 [shell_manifest.entries.eza.aliases.ll]
 kind = "literal"
