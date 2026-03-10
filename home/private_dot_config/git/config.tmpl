@@ -15,7 +15,9 @@
 {{- $editor = "nano" -}}
 {{- end -}}
 
-{{- if lookPath "delta"}}
+{{- if lookPath "diffnav"}}
+{{- $pager = "diffnav" -}}
+{{- else if lookPath "delta"}}
 {{- $pager = "delta" -}}
 {{- end -}}
 

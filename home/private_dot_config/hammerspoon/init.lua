@@ -42,11 +42,10 @@ WarpMouse:start()
 
 spoon.SpoonInstall:andUse("PaperWM", {
     repo = "PaperWM",
-    config = { screen_margin = 16, window_gap = 2 },
+    config = { screen_margin = 16, window_gap = 10, scroll_window = { "cmd", "alt", "shift", "ctrl" } },
     start = true,
     fn = function(pwm)
-        pwm.window_filter:setAppFilter("Zen", { rejectTitles = "Picture-in-Picture"})
-        pwm.scroll_window = { "cmd", "alt" }
+        pwm.window_filter = pwm.window_filter:setAppFilter("Zen", { rejectTitles = { "Picture-in-Picture" } })
     end,
     hotkeys = {
     -- switch to a new focused window in tiled grid
