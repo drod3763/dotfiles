@@ -3,6 +3,7 @@
 {{- $diffCmd := "" -}}
 {{- $mergeCmd := "" -}}
 {{- $pager := "" -}}
+{{- $diffPager := "" -}}
 {{- $github := .onepassword.items.github -}}
 
 {{- if and (eq .chezmoi.os "darwin") (stat "/Applications/Komet.app") -}}
@@ -15,10 +16,14 @@
 {{- $editor = "nano" -}}
 {{- end -}}
 
-{{- if lookPath "diffnav"}}
-{{- $pager = "diffnav" -}}
-{{- else if lookPath "delta"}}
+{{- if lookPath "delta"}}
 {{- $pager = "delta" -}}
+{{- else -}}
+{{- $pager = "less" -}}
+{{- end -}}
+
+{{- if lookPath "diffnav"}}
+{{- $diffPager = "diffnav" -}}
 {{- end -}}
 
 {{- if and (eq .chezmoi.os "linux") (lookPath "bcompare") }}
@@ -77,6 +82,11 @@ dell = branch -d
 [core]
 editor = {{ $editor }}
 pager = {{ $pager }}
+[pager]
+{{- if not (empty $diffPager) }}
+diff = {{ $diffPager }}
+show = {{ $diffPager }}
+{{- end }}
 [checkout]
 workers = -1
 {{- if lookPath "gh" }}
