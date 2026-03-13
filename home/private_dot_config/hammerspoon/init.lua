@@ -45,7 +45,23 @@ spoon.SpoonInstall:andUse("PaperWM", {
     config = { screen_margin = 16, window_gap = 10, scroll_window = { "cmd", "alt", "shift", "ctrl" } },
     start = true,
     fn = function(pwm)
-        pwm.window_filter = pwm.window_filter:setAppFilter("Zen", { rejectTitles = { "Picture-in-Picture" } })
+        local pip_title = "[Pp]icture[%- ]in[%- ]Picture"
+        pwm.window_filter:setAppFilter("Zen", { rejectTitles = pip_title })
+
+        if pwm.events and pwm.events.scrollHandler then
+            local original_scroll_handler = pwm.events.scrollHandler
+            pwm.events.scrollHandler = function(self)
+                local handler = original_scroll_handler(self)
+                return function(event)
+                    local ok, result = pcall(handler, event)
+                    if not ok then
+                        self.logger.ef("scroll handler recovered from error: %s", tostring(result))
+                        return false
+                    end
+                    return result
+                end
+            end
+        end
     end,
     hotkeys = {
     -- switch to a new focused window in tiled grid
