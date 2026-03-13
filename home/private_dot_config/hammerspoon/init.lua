@@ -48,17 +48,110 @@ spoon.SpoonInstall:andUse("PaperWM", {
         local pip_title = "[Pp]icture[%- ]in[%- ]Picture"
         pwm.window_filter:setAppFilter("Zen", { rejectTitles = pip_title })
 
+        if pwm.windows and pwm.windows.addWindow then
+            local original_add_window = pwm.windows.addWindow
+            pwm.windows.addWindow = function(window)
+                local ok, spaces = pcall(hs.spaces.windowSpaces, window)
+                if (not ok) or (not spaces) or (not spaces[1]) then
+                    return nil
+                end
+                return original_add_window(window)
+            end
+        end
+
         if pwm.events and pwm.events.scrollHandler then
-            local original_scroll_handler = pwm.events.scrollHandler
-            pwm.events.scrollHandler = function(self)
-                local handler = original_scroll_handler(self)
-                return function(event)
-                    local ok, result = pcall(handler, event)
-                    if not ok then
-                        self.logger.ef("scroll handler recovered from error: %s", tostring(result))
-                        return false
+            local function get_upvalue(fn, name)
+                for i = 1, 32 do
+                    local key, value = debug.getupvalue(fn, i)
+                    if not key then
+                        return nil
                     end
-                    return result
+                    if key == name then
+                        return value
+                    end
+                end
+                return nil
+            end
+
+            local original_scroll_handler = pwm.events.scrollHandler
+            local slide_windows = get_upvalue(original_scroll_handler, "slide_windows")
+            if slide_windows then
+                pwm.events.scrollHandler = function(self)
+                    local ScrollWheel = hs.eventtap.event.types.scrollWheel
+                    local ScrollWheelEventDelta = hs.eventtap.event.properties.scrollWheelEventDeltaAxis1
+                    local FlagsChanged = hs.eventtap.event.types.flagsChanged
+                    local Window = hs.window
+                    local Screen = hs.screen
+                    local Spaces = hs.spaces
+                    local flags_watcher, scroll_coro = nil, nil
+
+                    local function stop_scroll()
+                        self.logger.d("scroll window stop")
+                        if scroll_coro then
+                            pcall(scroll_coro, nil)
+                            scroll_coro = nil
+                        end
+                        if flags_watcher then
+                            pcall(function()
+                                flags_watcher:stop()
+                            end)
+                            flags_watcher = nil
+                        end
+                    end
+
+                    return function(event)
+                        local delete_event = false
+                        if self.scroll_window and event:getType() == ScrollWheel
+                            and event:getFlags():containExactly(self.scroll_window or {}) then
+                            delete_event = true
+                            if not scroll_coro then
+                                self.logger.d("scroll window start")
+
+                                local focused_window = Window.focusedWindow()
+                                if not focused_window then
+                                    self.logger.d("focused window not found")
+                                    return delete_event
+                                end
+
+                                local focused_index = self.state.windowIndex(focused_window)
+                                if not focused_index then
+                                    self.logger.e("focused index not found")
+                                    return delete_event
+                                end
+
+                                local screen = Screen(Spaces.spaceDisplay(focused_index.space))
+                                if not screen then
+                                    self.logger.e("no screen for space")
+                                    return delete_event
+                                end
+
+                                scroll_coro = coroutine.wrap(slide_windows)
+                                local ok, err = pcall(scroll_coro, self, focused_index.space, screen:frame())
+                                if not ok then
+                                    self.logger.ef("scroll init recovered from error: %s", tostring(err))
+                                    scroll_coro = nil
+                                    return delete_event
+                                end
+                            else
+                                local ok, err = pcall(scroll_coro,
+                                    event:getProperty(ScrollWheelEventDelta) * (self.scroll_gain or 1))
+                                if not ok then
+                                    self.logger.ef("scroll handler recovered from error: %s", tostring(err))
+                                    stop_scroll()
+                                end
+                            end
+
+                            if not flags_watcher then
+                                flags_watcher = hs.eventtap.new({ FlagsChanged }, function(flags_event)
+                                    if not flags_event:getFlags():contain(self.scroll_window or {}) then
+                                        stop_scroll()
+                                    end
+                                    return false
+                                end):start()
+                            end
+                        end
+                        return delete_event
+                    end
                 end
             end
         end
