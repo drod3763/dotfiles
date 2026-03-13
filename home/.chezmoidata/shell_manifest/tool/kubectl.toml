@@ -10,12 +10,21 @@ when_tool = "kubectl"
 kind = "literal"
 value = """
 pgadmin() {
-  POD=$(kubectl get pods -n subscription-management --no-headers -o custom-columns=\":metadata.name\" | grep \"-pgadmin\" | head -n 1)
-  if [ -z \"$POD\" ]; then
+  local namespace="subscription-management"
+  local local_port="${1:-6001}"
+  local remote_port="${2:-5000}"
+  local pod
+
+  if ! pod=$(kubectl get pods -n "$namespace" --field-selector=status.phase=Running --no-headers -o custom-columns=":metadata.name" 2>/dev/null | awk '/-pgadmin/ { print; exit }'); then
+    echo -e "\\033[0;31mUnable to list pods in ${namespace}. Check AWS auth/context.\\033[0m"
+    return 1
+  fi
+
+  if [ -z "$pod" ]; then
     echo -e "\\033[0;31mNo pgadmin pods found.\\033[0m"
     return 1
   fi
 
-  kubectl port-forward \"$POD\" 6001:5000 -n subscription-management
+  kubectl port-forward "$pod" "${local_port}:${remote_port}" -n "$namespace"
 }
 """
