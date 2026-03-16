@@ -1,5 +1,0 @@
-[package_catalog.packages."antigravity"]
-os = "mac"
-type = "personal"
-target_class = "all"
-brew_cask_name = "antigravity"
