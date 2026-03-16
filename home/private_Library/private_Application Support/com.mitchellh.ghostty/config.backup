@@ -1,3 +1,7 @@
+# NOTE: This file is intentionally tracked in dotfiles.
+# Ghostty currently has a bug where it recreates this backup template
+# when no user config exists, so we keep it managed to avoid churn.
+
 # This is the configuration file for Ghostty.
 #
 # This template file has been automatically created at the following
