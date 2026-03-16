@@ -2,4 +2,4 @@
 os = "mac"
 type = "personal"
 target_class = "all"
-brew_cask_name = "ledger-live"
+brew_cask_name = "ledger-wallet"

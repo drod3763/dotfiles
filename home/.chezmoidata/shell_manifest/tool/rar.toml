@@ -2,4 +2,4 @@
 os = "mac"
 type = "common"
 target_class = "all"
-brew_formula_name = "rar"
+brew_formula_name = "drod3763/tap/rar"
