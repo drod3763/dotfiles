@@ -1,0 +1,13 @@
+[tools]
+bun = "latest"
+{{- if not .personal }}
+dotnet = "8"
+node = "20"
+pnpm = "10"
+{{- end }}
+
+[settings]
+npm.package_manager = "bun"
+{{- if not .personal }}
+dotnet.cli_telemetry_optout = true
+{{- end }}

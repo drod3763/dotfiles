@@ -1,9 +1,0 @@
-[tools]
-bun = "latest"
-dotnet = "8"
-node = "20"
-pnpm = "10"
-
-[settings]
-dotnet.cli_telemetry_optout = true
-npm.package_manager = "bun"

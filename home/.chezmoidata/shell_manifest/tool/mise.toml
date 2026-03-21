@@ -1,6 +1,6 @@
 [package_catalog.packages."mise"]
 os = "mac"
-type = "work"
+type = "common"
 target_class = "all"
 brew_formula_name = "mise"
 
