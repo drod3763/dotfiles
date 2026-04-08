@@ -5,7 +5,7 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2025-12-15T22:40:14.631Z"
+    "lastUpdated": "2026-04-06T18:04:38.997Z"
   },
   "anthropic-agent-skills": {
     "source": {
@@ -13,6 +13,14 @@
       "repo": "anthropics/skills"
     },
     "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/anthropic-agent-skills",
-    "lastUpdated": "2026-02-06T23:40:47.722Z"
+    "lastUpdated": "2026-04-06T18:04:36.268Z"
+  },
+  "karpathy-skills": {
+    "source": {
+      "source": "github",
+      "repo": "forrestchang/andrej-karpathy-skills"
+    },
+    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/karpathy-skills",
+    "lastUpdated": "2026-04-06T18:04:40.264Z"
   }
 }

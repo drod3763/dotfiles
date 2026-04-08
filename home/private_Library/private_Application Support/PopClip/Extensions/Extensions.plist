@@ -28,21 +28,21 @@
 			<key>Enabled</key>
 			<true/>
 			<key>Extension Identifier</key>
-			<string>com.pilotmoon.popclip.extension.pasteplain</string>
-			<key>Extension Name</key>
-			<string>Paste =</string>
-			<key>Package Name</key>
-			<string>PasteAndMatch.popclipext</string>
-		</dict>
-		<dict>
-			<key>Enabled</key>
-			<true/>
-			<key>Extension Identifier</key>
 			<string>com.pilotmoon.popclip.extension.sort</string>
 			<key>Extension Name</key>
 			<string>Sort</string>
 			<key>Package Name</key>
 			<string>Sort.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.pasteplain</string>
+			<key>Extension Name</key>
+			<string>Paste =</string>
+			<key>Package Name</key>
+			<string>PasteAndMatch.popclipext</string>
 		</dict>
 		<dict>
 			<key>Enabled</key>
@@ -88,16 +88,6 @@
 			<key>Enabled</key>
 			<true/>
 			<key>Extension Identifier</key>
-			<string>com.pilotmoon.popclip.extension.kagi</string>
-			<key>Extension Name</key>
-			<string>Kagi</string>
-			<key>Package Name</key>
-			<string>Kagi.popclipext</string>
-		</dict>
-		<dict>
-			<key>Enabled</key>
-			<true/>
-			<key>Extension Identifier</key>
 			<string>com.pilotmoon.popclip.extension.pasteandenter</string>
 			<key>Extension Name</key>
 			<string>Paste + ↵</string>
@@ -108,11 +98,11 @@
 			<key>Enabled</key>
 			<true/>
 			<key>Extension Identifier</key>
-			<string>com.pilotmoon.popclip.extension.markdown-to-rtf</string>
+			<string>com.pilotmoon.popclip.extension.kagi</string>
 			<key>Extension Name</key>
-			<string>Markdown to RTF</string>
+			<string>Kagi</string>
 			<key>Package Name</key>
-			<string>MarkdownToRTF.popclipext</string>
+			<string>Kagi.popclipext</string>
 		</dict>
 		<dict>
 			<key>Enabled</key>
@@ -123,6 +113,16 @@
 			<string>Reverse</string>
 			<key>Package Name</key>
 			<string>Reverse.popclipext</string>
+		</dict>
+		<dict>
+			<key>Enabled</key>
+			<true/>
+			<key>Extension Identifier</key>
+			<string>com.pilotmoon.popclip.extension.markdown-to-rtf</string>
+			<key>Extension Name</key>
+			<string>Markdown to RTF</string>
+			<key>Package Name</key>
+			<string>MarkdownToRTF.popclipext</string>
 		</dict>
 		<dict>
 			<key>Enabled</key>

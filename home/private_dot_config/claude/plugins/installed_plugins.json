@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "plugins": {
+    "skill-creator@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/derick.rodriguez/.config/claude/plugins/cache/claude-plugins-official/skill-creator/104d39be10b7",
+        "version": "104d39be10b7",
+        "installedAt": "2026-03-05T18:20:53.106Z",
+        "lastUpdated": "2026-04-06T18:04:40.278Z",
+        "gitCommitSha": "55b58ec6e5649104f926ba7558b567dc8d33c5ff"
+      }
+    ],
+    "andrej-karpathy-skills@karpathy-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/derick.rodriguez/.config/claude/plugins/cache/karpathy-skills/andrej-karpathy-skills/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-03-07T00:37:07.662Z",
+        "lastUpdated": "2026-03-07T00:37:07.662Z",
+        "gitCommitSha": "aa4467f0b33e1e80d11c7c043d4b27e7c79a73a3"
+      }
+    ],
+    "telegram@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/derick.rodriguez/.config/claude/plugins/cache/claude-plugins-official/telegram/0.0.4",
+        "version": "0.0.4",
+        "installedAt": "2026-03-20T23:15:25.586Z",
+        "lastUpdated": "2026-04-06T18:04:40.272Z",
+        "gitCommitSha": "da61886c07a4773f647b6b277e4efdfb436728cc"
+      }
+    ],
+    "imessage@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/derick.rodriguez/.config/claude/plugins/cache/claude-plugins-official/imessage/0.1.0",
+        "version": "0.1.0",
+        "installedAt": "2026-04-06T18:04:58.261Z",
+        "lastUpdated": "2026-04-06T18:04:58.261Z",
+        "gitCommitSha": "104d39be10b7b1380b2ae23a387a11a297b599c3"
+      }
+    ],
+    "slack@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/derick.rodriguez/.config/claude/plugins/cache/claude-plugins-official/slack/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-04-06T19:07:03.385Z",
+        "lastUpdated": "2026-04-06T19:07:03.385Z",
+        "gitCommitSha": "7b9458950d38bb01ddb48b669f9fa89bcdfd98b8"
+      }
+    ]
+  }
+}

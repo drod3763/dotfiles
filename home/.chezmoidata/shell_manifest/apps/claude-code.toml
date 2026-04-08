@@ -9,7 +9,7 @@ config_file_locations = [".claude", ".config/claude"]
 priority = 235
 
 [shell_manifest.entries.claude-code.rules]
-when_tool = "claude"
+when_tools_any = ["claude", "claude-code"]
 
 [shell_manifest.entries.claude-code.functions.claudebr]
 kind = "literal"
@@ -44,3 +44,7 @@ claudebr() {
 [shell_manifest.entries.claude-code.exports.CLAUDE_CONFIG_DIR]
 kind = "literal"
 value = "${XDG_CONFIG_HOME}/claude"
+
+[shell_manifest.entries.claude-code.exports.CLAUDE_CODE_NO_FLICKER]
+kind = "literal"
+value = "1"

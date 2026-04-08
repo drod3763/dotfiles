@@ -13,21 +13,35 @@ pgadmin() {
   local namespace="subscription-management"
   local local_port="${1:-6001}"
   local remote_port="${2:-5000}"
+  local context
   local pods
   local pod
 
+  context="$(kubectl config current-context 2>/dev/null || true)"
+  if [[ -n "${context:-}" ]]; then
+    echo "Using kubectl context: ${context}"
+  fi
+
+  if ! kubectl --request-timeout=8s get --raw=/readyz >/dev/null 2>&1; then
+    echo -e "\\033[0;31mKubernetes API is unreachable. Re-auth Zscaler/VPN and AWS (loginarcussu), then retry.\\033[0m"
+    return 1
+  fi
+
   if ! pods=$(kubectl get pods -n "$namespace" --field-selector=status.phase=Running --no-headers -o custom-columns=":metadata.name" 2>/dev/null); then
-    echo -e "\\033[0;31mUnable to list pods in ${namespace}. Check AWS auth/context.\\033[0m"
+    echo -e "\\033[0;31mUnable to list pods in ${namespace}. Check AWS auth/context (loginarcussu) and your current context.\\033[0m"
     return 1
   fi
 
   pod=$(printf '%s\n' "$pods" | awk 'tolower($0) ~ /pgadmin/ { print; exit }')
 
-  if [ -z "$pod" ]; then
-    echo -e "\\033[0;31mNo pgadmin pods found.\\033[0m"
+  if [[ -z "$pod" ]]; then
+    echo -e "\\033[0;31mNo running pgadmin pods found in ${namespace}. Try: kubectl get pods -n ${namespace} | grep -i pgadmin\\033[0m"
     return 1
   fi
 
-  kubectl port-forward "$pod" "${local_port}:${remote_port}" -n "$namespace"
+  if ! kubectl port-forward "$pod" "${local_port}:${remote_port}" -n "$namespace"; then
+    echo -e "\\033[0;31mPort-forward failed. Ensure local port ${local_port} is free or try: pgadmin $((local_port + 1)) ${remote_port}\\033[0m"
+    return 1
+  fi
 }
 """
