@@ -59,7 +59,6 @@
   "enabledPlugins": {
     "skill-creator@claude-plugins-official": true,
     "andrej-karpathy-skills@karpathy-skills": true,
-    "telegram@claude-plugins-official": true,
     "imessage@claude-plugins-official": true,
     "slack@claude-plugins-official": true
   },

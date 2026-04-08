@@ -21,16 +21,6 @@
         "gitCommitSha": "aa4467f0b33e1e80d11c7c043d4b27e7c79a73a3"
       }
     ],
-    "telegram@claude-plugins-official": [
-      {
-        "scope": "user",
-        "installPath": "/Users/derick.rodriguez/.config/claude/plugins/cache/claude-plugins-official/telegram/0.0.4",
-        "version": "0.0.4",
-        "installedAt": "2026-03-20T23:15:25.586Z",
-        "lastUpdated": "2026-04-06T18:04:40.272Z",
-        "gitCommitSha": "da61886c07a4773f647b6b277e4efdfb436728cc"
-      }
-    ],
     "imessage@claude-plugins-official": [
       {
         "scope": "user",
