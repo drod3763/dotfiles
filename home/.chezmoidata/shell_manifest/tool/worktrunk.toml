@@ -1,0 +1,15 @@
+[package_catalog.packages."worktrunk"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "worktrunk"
+
+[shell_manifest.entries.worktrunk-zsh]
+priority = 336
+
+[shell_manifest.entries.worktrunk-zsh.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.worktrunk-zsh.init.worktrunk]
+kind = "literal"
+value = "if command -v wt >/dev/null 2>&1; then eval \"$(command wt config shell init zsh)\"; fi"
