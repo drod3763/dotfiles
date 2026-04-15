@@ -1,0 +1,23 @@
+{{- $packaging := .onepassword.items.packaging_token -}}
+{{- $sourceKey := includeTemplate "onepassword_field_label.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "label" $packaging.fields.source_key_label) -}}
+{{- $sourceURL := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.nuget_source_url) -}}
+{{- $username := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.username) -}}
+{{- $password := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.credential) -}}
+{{- $credentialNodeName := $sourceKey | replace " " "_x0020_" -}}
+{{- $sourceKeyXML := $sourceKey | replace "&" "&amp;" | replace "\"" "&quot;" | replace "<" "&lt;" | replace ">" "&gt;" -}}
+{{- $sourceURLXML := $sourceURL | replace "&" "&amp;" | replace "\"" "&quot;" | replace "<" "&lt;" | replace ">" "&gt;" -}}
+{{- $usernameXML := $username | replace "&" "&amp;" | replace "\"" "&quot;" | replace "<" "&lt;" | replace ">" "&gt;" -}}
+{{- $passwordXML := $password | replace "&" "&amp;" | replace "\"" "&quot;" | replace "<" "&lt;" | replace ">" "&gt;" -}}
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="{{ $sourceKeyXML }}" value="{{ $sourceURLXML }}" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+  </packageSources>
+  <packageSourceCredentials>
+    <{{ $credentialNodeName }}>
+      <add key="Username" value="{{ $usernameXML }}" />
+      <add key="ClearTextPassword" value="{{ $passwordXML }}" />
+    </{{ $credentialNodeName }}>
+  </packageSourceCredentials>
+</configuration>

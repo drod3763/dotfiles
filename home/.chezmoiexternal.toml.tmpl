@@ -23,7 +23,6 @@
 {{ $dropbox := .onepassword.items.dropbox -}}
 ["Library/Fonts/"]
     type = "archive"
-    exact = true
     url = {{- includeTemplate "onepassword_url_label.tmpl" (dict "item" $dropbox.item "vault" $dropbox.vault "label" "private font download") | quote }}
     include = ['**/*.otf', '**/*.ttf']
 {{ end -}}
