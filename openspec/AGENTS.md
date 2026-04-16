@@ -5,6 +5,7 @@ Instructions for AI coding assistants using OpenSpec for spec-driven development
 ## TL;DR Quick Checklist
 
 Use `mise exec -- openspec ...` for OpenSpec commands in this repo.
+Check `.agent/workflows/openspec-*.md` when present for repo-specific proposal, apply, and archive guidance.
 
 - Search existing work: `mise exec -- openspec spec list --long`, `mise exec -- openspec list` (use `rg` only for full-text search)
 - Decide scope: new capability vs modify existing capability
@@ -82,6 +83,7 @@ After deployment, create separate PR to:
 - [ ] Read relevant specs in `specs/[capability]/spec.md`
 - [ ] Check pending changes in `changes/` for conflicts
 - [ ] Read `openspec/project.md` for conventions
+- [ ] Read matching `.agent/workflows/openspec-*.md` guidance when the repo provides it
 - [ ] Run `mise exec -- openspec list` to see active changes
 - [ ] Run `mise exec -- openspec list --specs` to see existing capabilities
 

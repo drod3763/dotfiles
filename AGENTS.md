@@ -30,13 +30,13 @@ chezmoi apply
 
 ```bash
 # Validate specific template
-chezmoi execute-template home/dot_zshrc.tmpl
+chezmoi execute-template < home/dot_zshrc.tmpl
 
 # Check specific shell script
-nix run .#shellcheck home/.chezmoiscripts/macOS/10-setup.sh
+nix run .#shellcheck -- home/.chezmoiscripts/macOS/run_onchange_before_install-packages.sh.tmpl
 
 # Format specific file
-nix run .#treefmt -- --stdin home/dot_zshrc.tmpl
+nix run .#treefmt -- home/dot_zshrc.tmpl
 ```
 
 ### Development Workflow
@@ -75,7 +75,7 @@ set -euo pipefail  # Always use strict mode
 **Syntax**: Standard Go template syntax with chezmoi functions
 **Variables**: Use `{{ .variable }}` for chezmoi variables
 **Logic**: `{{ if eq .os "darwin" }}...{{ end }}` for platform detection
-**Includes**: Use `{{- template "partials/alias" . -}}` for reusability
+**Includes**: Use `{{- template "aliases.tmpl" . -}}` for reusability
 **Spacing**: Remove extra whitespace with `{{-` and `-}}`
 
 ### File Naming Conventions
@@ -115,18 +115,18 @@ set -euo pipefail  # Always use strict mode
 ### Template Includes
 
 ```go
-{{- template "partials/aliases" . -}}
-{{- template "partials/functions" . -}}
-{{- template "partials/path" . -}}
-{{- template "partials/exports" . -}}
+{{- template "aliases.tmpl" . -}}
+{{- template "functions.tmpl" . -}}
+{{- template "path.tmpl" . -}}
+{{- template "exports.tmpl" . -}}
 ```
 
 ### Shell Script Sourcing
 
 ```bash
-if [ -f "$HOME/.config/aliases" ]; then
-    # shellcheck source=/dev/null
-    source "$HOME/.config/aliases"
+if [[ -f "${HOME}/.config/aliases" ]]; then
+  # shellcheck source=/dev/null
+  source "${HOME}/.config/aliases"
 fi
 ```
 
@@ -153,6 +153,12 @@ fi
 - Adapt paths and configurations for Linux filesystem hierarchy
 - Consider different desktop environments
 
+### Windows
+
+- Keep PowerShell hooks under `home/.chezmoiscripts/windows/`
+- Prefer native PowerShell patterns for Windows setup/remove flows
+- Keep Windows-specific logic out of shared shell templates
+
 ## OpenSpec Integration
 
 - All changes should follow spec-driven development
@@ -165,8 +171,10 @@ fi
 
 - `home/` - Main dotfiles directory
 - `home/.chezmoiscripts/` - Platform-specific setup scripts
+- `home/.chezmoidata/` - Domain-scoped template data and package manifests
 - `home/.chezmoitemplates/` - Reusable template partials
 - `home/private_*` - Restricted permission files
+- `.agent/workflows/` - Repository-specific OpenSpec helper workflows
 - `openspec/` - Specifications and change proposals
 - `flake.nix` - Nix flakes configuration
 

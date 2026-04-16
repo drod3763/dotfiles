@@ -62,6 +62,7 @@ The installation script respects the following environment variables:
 
 ## Features
 
+- **Cross-Platform Structure:** OS-specific hooks and templates live under `home/.chezmoiscripts/{macOS,windows,linux}`.
 - **macOS Configuration:** Automates system preferences (Finder, Dock, Safari, etc.).
 - **Package Management:** Installs Homebrew packages, casks, and Mac App Store apps (via `mas`).
 - **Sleep Prevention:** Uses `caffeinate` during installation to prevent sleep interruptions.
@@ -86,10 +87,19 @@ Configured formatters include:
 
 ## Testing
 
-Shell script logic tests use `bats-core` with CLI mocks.
+Shell script logic and rendered-template checks use `bats-core` with CLI mocks.
 
 - Run test suite: `scripts/run_bats_tests.sh`
 - Test files: `tests/bats/**/*.bats`
+- Rendered shell checks: `tests/bats/scripts/check_rendered_shell_templates.bats`
+
+## OpenSpec
+
+Proposal-driven changes live under `openspec/`, with repo-specific helper workflows under `.agent/workflows/`.
+
+- List active changes: `mise exec -- openspec list`
+- List current specs: `mise exec -- openspec spec list --long`
+- Validate a change or spec: `mise exec -- openspec validate <item> --strict`
 
 ## Template Data Layout
 
