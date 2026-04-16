@@ -53,20 +53,42 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bun x ccusage statusline",
+    "command": "bash /Users/derick.rodriguez/.config/claude/statusline.sh",
     "padding": 0
   },
   "enabledPlugins": {
     "skill-creator@claude-plugins-official": true,
     "andrej-karpathy-skills@karpathy-skills": true,
+    "telegram@claude-plugins-official": true,
     "imessage@claude-plugins-official": true,
-    "slack@claude-plugins-official": true
+    "slack@claude-plugins-official": true,
+    "mcp-server-dev@claude-plugins-official": true,
+    "caveman@caveman": true,
+    "worktrunk@worktrunk": true
   },
   "extraKnownMarketplaces": {
     "karpathy-skills": {
       "source": {
         "source": "github",
         "repo": "forrestchang/andrej-karpathy-skills"
+      }
+    },
+    "agentic-tools": {
+      "source": {
+        "source": "github",
+        "repo": "drod3763/agentic-tools"
+      }
+    },
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "worktrunk": {
+      "source": {
+        "source": "github",
+        "repo": "max-sixty/worktrunk"
       }
     }
   }

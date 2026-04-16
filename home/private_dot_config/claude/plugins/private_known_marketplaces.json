@@ -22,5 +22,29 @@
     },
     "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/karpathy-skills",
     "lastUpdated": "2026-04-06T18:04:40.264Z"
+  },
+  "agentic-tools": {
+    "source": {
+      "source": "github",
+      "repo": "drod3763/agentic-tools"
+    },
+    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/agentic-tools",
+    "lastUpdated": "2026-04-10T23:33:36.068Z"
+  },
+  "caveman": {
+    "source": {
+      "source": "github",
+      "repo": "JuliusBrussee/caveman"
+    },
+    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/caveman",
+    "lastUpdated": "2026-04-13T19:14:20.614Z"
+  },
+  "worktrunk": {
+    "source": {
+      "source": "github",
+      "repo": "max-sixty/worktrunk"
+    },
+    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/worktrunk",
+    "lastUpdated": "2026-04-14T22:21:54.686Z"
   }
 }
