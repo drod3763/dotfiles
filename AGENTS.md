@@ -4,6 +4,16 @@
 
 This is a sophisticated chezmoi-managed dotfiles repository with cross-platform support, templating, encryption, and spec-driven development via OpenSpec.
 
+## Shell Manifest First
+
+The shell manifest under `home/.chezmoidata/shell_manifest/` is central to this repository.
+
+- Treat `shell_manifest/**/*.toml` as the primary source of truth for shell functions, aliases, exports, and init snippets.
+- When tracing a shell command or function, check the shell manifest data before assuming it lives in `zshrc`, `functions.tmpl`, or rendered dotfiles.
+- `home/.chezmoitemplates/{functions,aliases,exports,init}.tmpl` are render layers, not the canonical source of most shell behavior.
+- `home/private_dot_config/zsh/dot_zshrc.tmpl` and `home/dot_bashrc.tmpl` source rendered shell sections; they usually do not contain the real function definitions.
+- Tool-specific shell behavior is commonly defined in `home/.chezmoidata/shell_manifest/tool/*.toml`.
+
 ## Build/Test/Lint Commands
 
 ### Primary Commands
@@ -24,6 +34,28 @@ chezmoi diff
 # Apply changes safely
 chezmoi apply --dry-run
 chezmoi apply
+```
+
+### Common Chezmoi Commands
+
+```bash
+# Preview pending changes
+chezmoi diff
+
+# Simulate apply without writing files
+chezmoi apply --dry-run
+
+# Render and copy managed files into $HOME
+chezmoi apply
+
+# Show managed files that differ from source state
+chezmoi status
+
+# Edit the source template for a destination file
+chezmoi edit ~/.zshrc
+
+# Inspect full template data
+chezmoi data
 ```
 
 ### Single Test Commands
@@ -172,11 +204,21 @@ fi
 - `home/` - Main dotfiles directory
 - `home/.chezmoiscripts/` - Platform-specific setup scripts
 - `home/.chezmoidata/` - Domain-scoped template data and package manifests
+- `home/.chezmoidata/shell_manifest/` - Canonical shell behavior definitions for aliases, exports, functions, and init
 - `home/.chezmoitemplates/` - Reusable template partials
 - `home/private_*` - Restricted permission files
 - `.agent/workflows/` - Repository-specific OpenSpec helper workflows
 - `openspec/` - Specifications and change proposals
 - `flake.nix` - Nix flakes configuration
+
+## Destination Mapping
+
+- Files under `home/` render into `$HOME`
+- `home/dot_zshrc.tmpl` maps to `~/.zshrc`
+- `home/dot_bashrc.tmpl` maps to `~/.bashrc`
+- `home/private_dot_config/...` maps to `~/.config/...`
+- `home/private_Library/...` maps to `~/Library/...`
+- `home/.chezmoiscripts/...` are chezmoi lifecycle hooks, not ordinary copied config files
 
 ## Common Patterns
 
@@ -187,6 +229,14 @@ fi
 3. Update `.chezmoiexternal.toml.tmpl` if external file
 4. Add platform-specific logic if needed
 5. Test with `chezmoi diff` before applying
+
+### Tracing Shell Behavior
+
+1. Start with `home/.chezmoidata/shell_manifest/**/*.toml`
+2. Check the relevant entry under `shell_manifest.entries.*`
+3. Use `home/.chezmoitemplates/shell_manifest_renderer.tmpl` to understand how entries are merged and filtered
+4. Use `home/.chezmoitemplates/{functions,aliases,exports,init}.tmpl` to see where the rendered sections come from
+5. Only then inspect `dot_zshrc.tmpl`, `dot_bashrc.tmpl`, or rendered files for sourcing behavior
 
 ### Platform Detection
 

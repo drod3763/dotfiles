@@ -29,6 +29,16 @@ cd ~/.local/share/chezmoi
 ./install.sh
 ```
 
+## Common Chezmoi Commands
+
+- `chezmoi diff` - preview changes without applying them
+- `chezmoi apply --dry-run` - simulate an apply run safely
+- `chezmoi apply` - copy rendered files into the home directory
+- `chezmoi status` - show managed files that differ from source state
+- `chezmoi edit ~/.zshrc` - edit the source template for a managed destination file
+- `chezmoi execute-template < home/.chezmoitemplates/functions.tmpl` - inspect rendered template output
+- `chezmoi data` - inspect the full template data context used during rendering
+
 ## Options & Environment Variables
 
 ### Verbose Installation
@@ -116,6 +126,30 @@ Schema reference and onboarding guide:
 - `shell_manifest/**/*.toml` - split shell behavior manifest files (aliases, exports, functions, init)
 - `mcp.toml` - shared MCP server definitions
 - `onepassword.toml` - centralized item/vault mappings and field identifiers
+
+## Destination Paths
+
+Chezmoi source files in this repo are rendered and copied into your home directory.
+
+- `home/dot_zshrc.tmpl` becomes `~/.zshrc`
+- `home/dot_bashrc.tmpl` becomes `~/.bashrc`
+- `home/private_dot_config/...` becomes `~/.config/...`
+- `home/private_Library/...` becomes `~/Library/...`
+- `home/.chezmoiscripts/...` are lifecycle scripts executed by chezmoi during apply, not copied as normal config files
+
+When tracing behavior, check both the source path in this repo and the destination path under `$HOME`.
+
+## Shell Manifest Architecture
+
+The shell manifest under `home/.chezmoidata/shell_manifest/` is the primary source of truth for shell behavior in this repo.
+
+- Shell functions, aliases, exports, and init snippets are generally defined in `shell_manifest/**/*.toml`, not directly in `zshrc` or bash rc files.
+- `home/.chezmoitemplates/shell_manifest_renderer.tmpl` merges active manifest entries based on rules like shell, OS, installed tools, and personal/work context.
+- `home/.chezmoitemplates/{functions,aliases,exports,init}.tmpl` render those merged entries into shell section files.
+- `home/private_dot_config/zsh/dot_zshrc.tmpl` and `home/dot_bashrc.tmpl` primarily source those rendered sections.
+- Tool-owned shell functions are commonly defined in `home/.chezmoidata/shell_manifest/tool/*.toml`.
+
+If you need to trace a shell function or alias, start with `home/.chezmoidata/shell_manifest/**/*.toml`, then follow the render path through `shell_manifest_renderer.tmpl` and the section templates.
 
 ## Secrets and 1Password
 
