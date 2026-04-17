@@ -64,7 +64,9 @@
     "slack@claude-plugins-official": true,
     "mcp-server-dev@claude-plugins-official": true,
     "caveman@caveman": true,
-    "worktrunk@worktrunk": true
+    "worktrunk@worktrunk": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "csharp-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "karpathy-skills": {
@@ -91,5 +93,6 @@
         "repo": "max-sixty/worktrunk"
       }
     }
-  }
+  },
+  "effortLevel": "high"
 }
