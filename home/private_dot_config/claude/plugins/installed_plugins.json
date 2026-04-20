@@ -100,6 +100,16 @@
         "lastUpdated": "2026-04-17T20:21:05.183Z",
         "gitCommitSha": "104d39be10b7b1380b2ae23a387a11a297b599c3"
       }
+    ],
+    "sonarqube-agent-plugins@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/derick.rodriguez/.config/claude/plugins/cache/claude-plugins-official/sonarqube-agent-plugins/1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-04-20T17:28:47.393Z",
+        "lastUpdated": "2026-04-20T17:28:47.393Z",
+        "gitCommitSha": "0cae644cee9318e6245b62ca779abdc60e6daa49"
+      }
     ]
   }
 }

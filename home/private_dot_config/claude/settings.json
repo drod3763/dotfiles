@@ -66,7 +66,8 @@
     "caveman@caveman": true,
     "worktrunk@worktrunk": true,
     "typescript-lsp@claude-plugins-official": true,
-    "csharp-lsp@claude-plugins-official": true
+    "csharp-lsp@claude-plugins-official": true,
+    "sonarqube-agent-plugins@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "karpathy-skills": {
