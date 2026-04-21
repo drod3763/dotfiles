@@ -189,6 +189,7 @@ cd_() {
 kind = "literal"
 value = '''
 cd() {
+  [ "$1" = "--" ] && shift
   local dest="${@:-"$HOME"}"
   if [ "$dest" = "_" ]; then
     cd_ "$dest"
@@ -197,6 +198,6 @@ cd() {
   if [ -f "$dest" ]; then
     dest=${dest:h}
   fi
-  builtin cd "$dest"
+  builtin cd -- "$dest"
 }
 '''
