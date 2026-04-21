@@ -1,9 +1,4 @@
 cache=${XDG_CACHE_HOME}/npm
-{{- if eq .chezmoi.os "darwin" }}
-tmp=${TMPDIR}npm
-{{- else }}
-tmp=${XDG_RUNTIME_DIR}/npm
-{{- end }}
 init-module=${XDG_CONFIG_HOME}/npm/config/npm-init.js
 min-release-age=7 # days
 ignore-scripts=true
@@ -13,6 +8,9 @@ ignore-scripts=true
 {{- $username := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.username) -}}
 {{- $password := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.credential) -}}
 {{- $email := includeTemplate "onepassword_field.tmpl" (dict "item" $workDomain.item "vault" $workDomain.vault "field_id" $workDomain.fields.username) -}}
+registry=https://registry.npmjs.org/
+@mindbody:registry=https:{{ $registryURL -}}registry/
+@mbx:registry=https:{{ $registryURL -}}registry/
 ; begin auth token
 {{ $registryURL -}}registry/:username={{- $username }}
 {{ $registryURL -}}registry/:_password={{- b64enc $password }}
