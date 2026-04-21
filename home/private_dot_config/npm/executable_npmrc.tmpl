@@ -1,15 +1,14 @@
 cache=${XDG_CACHE_HOME}/npm
 init-module=${XDG_CONFIG_HOME}/npm/config/npm-init.js
-min-release-age=7 # days
-ignore-scripts=true
 {{ $packaging := .onepassword.items.packaging_token -}}
 {{- $workDomain := .onepassword.items.work_domain -}}
 {{- $registryURL := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.npm_registry_url) -}}
 {{- $username := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.username) -}}
 {{- $password := includeTemplate "onepassword_field.tmpl" (dict "item" $packaging.item "vault" $packaging.vault "field_id" $packaging.fields.credential) -}}
 {{- $email := includeTemplate "onepassword_field.tmpl" (dict "item" $workDomain.item "vault" $workDomain.vault "field_id" $workDomain.fields.username) -}}
+ignore-scripts=true
 registry=https://registry.npmjs.org/
-@mindbody:registry=https:{{ $registryURL -}}registry/
+@{{ $username -}}:registry=https:{{ $registryURL -}}registry/
 @mbx:registry=https:{{ $registryURL -}}registry/
 ; begin auth token
 {{ $registryURL -}}registry/:username={{- $username }}
