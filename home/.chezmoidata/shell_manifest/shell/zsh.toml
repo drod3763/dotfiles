@@ -4,6 +4,43 @@ priority = 180
 [shell_manifest.entries.zsh-core.rules]
 when_shell = ["zsh"]
 
+[shell_manifest.entries.zsh-history-filter]
+priority = 185
+
+[shell_manifest.entries.zsh-history-filter.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zsh-history-filter.init.zshaddhistory]
+kind = "literal"
+value = '''
+zshaddhistory() {
+  emulate -L zsh
+
+  local line="${1%%$'\n'}"
+
+  [[ "${line}" == *OPENAI_API_KEY=* ]] && return 1
+  [[ "${line}" == *ANTHROPIC_API_KEY=* ]] && return 1
+  [[ "${line}" == *AWS_SECRET_ACCESS_KEY=* ]] && return 1
+  [[ "${line}" == *GITHUB_TOKEN=* ]] && return 1
+  [[ "${line}" == *HOMEBREW_GITHUB_API_TOKEN=* ]] && return 1
+
+  [[ "${line}" == *--password* ]] && return 1
+  [[ "${line}" == *--token* ]] && return 1
+  [[ "${line}" == *Authorization:\ Bearer\ * ]] && return 1
+  [[ "${line}" == *authorization:\ bearer\ * ]] && return 1
+
+  [[ "${line}" == gh\ auth\ login*--with-token* ]] && return 1
+  [[ "${line}" == op\ item\ get* ]] && return 1
+  [[ "${line}" == op\ read* ]] && return 1
+  [[ "${line}" == aws\ configure\ set*aws_secret_access_key* ]] && return 1
+  [[ "${line}" == aws\ secretsmanager\ create-secret* ]] && return 1
+  [[ "${line}" == aws\ secretsmanager\ put-secret-value* ]] && return 1
+  [[ "${line}" == curl*Authorization:\ Bearer\ * ]] && return 1
+
+  return 0
+}
+'''
+
 [shell_manifest.entries.zsh-core.init.bashcompinit]
 kind = "literal"
 value = "autoload -Uz bashcompinit && bashcompinit"
