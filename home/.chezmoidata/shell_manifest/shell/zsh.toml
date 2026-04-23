@@ -23,18 +23,62 @@ zshaddhistory() {
   [[ "${line}" == *AWS_SECRET_ACCESS_KEY=* ]] && return 1
   [[ "${line}" == *GITHUB_TOKEN=* ]] && return 1
   [[ "${line}" == *HOMEBREW_GITHUB_API_TOKEN=* ]] && return 1
+  [[ "${line}" == *NEW_RELIC_API_KEY=* ]] && return 1
+  [[ "${line}" == *MINDBODY_CLIENT_SECRET=* ]] && return 1
+
+  [[ "${line:l}" == *api_key=* ]] && return 1
+  [[ "${line:l}" == *apikey=* ]] && return 1
+  [[ "${line:l}" == *access_token=* ]] && return 1
+  [[ "${line:l}" == *accesstoken=* ]] && return 1
+  [[ "${line:l}" == *refresh_token=* ]] && return 1
+  [[ "${line:l}" == *refreshtoken=* ]] && return 1
+  [[ "${line:l}" == *session_token=* ]] && return 1
+  [[ "${line:l}" == *sessiontoken=* ]] && return 1
+  [[ "${line:l}" == *secret_key=* ]] && return 1
+  [[ "${line:l}" == *secretkey=* ]] && return 1
+  [[ "${line:l}" == *private_key=* ]] && return 1
+  [[ "${line:l}" == *privatekey=* ]] && return 1
+  [[ "${line:l}" == *client_id=* ]] && return 1
+  [[ "${line:l}" == *client-id=* ]] && return 1
+  [[ "${line:l}" == *clientid=* ]] && return 1
+  [[ "${line:l}" == *client_secret=* ]] && return 1
+  [[ "${line:l}" == *client-secret=* ]] && return 1
+  [[ "${line:l}" == *clientsecret=* ]] && return 1
+
+  [[ "${line}" == *'"api_key":'* ]] && return 1
+  [[ "${line}" == *'"apiKey":'* ]] && return 1
+  [[ "${line}" == *'"access_token":'* ]] && return 1
+  [[ "${line}" == *'"accessToken":'* ]] && return 1
+  [[ "${line}" == *'"refresh_token":'* ]] && return 1
+  [[ "${line}" == *'"refreshToken":'* ]] && return 1
+  [[ "${line}" == *'"session_token":'* ]] && return 1
+  [[ "${line}" == *'"sessionToken":'* ]] && return 1
+  [[ "${line}" == *'"secret_key":'* ]] && return 1
+  [[ "${line}" == *'"secretKey":'* ]] && return 1
+  [[ "${line}" == *'"private_key":'* ]] && return 1
+  [[ "${line}" == *'"privateKey":'* ]] && return 1
+  [[ "${line}" == *'"client_id":'* ]] && return 1
+  [[ "${line}" == *'"clientId":'* ]] && return 1
+  [[ "${line}" == *'"client_secret":'* ]] && return 1
+  [[ "${line}" == *'"clientSecret":'* ]] && return 1
 
   [[ "${line}" == *--password* ]] && return 1
   [[ "${line}" == *--token* ]] && return 1
+  [[ "${line}" == *--secret-string* ]] && return 1
+  [[ "${line}" == *--secret-binary* ]] && return 1
   [[ "${line}" == *Authorization:\ Bearer\ * ]] && return 1
   [[ "${line}" == *authorization:\ bearer\ * ]] && return 1
+  [[ "${line:l}" == *bearer\ * ]] && return 1
+  [[ "${line}" == *BEGIN\ PRIVATE\ KEY* ]] && return 1
+  [[ "${line}" == *BEGIN\ RSA\ PRIVATE\ KEY* ]] && return 1
+  [[ "${line}" == *BEGIN\ OPENSSH\ PRIVATE\ KEY* ]] && return 1
 
   [[ "${line}" == gh\ auth\ login*--with-token* ]] && return 1
   [[ "${line}" == op\ item\ get* ]] && return 1
   [[ "${line}" == op\ read* ]] && return 1
   [[ "${line}" == aws\ configure\ set*aws_secret_access_key* ]] && return 1
-  [[ "${line}" == aws\ secretsmanager\ create-secret* ]] && return 1
-  [[ "${line}" == aws\ secretsmanager\ put-secret-value* ]] && return 1
+  [[ "${line:l}" == aws\ *secretsmanager\ *create-secret* ]] && return 1
+  [[ "${line:l}" == aws\ *secretsmanager\ *put-secret-value* ]] && return 1
   [[ "${line}" == curl*Authorization:\ Bearer\ * ]] && return 1
 
   return 0
