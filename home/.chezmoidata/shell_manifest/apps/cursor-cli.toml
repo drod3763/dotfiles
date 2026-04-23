@@ -1,6 +1,0 @@
-[package_catalog.packages."cursor-cli"]
-os = "mac"
-type = "work"
-target_class = "all"
-brew_cask_name = "cursor-cli"
-config_file_locations = [".cursor"]

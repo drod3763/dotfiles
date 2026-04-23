@@ -1,5 +1,0 @@
-[package_catalog.packages."sonarqube-cli"]
-os = "mac"
-type = "work"
-target_class = "all"
-brew_formula_name = "sonar-scanner"

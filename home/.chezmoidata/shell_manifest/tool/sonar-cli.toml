@@ -1,0 +1,5 @@
+[package_catalog.packages."sonar-cli"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "playlist-tech/tap/sonar-cli"
