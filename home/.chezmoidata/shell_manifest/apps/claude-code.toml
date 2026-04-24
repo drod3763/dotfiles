@@ -1,8 +1,8 @@
-[package_catalog.packages."claude-code"]
+[package_catalog.packages."claude-code@latest"]
 os = "mac"
 type = "common"
 target_class = "all"
-brew_cask_name = "claude-code"
+brew_cask_name = "claude-code@latest"
 config_file_locations = [".claude", ".config/claude"]
 
 [shell_manifest.entries.claude-code]
