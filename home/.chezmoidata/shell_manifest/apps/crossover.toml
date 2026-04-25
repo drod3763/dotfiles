@@ -1,0 +1,5 @@
+[package_catalog.packages."crossover"]
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_cask_name = "crossover"
