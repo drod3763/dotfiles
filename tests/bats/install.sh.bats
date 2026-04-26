@@ -74,6 +74,27 @@ if [[ "${1:-}" == "-v" ]]; then
   exit 0
 fi
 
+"$@"
+EOF
+
+  cat > "${MOCK_BIN_DIR}/arch" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "-x86_64" ]]; then
+  if [[ -n "${MOCK_ROSETTA_AVAILABLE:-}" ]]; then
+    exit 0
+  fi
+  exit 1
+fi
+
+exit 0
+EOF
+
+  cat > "${MOCK_BIN_DIR}/softwareupdate" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> "${MOCK_SOFTWAREUPDATE_CALLS_FILE:?}"
 exit 0
 EOF
 
@@ -114,6 +135,17 @@ fi
 
 if [[ "${1:-}" == "--install" ]]; then
   exit 0
+fi
+
+exit 0
+EOF
+
+  cat > "${MOCK_BIN_DIR}/sqlite3" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -n "${MOCK_FULL_DISK_ACCESS_DENIED:-}" ]]; then
+  exit 1
 fi
 
 exit 0
@@ -165,13 +197,14 @@ EOF
 exit 0
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/uname" "${MOCK_BIN_DIR}/git" "${MOCK_BIN_DIR}/chezmoi" "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/caffeinate" "${MOCK_BIN_DIR}/curl" "${MOCK_BIN_DIR}/xcode-select" "${MOCK_BIN_DIR}/sh"
+  chmod +x "${MOCK_BIN_DIR}/uname" "${MOCK_BIN_DIR}/git" "${MOCK_BIN_DIR}/chezmoi" "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/arch" "${MOCK_BIN_DIR}/softwareupdate" "${MOCK_BIN_DIR}/caffeinate" "${MOCK_BIN_DIR}/curl" "${MOCK_BIN_DIR}/xcode-select" "${MOCK_BIN_DIR}/sqlite3" "${MOCK_BIN_DIR}/sh"
 
   export MOCK_CHEZMOI_CALLS_FILE="${TEST_TMPDIR}/chezmoi.calls"
   export MOCK_BREW_CALLS_FILE="${TEST_TMPDIR}/brew.calls"
   export MOCK_GIT_CALLS_FILE="${TEST_TMPDIR}/git.calls"
   export MOCK_CAFFEINATE_CALLS_FILE="${TEST_TMPDIR}/caffeinate.calls"
   export MOCK_CURL_CALLS_FILE="${TEST_TMPDIR}/curl.calls"
+  export MOCK_SOFTWAREUPDATE_CALLS_FILE="${TEST_TMPDIR}/softwareupdate.calls"
   export MOCK_XCODE_CALLS_FILE="${TEST_TMPDIR}/xcode.calls"
   export OP_SERVICE_ACCOUNT_TOKEN="dummy-token"
   export PATH="${MOCK_BIN_DIR}:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -266,6 +299,39 @@ teardown() {
 
   [ "${status}" -eq 0 ]
   run grep -q '^--install$' "${MOCK_XCODE_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+}
+
+@test "GIVEN Darwin terminal without Full Disk Access EXPECT installer exits with guidance" {
+  export MOCK_UNAME_S="Darwin"
+  export MOCK_FULL_DISK_ACCESS_DENIED=1
+
+  run bash "${INSTALL_SCRIPT}"
+
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"Full Disk Access is required for the terminal running install.sh."* ]]
+}
+
+@test "GIVEN Darwin arm64 without Rosetta EXPECT installer installs Rosetta 2" {
+  export MOCK_UNAME_S="Darwin"
+  export MOCK_UNAME_M="arm64"
+
+  run bash "${INSTALL_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q '^--install-rosetta --agree-to-license$' "${MOCK_SOFTWAREUPDATE_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+}
+
+@test "GIVEN Darwin arm64 with Rosetta available EXPECT installer skips Rosetta install" {
+  export MOCK_UNAME_S="Darwin"
+  export MOCK_UNAME_M="arm64"
+  export MOCK_ROSETTA_AVAILABLE=1
+
+  run bash "${INSTALL_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run test ! -s "${MOCK_SOFTWAREUPDATE_CALLS_FILE}"
   [ "${status}" -eq 0 ]
 }
 

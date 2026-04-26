@@ -20,6 +20,15 @@ if [ "$(uname)" = "Darwin" ]; then
 	sudo_keepalive_pid=$!
 fi
 
+if [ "$(uname)" = "Darwin" ]; then
+	tcc_db="${HOME}/Library/Application Support/com.apple.TCC/TCC.db"
+	if sqlite3_bin="$(command -v sqlite3 2>/dev/null)" && ! "${sqlite3_bin}" "${tcc_db}" 'SELECT 1;' >/dev/null 2>&1; then
+		echo "Full Disk Access is required for the terminal running install.sh." >&2
+		echo "Grant it in System Settings > Privacy & Security > Full Disk Access, then re-run install.sh." >&2
+		exit 1
+	fi
+fi
+
 # Check and install Xcode Command Line Tools on macOS
 if [ "$(uname)" = "Darwin" ] && ! xcode-select -p >/dev/null 2>&1; then
 	echo "Installing Xcode Command Line Tools..." >&2
@@ -35,6 +44,12 @@ if [ "$(uname)" = "Darwin" ] && ! command -v git >/dev/null 2>&1; then
 		sleep 2
 	done
 	echo "Xcode Command Line Tools are now available." >&2
+fi
+
+# Install Rosetta 2 on Apple Silicon when it is not already available.
+if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "arm64" ] && ! arch -x86_64 /usr/bin/true >/dev/null 2>&1; then
+	echo "Installing Rosetta 2..." >&2
+	sudo softwareupdate --install-rosetta --agree-to-license
 fi
 
 # Configure Git with placeholder values if not configured
