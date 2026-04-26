@@ -82,7 +82,7 @@ if [[ -f "$0" ]]; then
 	script_dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 	chezmoi init --source="$script_dir"
 else
-	chezmoi init drod3763
+	chezmoi init --ssh drod3763
 fi
 
 # Determine verbosity

@@ -250,6 +250,14 @@ teardown() {
   [ "${status}" -eq 0 ]
 }
 
+@test "GIVEN install script executed from stdin EXPECT installer initializes chezmoi with SSH" {
+  run bash -s -- < "${INSTALL_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q '^init --ssh drod3763$' "${MOCK_CHEZMOI_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+}
+
 @test "GIVEN Darwin and missing xcode tools EXPECT installer runs xcode-select --install" {
   export MOCK_UNAME_S="Darwin"
   export MOCK_XCODE_MISSING=1

@@ -24,7 +24,7 @@ This will:
 If you prefer to clone the repository first or need custom options:
 
 ```bash
-git clone https://github.com/drod3763/dotfiles.git ~/.local/share/chezmoi
+git clone git@github.com:drod3763/dotfiles.git ~/.local/share/chezmoi
 cd ~/.local/share/chezmoi
 ./install.sh
 ```
