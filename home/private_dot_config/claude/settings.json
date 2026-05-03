@@ -94,5 +94,6 @@
       }
     }
   },
-  "effortLevel": "high"
+  "effortLevel": "high",
+  "theme": "dark-daltonized"
 }
