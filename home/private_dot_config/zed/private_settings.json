@@ -11,10 +11,15 @@
     "play_sound_when_agent_done": true,
     "model_parameters": []
   }, */
+  "cli_default_open_behavior": "existing_window",
   "edit_predictions": {
     "provider": "none"
   },
-  "icon_theme": "Catppuccin Frappé",
+  "icon_theme": {
+    "mode": "system",
+    "light": "Catppuccin Frappé",
+    "dark": "Catppuccin Frappé"
+  },
   "ui_font_family": "PragmataPro VF Mono Liga",
   "agent_servers": {
     "OpenCode": {
@@ -53,7 +58,11 @@
     "coloring": "indent_aware",
     "background_coloring": "indent_aware"
   },
-  "theme": "Catppuccin Frappé",
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "One Dark"
+  },
   "telemetry": {
     "diagnostics": false,
     "metrics": false
