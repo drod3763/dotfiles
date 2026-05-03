@@ -4,7 +4,7 @@
       "source": "github",
       "repo": "anthropics/claude-plugins-official"
     },
-    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/claude-plugins-official",
+    "installLocation": {{ (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/claude-plugins-official" | join "") | quote }},
     "lastUpdated": "2026-04-06T18:04:38.997Z"
   },
   "anthropic-agent-skills": {
@@ -12,7 +12,7 @@
       "source": "github",
       "repo": "anthropics/skills"
     },
-    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/anthropic-agent-skills",
+    "installLocation": {{ (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/anthropic-agent-skills" | join "") | quote }},
     "lastUpdated": "2026-04-06T18:04:36.268Z"
   },
   "karpathy-skills": {
@@ -20,7 +20,7 @@
       "source": "github",
       "repo": "forrestchang/andrej-karpathy-skills"
     },
-    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/karpathy-skills",
+    "installLocation": {{ (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/karpathy-skills" | join "") | quote }},
     "lastUpdated": "2026-04-06T18:04:40.264Z"
   },
   "agentic-tools": {
@@ -28,7 +28,7 @@
       "source": "github",
       "repo": "drod3763/agentic-tools"
     },
-    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/agentic-tools",
+    "installLocation": {{ (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/agentic-tools" | join "") | quote }},
     "lastUpdated": "2026-04-10T23:33:36.068Z"
   },
   "caveman": {
@@ -36,7 +36,7 @@
       "source": "github",
       "repo": "JuliusBrussee/caveman"
     },
-    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/caveman",
+    "installLocation": {{ (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/caveman" | join "") | quote }},
     "lastUpdated": "2026-04-13T19:14:20.614Z"
   },
   "worktrunk": {
@@ -44,7 +44,7 @@
       "source": "github",
       "repo": "max-sixty/worktrunk"
     },
-    "installLocation": "/Users/derick.rodriguez/.config/claude/plugins/marketplaces/worktrunk",
+    "installLocation": {{ (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/worktrunk" | join "") | quote }},
     "lastUpdated": "2026-04-14T22:21:54.686Z"
   }
 }
