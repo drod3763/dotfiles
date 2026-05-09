@@ -1,0 +1,129 @@
+#!/bin/bash
+set -euo pipefail
+
+current_plist="$(mktemp)"
+managed_plist="$(mktemp)"
+trap 'rm -f "${current_plist}" "${managed_plist}"' EXIT
+
+cat >"${current_plist}"
+
+cat >"${managed_plist}" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ActionsPaneHeight</key>
+	<real>432</real>
+	<key>CombinedItemOrder</key>
+	<array>
+		<string>ext-com.pilotmoon.popclip.extension.select-all</string>
+		<string>cut</string>
+		<string>copy</string>
+		<string>ext-com.pilotmoon.popclip.extension.copy-as-markdown</string>
+		<string>ext-com.pilotmoon.popclip.extension.pasteplain</string>
+		<string>ext-com.pilotmoon.popclip.extension.pasteandenter</string>
+		<string>ext-com.pilotmoon.popclip.extension.kagi</string>
+		<string>ext-com.pilotmoon.popclip.extension.readwise</string>
+		<string>openlink</string>
+		<string>revealfile</string>
+		<string>lookup</string>
+		<string>ext-com.pilotmoon.popclip.extension.quotes</string>
+		<string>ext-com.pilotmoon.popclip.extension.brackets</string>
+		<string>ext-com.pilotmoon.popclip.extension.comma-list</string>
+		<string>ext-com.pilotmoon.popclip.extension.hyphenate</string>
+		<string>ext-com.pilotmoon.popclip.extension.remove-spaces</string>
+		<string>ext-com.pilotmoon.popclip.extension.markdown-to-rtf</string>
+		<string>ext-com.pilotmoon.popclip.extension.sort</string>
+		<string>ext-com.pilotmoon.popclip.extension.reverse</string>
+		<string>ext-com.pilotmoon.popclip.extension.underscore</string>
+		<string>ext-com.pilotmoon.popclip.extension.charcount</string>
+		<string>ext-com.pilotmoon.popclip.extension.wordcount</string>
+		<string>search</string>
+		<string>paste</string>
+		<string>openmail</string>
+	</array>
+	<key>ExtensionAdded</key>
+	<true/>
+	<key>HasShownWelcome</key>
+	<true/>
+	<key>LastRunOSVersion</key>
+	<string>14.4.1</string>
+	<key>LastRunVersion</key>
+	<integer>5155</integer>
+	<key>LastUpdateInfoDate</key>
+	<date>2026-05-03T16:17:10Z</date>
+	<key>NSRequiresAquaSystemAppearance</key>
+	<false/>
+	<key>NSStatusItem Preferred Position Item-0</key>
+	<real>6042</real>
+	<key>PopEnabled</key>
+	<true/>
+	<key>PopupColor</key>
+	<string>auto</string>
+	<key>PopupUnder</key>
+	<true/>
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUHasLaunchedBefore</key>
+	<true/>
+	<key>SULastCheckTime</key>
+	<date>2026-05-03T16:17:10Z</date>
+	<key>SUUpdateGroupIdentifier</key>
+	<integer>3640685112</integer>
+	<key>TrialData</key>
+	<data>
+	YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMS
+	AAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGlCwwVFhdVJG51bGzTDQ4PEBIU
+	V05TLmtleXNaTlMub2JqZWN0c1YkY2xhc3OhEYACoROAA4AEVHVzZXMQ3dIYGRobWiRj
+	bGFzc25hbWVYJGNsYXNzZXNcTlNEaWN0aW9uYXJ5ohocWE5TT2JqZWN0CBEaJCkyN0lM
+	UVNZX2ZueYCChIaIio+RlqGqt7oAAAAAAAABAQAAAAAAAAAdAAAAAAAAAAAAAAAAAAAA
+	ww==
+	</data>
+	<key>UsageCount</key>
+	<integer>0</integer>
+	<key>enable-action-paste</key>
+	<false/>
+	<key>enable-action-search</key>
+	<false/>
+	<key>enable-action-spelling</key>
+	<false/>
+	<key>extension#com.pilotmoon.popclip.extension.pasteandenter#showIcon</key>
+	<true/>
+	<key>extension#com.pilotmoon.popclip.extension.pasteplain#showIcon</key>
+	<true/>
+	<key>extension#com.pilotmoon.popclip.extension.quotes#style-0</key>
+	<false/>
+	<key>extension#com.pilotmoon.popclip.extension.quotes#style-1</key>
+	<false/>
+	<key>extension#com.pilotmoon.popclip.extension.quotes#style-2</key>
+	<true/>
+	<key>extension#com.pilotmoon.popclip.extension.quotes#style-3</key>
+	<true/>
+	<key>extension#com.pilotmoon.popclip.extension.quotes#style-4</key>
+	<true/>
+	<key>extension#com.pilotmoon.popclip.extension.quotes#style-6</key>
+	<true/>
+</dict>
+</plist>
+PLIST
+
+timestamp="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+if [[ -s "${current_plist}" ]]; then
+  if current_last_update="$(plutil -extract LastUpdateInfoDate raw -o - "${current_plist}" 2>/dev/null)"; then
+    timestamp="${current_last_update}"
+  fi
+fi
+
+last_check_time="${timestamp}"
+if [[ -s "${current_plist}" ]]; then
+  if current_last_check="$(plutil -extract SULastCheckTime raw -o - "${current_plist}" 2>/dev/null)"; then
+    last_check_time="${current_last_check}"
+  fi
+fi
+
+plutil -replace LastUpdateInfoDate -date "${timestamp}" "${managed_plist}"
+plutil -replace SULastCheckTime -date "${last_check_time}" "${managed_plist}"
+plutil -replace UsageCount -integer 0 "${managed_plist}"
+plutil -convert binary1 -o - "${managed_plist}"
