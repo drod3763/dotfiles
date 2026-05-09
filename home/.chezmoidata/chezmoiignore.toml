@@ -3,7 +3,6 @@ base = [
   "*.deb",
   "*.tar.gz",
   "1password_settings.json",
-  ".config/claude/.claude.json",
   "functions",
   "key.txt.age",
   "install.sh",
@@ -29,21 +28,11 @@ not_linux = [
   "1password_settings.json",
 ]
 
-non_zsh_shell = [
-  ".p10k.zsh",
-  ".zshenv",
-  ".zshrc",
-]
+non_zsh_shell = [".p10k.zsh", ".zshenv", ".zshrc"]
 
-non_bash_shell = [
-  ".bashrc",
-  ".bash_profile",
-]
+non_bash_shell = [".bashrc", ".bash_profile"]
 
-not_windows = [
-  ".chezmoiscripts/windows/**",
-  "Documents",
-]
+not_windows = [".chezmoiscripts/windows/**", "Documents"]
 
 windows = [
   ".gitignore",

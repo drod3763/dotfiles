@@ -1,0 +1,30 @@
+{{/* chezmoi:modify-template */}}
+{{- $current := dict -}}
+{{- $stdin := get .chezmoi "stdin" -}}
+{{- if $stdin -}}
+  {{- $current = $stdin | fromJson -}}
+{{- end -}}
+{{- $modified := deepCopy $current -}}
+{{- $timestamp := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
+{{- $managed := dict
+  "claude-plugins-official" (dict "source" (dict "source" "github" "repo" "anthropics/claude-plugins-official") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/claude-plugins-official" | join "") "lastUpdated" "2026-04-06T18:04:38.997Z")
+  "anthropic-agent-skills" (dict "source" (dict "source" "github" "repo" "anthropics/skills") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/anthropic-agent-skills" | join "") "lastUpdated" "2026-04-06T18:04:36.268Z")
+  "karpathy-skills" (dict "source" (dict "source" "github" "repo" "forrestchang/andrej-karpathy-skills") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/karpathy-skills" | join "") "lastUpdated" "2026-04-06T18:04:40.264Z")
+  "agentic-tools" (dict "source" (dict "source" "github" "repo" "drod3763/agentic-tools") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/agentic-tools" | join "") "lastUpdated" "2026-04-10T23:33:36.068Z")
+  "caveman" (dict "source" (dict "source" "github" "repo" "JuliusBrussee/caveman") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/caveman" | join "") "lastUpdated" "2026-04-13T19:14:20.614Z")
+  "worktrunk" (dict "source" (dict "source" "github" "repo" "max-sixty/worktrunk") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/worktrunk" | join "") "lastUpdated" "2026-04-14T22:21:54.686Z") -}}
+{{- if .personal -}}
+  {{- $_ := set $managed "cloudflare" (dict "source" (dict "source" "github" "repo" "cloudflare/skills") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/cloudflare" | join "") "lastUpdated" "2026-05-04T03:53:12.140Z") -}}
+{{- else -}}
+  {{- $_ := unset $modified "cloudflare" -}}
+{{- end -}}
+{{- range $name, $managedMarketplace := $managed -}}
+  {{- $currentMarketplace := get $current $name | default (dict) -}}
+  {{- $_ := set $managedMarketplace "lastUpdated" (get $currentMarketplace "lastUpdated" | default $timestamp) -}}
+  {{- $_ = set $modified $name $managedMarketplace -}}
+{{- end -}}
+{{- if deepEqual $current $modified -}}
+{{ $stdin }}
+{{- else -}}
+{{ $modified | toPrettyJson }}
+{{- end -}}

@@ -1,3 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v jq >/dev/null 2>&1; then
+  cat
+  exit 0
+fi
+
+current_file="$(mktemp)"
+trap 'rm -f "${current_file}"' EXIT
+
+cat >"${current_file}"
+
+if [[ ! -s "${current_file}" ]] || ! jq -e . "${current_file}" >/dev/null 2>&1; then
+  printf '{}\n' >"${current_file}"
+fi
+
 {{- $servers := merge (dict) .mcp.shared.servers -}}
 {{- $githubItem := .onepassword.items.github -}}
 {{- $workDomainItem := .onepassword.items.work_domain -}}
@@ -13,5 +30,10 @@
 {{- $ldArgs := concat ((get $launchdarkly "args") | default (list)) (list (includeTemplate "onepassword_field_label.tmpl" (dict "item" $workDomainItem.item "vault" $workDomainItem.vault "label" $workDomainItem.fields.launchdarkly_reader_token_label))) -}}
 {{- $_ := set $launchdarkly "args" $ldArgs -}}
 {{- $_ := set $servers "launchdarkly" $launchdarkly -}}
-{{- end -}}
+{{- end }}
+mcp_servers_json=$(cat <<'JSON'
 {{ $servers | toPrettyJson }}
+JSON
+)
+
+jq --argjson mcpServers "${mcp_servers_json}" '.mcpServers = $mcpServers' "${current_file}"

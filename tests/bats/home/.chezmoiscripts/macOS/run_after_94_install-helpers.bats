@@ -2,7 +2,7 @@
 
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
-  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_after_94_install-helpers.sh.tmpl"
+  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_onchange_after_94_install-helpers.sh.tmpl"
   REAL_CHEZMOI_BIN="$(command -v chezmoi)"
 
   TEST_TMPDIR="$(mktemp -d)"

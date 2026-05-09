@@ -6,6 +6,11 @@ setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   REAL_CHEZMOI_BIN="$(command -v chezmoi)"
   TEST_TMPDIR="$(mktemp -d)"
+  MOCK_BIN_DIR="${TEST_TMPDIR}/bin"
+  mkdir -p "${MOCK_BIN_DIR}"
+  touch "${MOCK_BIN_DIR}/saml2aws"
+  chmod +x "${MOCK_BIN_DIR}/saml2aws"
+  export PATH="${MOCK_BIN_DIR}:${PATH}"
 }
 
 teardown() {

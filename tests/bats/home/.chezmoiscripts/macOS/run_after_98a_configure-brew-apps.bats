@@ -2,7 +2,7 @@
 
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
-  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_after_98a_configure-brew-apps.sh.tmpl"
+  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_onchange_after_98a_configure-brew-apps.sh.tmpl"
   REAL_CHEZMOI_BIN="$(command -v chezmoi)"
 
   TEST_TMPDIR="$(mktemp -d)"

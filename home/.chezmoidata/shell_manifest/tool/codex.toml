@@ -1,0 +1,15 @@
+[package_catalog.packages."codex"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "codex"
+
+[shell_manifest.entries.codex-api-key]
+priority = 226
+
+[shell_manifest.entries.codex-api-key.rules]
+when_tool = "codex"
+
+[shell_manifest.entries.codex-api-key.exports.OPENAI_API_KEY]
+kind = "dynamic"
+resolver = "openai_api_key"

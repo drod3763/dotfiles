@@ -2,12 +2,12 @@
 
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
-  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_before_90_bootstrap-age-identities.sh.tmpl"
+  TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_once_before_90_bootstrap-age-identities.sh.tmpl"
   REAL_CHEZMOI_BIN="$(command -v chezmoi)"
 
   TEST_TMPDIR="$(mktemp -d)"
   MOCK_BIN_DIR="${TEST_TMPDIR}/bin"
-  mkdir -p "${MOCK_BIN_DIR}"
+  mkdir -p "${MOCK_BIN_DIR}" "${TEST_TMPDIR}/home"
 
   cat > "${MOCK_BIN_DIR}/op" <<'EOF'
 #!/usr/bin/env bash
