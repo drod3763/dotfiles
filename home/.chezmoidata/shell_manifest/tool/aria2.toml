@@ -1,0 +1,5 @@
+[package_catalog.packages."aria2"]
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_formula_name = "aria2"
