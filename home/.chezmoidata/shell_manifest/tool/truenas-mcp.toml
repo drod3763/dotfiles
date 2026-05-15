@@ -1,0 +1,5 @@
+[package_catalog.packages."truenas-mcp"]
+os = "mac"
+type = "personal"
+target_class = "all"
+brew_formula_name = "drod3763/tap/truenas-mcp"
