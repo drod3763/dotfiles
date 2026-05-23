@@ -67,23 +67,17 @@
     "typescript-lsp@claude-plugins-official": true{{ if not .personal }},
     "csharp-lsp@claude-plugins-official": true{{ end }}{{ if .personal }},
     "cloudflare@cloudflare": true{{ end }},
-    "homebrew-formula-cask@agentic-tools": true,
-    "pr-prep@agentic-tools": true,
-    "prettier-hook@agentic-tools": true{{ if .personal }},
-    "truenas-extras@agentic-tools": true{{ end }},
-    "writing-style@agentic-tools": true
+    "engineering@agentic-tools": true,
+    "brew@agentic-tools": true,
+    "codex@openai-codex": true,
+    "writing-style@agentic-tools": true,
+    "marketplace@agentic-tools": true
   },
   "extraKnownMarketplaces": {
     "karpathy-skills": {
       "source": {
         "source": "github",
         "repo": "forrestchang/andrej-karpathy-skills"
-      }
-    },
-    "agentic-tools": {
-      "source": {
-        "source": "github",
-        "repo": "drod3763/agentic-tools"
       }
     },
     "caveman": {
@@ -97,14 +91,26 @@
         "source": "github",
         "repo": "max-sixty/worktrunk"
       }
-    }{{ if .personal }},
+    },{{ if .personal }}
     "cloudflare": {
       "source": {
         "source": "github",
         "repo": "cloudflare/skills"
       }
-    }
+    },
     {{- end }}
+    "agentic-tools": {
+      "source": {
+        "source": "github",
+        "repo": "drod3763/agentic-tools"
+      }
+    },
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
   },
   "effortLevel": "high",
   "theme": "dark-daltonized"

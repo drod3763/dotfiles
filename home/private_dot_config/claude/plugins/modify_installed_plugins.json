@@ -18,7 +18,6 @@
   {{- $_ = unset $plugins "csharp-lsp@claude-plugins-official" -}}
 {{- else -}}
   {{- $_ = unset $plugins "cloudflare@cloudflare" -}}
-  {{- $_ = unset $plugins "truenas-extras@agentic-tools" -}}
 {{- end -}}
 {{- $_ = unset $plugins "telegram@claude-plugins-official" -}}
 {{- $managed := dict
@@ -29,26 +28,29 @@
   "caveman@caveman" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/caveman/caveman/63e797cd753b" | join "") "version" "63e797cd753b" "installedAt" "2026-04-14T22:14:28.435Z" "lastUpdated" "2026-04-14T22:14:28.435Z" "gitCommitSha" "63e797cd753b301374947a5ed975c21775d962b9")
   "worktrunk@worktrunk" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/worktrunk/worktrunk/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-04-14T22:21:55.901Z" "lastUpdated" "2026-04-14T22:21:55.901Z" "gitCommitSha" "62653941825c642b76d723df9cab34eac759203e")
   "typescript-lsp@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/typescript-lsp/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-04-16T17:51:30.219Z" "lastUpdated" "2026-04-16T17:51:30.219Z" "gitCommitSha" "104d39be10b7b1380b2ae23a387a11a297b599c3")
-  "homebrew-formula-cask@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/homebrew-formula-cask/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-08T05:57:41.334Z" "lastUpdated" "2026-05-08T05:57:41.334Z" "gitCommitSha" "5dc90dae679d9fb5b9332ebd0a6da9927f17390b")
-  "pr-prep@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/pr-prep/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-08T05:57:50.294Z" "lastUpdated" "2026-05-08T05:57:50.294Z" "gitCommitSha" "5dc90dae679d9fb5b9332ebd0a6da9927f17390b")
-  "prettier-hook@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/prettier-hook/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-08T05:57:59.097Z" "lastUpdated" "2026-05-08T05:57:59.097Z" "gitCommitSha" "5dc90dae679d9fb5b9332ebd0a6da9927f17390b")
-  "writing-style@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/writing-style/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-08T05:58:18.159Z" "lastUpdated" "2026-05-08T05:58:18.159Z" "gitCommitSha" "5dc90dae679d9fb5b9332ebd0a6da9927f17390b") -}}
+  "brew@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/brew/9f582fcb4322" | join "") "version" "9f582fcb4322" "installedAt" "2026-05-14T19:27:38.806Z" "lastUpdated" "2026-05-23T03:53:34.802Z" "gitCommitSha" "461fae051db15a65bfca58a9cf649682f40d307b")
+  "engineering@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/engineering/9f582fcb4322" | join "") "version" "9f582fcb4322" "installedAt" "2026-05-13T15:57:17.919Z" "lastUpdated" "2026-05-23T03:53:34.804Z" "gitCommitSha" "0d252a6ba681576f54ccb5e1a9a74624daff0ae2")
+  "marketplace@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/marketplace/9f582fcb4322" | join "") "version" "9f582fcb4322" "installedAt" "2026-05-23T03:54:09.239Z" "lastUpdated" "2026-05-23T03:54:09.239Z" "gitCommitSha" "9f582fcb432222b5ab6530c85084c561206722d7")
+  "writing-style@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/writing-style/9f582fcb4322" | join "") "version" "9f582fcb4322" "installedAt" "2026-05-23T03:53:51.212Z" "lastUpdated" "2026-05-23T03:53:51.212Z" "gitCommitSha" "9f582fcb432222b5ab6530c85084c561206722d7")
+  "codex@openai-codex" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/openai-codex/codex/1.0.4" | join "") "version" "1.0.4" "installedAt" "2026-05-16T04:39:41.644Z" "lastUpdated" "2026-05-16T04:39:41.644Z" "gitCommitSha" "807e03ac9d5aa23bc395fdec8c3767500a86b3cf") -}}
 {{- if not .personal -}}
   {{- $_ = set $managed "slack@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/slack/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-04-06T19:07:03.385Z" "lastUpdated" "2026-04-06T19:07:03.385Z" "gitCommitSha" "7b9458950d38bb01ddb48b669f9fa89bcdfd98b8") -}}
   {{- $_ = set $managed "csharp-lsp@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/csharp-lsp/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-04-17T20:21:05.183Z" "lastUpdated" "2026-04-17T20:21:05.183Z" "gitCommitSha" "104d39be10b7b1380b2ae23a387a11a297b599c3") -}}
 {{- end -}}
 {{- if .personal -}}
   {{- $_ = set $managed "cloudflare@cloudflare" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/cloudflare/cloudflare/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-04T03:56:03.542Z" "lastUpdated" "2026-05-04T03:56:03.542Z" "gitCommitSha" "7c449def4e0c63daa27212d853094e4c8e37bbe8") -}}
-  {{- $_ = set $managed "truenas-extras@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/truenas-extras/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-08T05:58:07.162Z" "lastUpdated" "2026-05-08T05:58:07.162Z" "gitCommitSha" "5dc90dae679d9fb5b9332ebd0a6da9927f17390b") -}}
 {{- end -}}
 {{- range $name, $managedPlugin := $managed -}}
   {{- $currentPlugin := dict -}}
   {{- $currentList := get $currentPlugins $name | default (list) -}}
   {{- if gt (len $currentList) 0 -}}
     {{- $currentPlugin = index $currentList 0 -}}
+    {{- range $field := list "installPath" "version" "gitCommitSha" "installedAt" "lastUpdated" -}}
+      {{- if hasKey $currentPlugin $field -}}
+        {{- $_ = set $managedPlugin $field (get $currentPlugin $field) -}}
+      {{- end -}}
+    {{- end -}}
   {{- end -}}
-  {{- $_ = set $managedPlugin "installedAt" (get $currentPlugin "installedAt" | default $timestamp) -}}
-  {{- $_ = set $managedPlugin "lastUpdated" (get $currentPlugin "lastUpdated" | default $timestamp) -}}
   {{- $_ = set $plugins $name (list $managedPlugin) -}}
 {{- end -}}
 {{- if deepEqual $current $modified -}}

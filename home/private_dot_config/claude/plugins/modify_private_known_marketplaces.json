@@ -11,6 +11,7 @@
   "anthropic-agent-skills" (dict "source" (dict "source" "github" "repo" "anthropics/skills") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/anthropic-agent-skills" | join "") "lastUpdated" "2026-04-06T18:04:36.268Z")
   "karpathy-skills" (dict "source" (dict "source" "github" "repo" "forrestchang/andrej-karpathy-skills") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/karpathy-skills" | join "") "lastUpdated" "2026-04-06T18:04:40.264Z")
   "agentic-tools" (dict "source" (dict "source" "github" "repo" "drod3763/agentic-tools") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/agentic-tools" | join "") "lastUpdated" "2026-04-10T23:33:36.068Z")
+  "openai-codex" (dict "source" (dict "source" "github" "repo" "openai/codex-plugin-cc") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/openai-codex" | join "") "lastUpdated" "2026-05-16T04:39:34.974Z")
   "caveman" (dict "source" (dict "source" "github" "repo" "JuliusBrussee/caveman") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/caveman" | join "") "lastUpdated" "2026-04-13T19:14:20.614Z")
   "worktrunk" (dict "source" (dict "source" "github" "repo" "max-sixty/worktrunk") "installLocation" (list .chezmoi.homeDir "/.config/claude/plugins/marketplaces/worktrunk" | join "") "lastUpdated" "2026-04-14T22:21:54.686Z") -}}
 {{- if .personal -}}
