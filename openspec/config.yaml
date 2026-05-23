@@ -1,0 +1,133 @@
+schema: spec-driven
+
+context: |
+  This repository is a personal, chezmoi-managed dotfiles system for macOS, Linux,
+  and Windows. It automates repeatable development environment setup, package
+  installation, shell behavior, application preferences, lifecycle scripts, and
+  secure secret retrieval.
+
+  Project goals:
+  - Keep development environments consistent across machines while preserving
+    machine-specific differences.
+  - Prefer declarative, data-driven configuration where it improves reviewability
+    and reduces duplication.
+  - Keep platform-specific behavior explicit and guarded by chezmoi data or file
+    layout conventions.
+  - Keep secrets out of plaintext source files and avoid changes that weaken the
+    YubiKey, age, or 1Password workflow.
+
+  Core tools and patterns:
+  - Dotfiles are managed by chezmoi; files under `home/` render into `$HOME`.
+  - Go templates and `.chezmoidata` provide structured, reusable configuration.
+  - Shell setup centers on zsh with zsh4humans, with bash compatibility where needed.
+  - Runtime and package tooling includes mise, Homebrew, mas, whalebrew, and Nix flakes.
+  - Secret retrieval uses 1Password and age encryption backed by YubiKey identities.
+  - Formatting and checks use treefmt, shfmt, shellcheck, gofmt, nixpkgs-fmt, chezmoi,
+    and OpenSpec validation.
+
+  Repository conventions:
+  - `dot_` creates dotfiles, `private_` sets restricted permissions, `encrypted_`
+    stores age-encrypted content, `executable_` sets executable mode, `empty_`
+    creates empty files, and `.tmpl` marks Go templates.
+  - Reusable template partials live under `home/.chezmoitemplates/`.
+  - Domain data lives under `home/.chezmoidata/`; prefer stable, typed data shapes
+    over repeated literals in templates when the data is shared or likely to grow.
+  - Platform-specific behavior should be guarded with `.os`, `.distribution`,
+    `.chezmoiignore`, and machine feature flags such as `$headless`, `$transient`,
+    and `$personal`.
+  - Lifecycle setup belongs in chezmoi hooks such as `run_before`, `run_after`, and
+    `run_onchange`; destination dotfiles should usually source rendered fragments
+    rather than contain all behavior inline.
+
+  Shell and template style:
+  - Shell scripts should use strict mode, prefer `[[ ... ]]`, quote variables, use
+    `${var}` style, and keep 2-space indentation compatible with shfmt.
+  - Template changes should be minimal, readable, and validated with rendered output
+    when behavior is not obvious from source alone.
+  - Avoid arbitrary code execution or raw inline Go template expressions inside data
+    values when a typed data model or resolver can express the behavior clearly.
+
+  Shell behavior guidance:
+  - The shell manifest under `home/.chezmoidata/shell_manifest/` is the canonical
+    source for shell aliases, exports, functions, and init snippets.
+  - When changing shell behavior, update the relevant shell manifest TOML entry first.
+  - `home/.chezmoitemplates/{functions,aliases,exports,init}.tmpl` and
+    `home/.chezmoitemplates/shell_manifest_renderer.tmpl` are render layers, not the
+    primary source of behavior.
+  - Tool-specific shell behavior usually lives in
+    `home/.chezmoidata/shell_manifest/tool/*.toml`.
+  - Manifest values should remain static and typed, using forms such as `literal` and
+    `dynamic`. Dynamic values should resolve through an explicit renderer allowlist.
+  - Manifest ordering should stay deterministic; aliases and exports use explicit
+    precedence semantics, while functions and init snippets append in sorted order.
+
+  Existing OpenSpec capabilities:
+  - `shell-manifest` defines the canonical manifest model, render rules, dynamic
+    resolver allowlist, deterministic ordering, and manifest-owned package metadata.
+  - `work-config` defines work-machine package and application expectations,
+    including AI tools, cloud and Kubernetes tooling, JavaScript tooling, CLI
+    utilities, terminal preferences, and hardware integration.
+
+  Important constraints:
+  - Chezmoi is the source of truth for rendered dotfiles; test with `chezmoi diff` or
+    `chezmoi apply --dry-run` before relying on changes.
+  - Hardware keys are required to decrypt secrets on non-transient machines.
+  - 1Password is required for credentials and private download URLs.
+  - Homebrew is required on macOS for package management.
+  - Avoid committing plaintext secrets; use private/encrypted chezmoi paths as needed.
+  - Keep changes incremental and behavior-preserving unless the proposal explicitly
+    calls out a behavior change.
+
+rules:
+  proposal:
+    - State the concrete dotfiles problem being solved and why it needs a spec-level
+      change instead of a direct implementation.
+    - Identify affected domains such as shell manifest, package installation,
+      lifecycle scripts, secrets, macOS defaults, Linux support, Windows support,
+      templates, or external resources.
+    - List new capabilities only when a new top-level behavior area is introduced;
+      otherwise modify an existing capability such as `shell-manifest` or
+      `work-config`.
+    - Include impact on rendered files, chezmoi data, package selection, secret
+      retrieval, and platform/profile behavior where relevant.
+    - Call out non-goals for broad refactors, especially data migrations and shell
+      manifest changes, so implementation stays incremental.
+
+  design:
+    - Prefer small, reversible design decisions with clear rationale over broad
+      rewrites or opportunistic cleanup.
+    - Describe current state by referencing concrete repo paths such as
+      `home/.chezmoidata/`, `home/.chezmoitemplates/`, `home/.chezmoiscripts/`, and
+      destination-mapped files under `home/`.
+    - For shell behavior, explain how the shell manifest remains the source of truth,
+      how rules are evaluated, and how render ordering or precedence is preserved.
+    - For data migrations, include phased migration, render parity checks, and a
+      readability check to avoid over-normalizing one-off values.
+    - For secrets or private resources, state how plaintext secrets are avoided and
+      how 1Password, age, private paths, or encrypted paths are preserved.
+    - Include risks around cross-platform behavior, machine profiles, package install
+      drift, render parity, and lifecycle script side effects.
+
+  specs:
+    - Use RFC 2119 terms such as SHALL and SHALL NOT for normative behavior.
+    - Write requirements around observable dotfiles behavior, rendered output,
+      package selection, or secret retrieval rather than implementation steps.
+    - Every requirement should include at least one scenario with WHEN and THEN
+      clauses, plus AND clauses where useful.
+    - Keep platform and profile conditions explicit, including macOS, Linux, Windows,
+      work versus personal, headless, and transient machines when relevant.
+    - Preserve existing capability names and only add new capability specs when the
+      behavior does not fit an existing capability.
+
+  tasks:
+    - Break work into small, reviewable groups such as data model, template/rendering,
+      migration, tests, and documentation.
+    - Put validation tasks next to the implementation they verify, including commands
+      such as `mise exec -- openspec validate <change> --strict`,
+      `chezmoi execute-template`, `chezmoi diff`, `chezmoi apply --dry-run`,
+      `nix run .#treefmt`, and `nix run .#shellcheck` when applicable.
+    - Include render parity or dry-run checks for template and `.chezmoidata` changes.
+    - Include shellcheck/treefmt tasks for shell scripts, lifecycle hooks, and shell
+      manifest renderer changes.
+    - Avoid tasks that mix unrelated domains; separate shell manifest changes from
+      package catalog, macOS defaults, secret retrieval, or agent configuration work.
