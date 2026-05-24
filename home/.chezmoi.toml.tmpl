@@ -2,6 +2,7 @@
 {{- $headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
 {{- $transient := false -}}{{/* true if this machine is temporary, e.g. a cloud or VM instance */}}
 {{- $personal := promptBool "Is this a personal machine" false -}}{{/* true if this machine should have personal secrets */}}
+{{- $enablePasswordlessSsh := true -}}{{/* true if this machine should accept hardened key-only SSH logins */}}
 {{- "" -}}
 
 {{/* determine whether the current machine is a laptop or desktop */}}
@@ -83,6 +84,7 @@ remove = true
 chassisType = {{ $chassisType | quote }}
 cpuCores = {{ $cpuCores }}
 cpuThreads = {{ $cpuThreads }}
+enablePasswordlessSsh = {{ $enablePasswordlessSsh }}
 headless = {{ $headless }}
 hostname = {{ $hostname | quote }} {{/* the pipe quote is necessary for strings otherwise its interpreted as a command */}}
 osID = {{ $osID | quote }}
