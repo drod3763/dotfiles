@@ -37,11 +37,17 @@ gh auth setup-git
 
 echo "Installing playlist-tech tools..."
 
-# Install pipemind from private tap
 brew tap playlist-tech/tap
+
 if brew list --formula pipemind >/dev/null 2>&1; then
   echo "Skipping pipemind install: already installed."
 else
   brew install playlist-tech/tap/pipemind
+fi
+
+if brew list --formula sonar-cli >/dev/null 2>&1; then
+  echo "Skipping sonar-cli install: already installed."
+else
+  brew install playlist-tech/tap/sonar-cli
 fi
 {{ end -}}

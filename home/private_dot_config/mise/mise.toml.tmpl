@@ -1,7 +1,6 @@
 [tools]
 bun = "latest"
 {{- if not .personal }}
-dotnet = "8"
 go = "latest"
 node = "24"
 "npm:@wallabyjs/cli" = "latest"
@@ -10,7 +9,7 @@ pnpm = "10"
 
 [settings]
 npm.package_manager = "bun"
+idiomatic_version_file_enable_tools = ["node", "npm", "pnpm", "bun"{{ if not .personal }}, "dotnet"{{ end }}]
 {{- if not .personal }}
 dotnet.cli_telemetry_optout = true
-idiomatic_version_file_enable_tools = ["node", "npm", "pnpm", "bun"]
 {{- end }}

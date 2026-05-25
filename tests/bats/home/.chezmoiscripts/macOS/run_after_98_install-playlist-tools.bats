@@ -54,6 +54,13 @@ if [[ "${1:-}" == "list" && "${2:-}" == "--formula" && "${3:-}" == "pipemind" ]]
   exit 1
 fi
 
+if [[ "${1:-}" == "list" && "${2:-}" == "--formula" && "${3:-}" == "sonar-cli" ]]; then
+  if [[ -n "${MOCK_SONAR_CLI_INSTALLED:-}" ]]; then
+    exit 0
+  fi
+  exit 1
+fi
+
 if [[ "${1:-}" == "tap" && -n "${MOCK_BREW_TAP_FAIL:-}" ]]; then
   exit 1
 fi
@@ -109,6 +116,10 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   run grep -q '^install playlist-tech/tap/pipemind$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
+  run grep -q '^list --formula sonar-cli$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^install playlist-tech/tap/sonar-cli$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
 }
 
 @test "GIVEN non-personal and pipemind already installed EXPECT script skips install" {
@@ -122,6 +133,22 @@ teardown() {
   run grep -q '^list --formula pipemind$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
   run grep -q '^install playlist-tech/tap/pipemind$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 1 ]]
+  run grep -q '^install playlist-tech/tap/sonar-cli$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN non-personal and sonar-cli already installed EXPECT script skips sonar-cli install" {
+  export MOCK_GH_AUTHENTICATED=1
+  export MOCK_SONAR_CLI_INSTALLED=1
+  render_non_personal_script
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^list --formula sonar-cli$' "${MOCK_BREW_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^install playlist-tech/tap/sonar-cli$' "${MOCK_BREW_CALLS_FILE}"
   [[ "${status}" -eq 1 ]]
 }
 
