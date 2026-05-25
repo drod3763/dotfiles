@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+current_file="$(mktemp)"
+trap 'rm -f "${current_file}"' EXIT
+
+cat >"${current_file}"
+
+if [[ -s "${current_file}" ]] && jq -e . "${current_file}" >/dev/null 2>&1; then
+  cat "${current_file}"
+  exit 0
+fi
+
+cat <<'EOF'
+{
+  "cookies": [],
+  "origins": []
+}
+EOF

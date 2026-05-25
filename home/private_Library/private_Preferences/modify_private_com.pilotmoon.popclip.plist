@@ -123,7 +123,32 @@ if [[ -s "${current_plist}" ]]; then
   fi
 fi
 
+status_item_position="6042"
+if [[ -s "${current_plist}" ]]; then
+  if current_status_item_position="$(plutil -extract 'NSStatusItem Preferred Position Item-0' raw -o - "${current_plist}" 2>/dev/null)"; then
+    status_item_position="${current_status_item_position}"
+  fi
+fi
+
+usage_count="0"
+if [[ -s "${current_plist}" ]]; then
+  if current_usage_count="$(plutil -extract UsageCount raw -o - "${current_plist}" 2>/dev/null)"; then
+    usage_count="${current_usage_count}"
+  fi
+fi
+
+trial_data=""
+if [[ -s "${current_plist}" ]]; then
+  if current_trial_data="$(plutil -extract TrialData raw -o - "${current_plist}" 2>/dev/null)"; then
+    trial_data="${current_trial_data}"
+  fi
+fi
+
 plutil -replace LastUpdateInfoDate -date "${timestamp}" "${managed_plist}"
 plutil -replace SULastCheckTime -date "${last_check_time}" "${managed_plist}"
-plutil -replace UsageCount -integer 0 "${managed_plist}"
+plutil -replace 'NSStatusItem Preferred Position Item-0' -float "${status_item_position}" "${managed_plist}"
+plutil -replace UsageCount -integer "${usage_count}" "${managed_plist}"
+if [[ -n "${trial_data}" ]]; then
+  plutil -replace TrialData -data "${trial_data}" "${managed_plist}"
+fi
 plutil -convert binary1 -o - "${managed_plist}"
