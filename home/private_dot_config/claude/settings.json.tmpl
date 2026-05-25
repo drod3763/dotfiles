@@ -65,13 +65,21 @@
     "caveman@caveman": true,
     "worktrunk@worktrunk": true,
     "typescript-lsp@claude-plugins-official": true{{ if not .personal }},
-    "csharp-lsp@claude-plugins-official": true{{ end }}{{ if .personal }},
+    "csharp-lsp@claude-plugins-official": true,
+    "arcus-build@arcus": true,
+    "arcus-deploy@arcus": true,
+    "arcus-devtools@arcus": true,
+    "arcus-infra@arcus": true,
+    "arcus-overview@arcus": true,
+    "az-access@arcus": true,
+    "javascript-typescript@claude-code-workflows": true,
+    "superpowers@claude-plugins-official": true{{ end }}{{ if .personal }},
     "cloudflare@cloudflare": true{{ end }},
     "engineering@agentic-tools": true,
     "brew@agentic-tools": true,
     "codex@openai-codex": true,
-    "writing-style@agentic-tools": true,
-    "marketplace@agentic-tools": true
+    "writing-style@agentic-tools": true{{ if .personal }},
+    "marketplace@agentic-tools": true{{ end }}
   },
   "extraKnownMarketplaces": {
     "karpathy-skills": {
@@ -96,6 +104,25 @@
       "source": {
         "source": "github",
         "repo": "cloudflare/skills"
+      }
+    },
+    {{- else }}
+    "arcus": {
+      "source": {
+        "source": "git",
+        "url": "git@github.com:mindbody/arcus-agentic-resources.git"
+      }
+    },
+    "team-rocket-tools": {
+      "source": {
+        "source": "github",
+        "repo": "mindbody/team-rocket-tools"
+      }
+    },
+    "claude-code-workflows": {
+      "source": {
+        "source": "github",
+        "repo": "wshobson/agents"
       }
     },
     {{- end }}
