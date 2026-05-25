@@ -57,7 +57,35 @@ printf 'launchctl %s\n' "$*" >> "${MOCK_CALLS_FILE:?}"
 exit 0
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/sshd" "${MOCK_BIN_DIR}/systemsetup" "${MOCK_BIN_DIR}/ssh-keygen" "${MOCK_BIN_DIR}/launchctl"
+  cat > "${MOCK_BIN_DIR}/dscl" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == "." && "${2:-}" == "-read" && "${4:-}" == "GroupMembership" ]]; then
+  printf 'GroupMembership: %s\n' "${MOCK_SSH_GROUP_MEMBERSHIP:-jamfadmin}"
+  exit 0
+fi
+exit 1
+EOF
+
+  cat > "${MOCK_BIN_DIR}/dseditgroup" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'dseditgroup %s\n' "$*" >> "${MOCK_CALLS_FILE:?}"
+exit 0
+EOF
+
+  cat > "${MOCK_BIN_DIR}/socketfilterfw" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'socketfilterfw %s\n' "$*" >> "${MOCK_CALLS_FILE:?}"
+if [[ "${MOCK_SOCKETFILTERFW_MANAGED:-false}" == "true" ]]; then
+  printf 'Firewall settings cannot be modified from command line on managed Mac computers.\n' >&2
+  exit 1
+fi
+exit 0
+EOF
+
+  chmod +x "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/sshd" "${MOCK_BIN_DIR}/systemsetup" "${MOCK_BIN_DIR}/ssh-keygen" "${MOCK_BIN_DIR}/launchctl" "${MOCK_BIN_DIR}/dscl" "${MOCK_BIN_DIR}/dseditgroup" "${MOCK_BIN_DIR}/socketfilterfw"
 
   export MOCK_CALLS_FILE="${TEST_TMPDIR}/calls.log"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
@@ -70,6 +98,16 @@ EOF
   export CHEZMOI_SSH_HOST_KEY_DIR="${MOCK_ETC}"
   export CHEZMOI_SYSTEMSETUP_BIN="${MOCK_BIN_DIR}/systemsetup"
   export CHEZMOI_LAUNCHCTL_BIN="${MOCK_BIN_DIR}/launchctl"
+  export CHEZMOI_DSEDITGROUP_BIN="${MOCK_BIN_DIR}/dseditgroup"
+  export CHEZMOI_SOCKETFILTERFW_BIN="${MOCK_BIN_DIR}/socketfilterfw"
+  export CHEZMOI_MOSH_SERVER_BIN="${MOCK_BIN_DIR}/mosh-server"
+
+  cat > "${MOCK_BIN_DIR}/mosh-server" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exit 0
+EOF
+  chmod +x "${MOCK_BIN_DIR}/mosh-server"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_95_configure-passwordless-ssh.sh"
   "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
@@ -112,9 +150,17 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   run grep -q '^AllowUsers ' "${MOCK_ETC}/sshd_config.d/99-chezmoi-passwordless.conf"
   [[ "${status}" -eq 0 ]]
+  run grep -q '^SetEnv PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin$' "${MOCK_ETC}/sshd_config.d/99-chezmoi-passwordless.conf"
+  [[ "${status}" -eq 0 ]]
   run grep -q '^LoginGraceTime 20$' "${MOCK_ETC}/sshd_config.d/99-chezmoi-passwordless.conf"
   [[ "${status}" -eq 0 ]]
   run grep -q '^AllowAgentForwarding no$' "${MOCK_ETC}/sshd_config.d/99-chezmoi-passwordless.conf"
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^sudo .*dseditgroup -o edit -a .* -t user com.apple.access_ssh$' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^sudo .*socketfilterfw --add .*/mosh-server$' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+  run grep -q '^sudo .*socketfilterfw --unblockapp .*/mosh-server$' "${MOCK_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
 }
 
@@ -167,10 +213,19 @@ teardown() {
 
   run env CHEZMOI_ENABLE_PASSWORDLESS_SSH=true MOCK_REMOTE_LOGIN_STATUS=On bash "${RENDERED_SCRIPT}"
   [[ "${status}" -eq 0 ]]
-  run env CHEZMOI_ENABLE_PASSWORDLESS_SSH=true MOCK_REMOTE_LOGIN_STATUS=On bash "${RENDERED_SCRIPT}"
+  run env CHEZMOI_ENABLE_PASSWORDLESS_SSH=true MOCK_REMOTE_LOGIN_STATUS=On MOCK_SSH_GROUP_MEMBERSHIP='jamfadmin derick.rodriguez' bash "${RENDERED_SCRIPT}"
   [[ "${status}" -eq 0 ]]
 
   include_count="$(grep -c '^Include .*/sshd_config.d/\*.conf$' "${MOCK_ETC}/sshd_config")"
   [[ "${include_count}" -eq 1 ]]
   [[ "${output}" == *"Passwordless SSH setup already configured."* ]]
+}
+
+@test "GIVEN firewall is device-managed EXPECT mosh firewall setup is skipped non-fatally" {
+  printf '%s\n' 'ssh-ed25519 AAAATEST derick@example' > "${CHEZMOI_SSH_AUTHORIZED_KEYS}"
+
+  run env CHEZMOI_ENABLE_PASSWORDLESS_SSH=true MOCK_SOCKETFILTERFW_MANAGED=true bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  [[ "${output}" == *"firewall is managed by device policy"* ]]
 }
