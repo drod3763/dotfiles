@@ -1,3 +1,14 @@
+{{- $marketplaceManifest := includeTemplate "claude_marketplace_manifest_renderer.tmpl" . | mustFromJson -}}
+{{- $extraKnownMarketplaces := get $marketplaceManifest "extraKnownMarketplaces" -}}
+{{- $karpathySkills := get $extraKnownMarketplaces "karpathy-skills" -}}
+{{- $caveman := get $extraKnownMarketplaces "caveman" -}}
+{{- $worktrunk := get $extraKnownMarketplaces "worktrunk" -}}
+{{- $cloudflare := get $extraKnownMarketplaces "cloudflare" -}}
+{{- $arcus := get $extraKnownMarketplaces "arcus" -}}
+{{- $teamRocketTools := get $extraKnownMarketplaces "team-rocket-tools" -}}
+{{- $claudeCodeWorkflows := get $extraKnownMarketplaces "claude-code-workflows" -}}
+{{- $agenticTools := get $extraKnownMarketplaces "agentic-tools" -}}
+{{- $openaiCodex := get $extraKnownMarketplaces "openai-codex" -}}
 {
   "env": {
     "BASH_DEFAULT_TIMEOUT_MS": "60000",
@@ -84,58 +95,58 @@
   "extraKnownMarketplaces": {
     "karpathy-skills": {
       "source": {
-        "source": "github",
-        "repo": "forrestchang/andrej-karpathy-skills"
+        "source": "{{ get $karpathySkills.source "source" }}",
+        "repo": "{{ get $karpathySkills.source "repo" }}"
       }
     },
     "caveman": {
       "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
+        "source": "{{ get $caveman.source "source" }}",
+        "repo": "{{ get $caveman.source "repo" }}"
       }
     },
     "worktrunk": {
       "source": {
-        "source": "github",
-        "repo": "max-sixty/worktrunk"
+        "source": "{{ get $worktrunk.source "source" }}",
+        "repo": "{{ get $worktrunk.source "repo" }}"
       }
     },{{ if .personal }}
     "cloudflare": {
       "source": {
-        "source": "github",
-        "repo": "cloudflare/skills"
+        "source": "{{ get $cloudflare.source "source" }}",
+        "repo": "{{ get $cloudflare.source "repo" }}"
       }
     },
     {{- else }}
     "arcus": {
       "source": {
-        "source": "git",
-        "url": "git@github.com:mindbody/arcus-agentic-resources.git"
+        "source": "{{ get $arcus.source "source" }}",
+        "url": "{{ get $arcus.source "url" }}"
       }
     },
     "team-rocket-tools": {
       "source": {
-        "source": "github",
-        "repo": "mindbody/team-rocket-tools"
+        "source": "{{ get $teamRocketTools.source "source" }}",
+        "repo": "{{ get $teamRocketTools.source "repo" }}"
       }
     },
     "claude-code-workflows": {
       "source": {
-        "source": "github",
-        "repo": "wshobson/agents"
+        "source": "{{ get $claudeCodeWorkflows.source "source" }}",
+        "repo": "{{ get $claudeCodeWorkflows.source "repo" }}"
       }
     },
     {{- end }}
     "agentic-tools": {
       "source": {
-        "source": "github",
-        "repo": "drod3763/agentic-tools"
+        "source": "{{ get $agenticTools.source "source" }}",
+        "repo": "{{ get $agenticTools.source "repo" }}"
       }
     },
     "openai-codex": {
       "source": {
-        "source": "github",
-        "repo": "openai/codex-plugin-cc"
+        "source": "{{ get $openaiCodex.source "source" }}",
+        "repo": "{{ get $openaiCodex.source "repo" }}"
       }
     }
   },

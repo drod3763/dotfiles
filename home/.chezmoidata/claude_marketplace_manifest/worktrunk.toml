@@ -1,0 +1,4 @@
+[claude_marketplace_manifest.marketplaces."worktrunk"]
+type = "common"
+source = "github"
+repo = "max-sixty/worktrunk"

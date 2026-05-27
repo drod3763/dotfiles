@@ -1,0 +1,4 @@
+[claude_marketplace_manifest.marketplaces."openai-codex"]
+type = "common"
+source = "github"
+repo = "openai/codex-plugin-cc"

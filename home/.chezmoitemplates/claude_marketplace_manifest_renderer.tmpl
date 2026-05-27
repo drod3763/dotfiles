@@ -1,0 +1,46 @@
+{{- $ctx := . -}}
+{{- $marketplacesRaw := ($ctx.claude_marketplace_manifest.marketplaces | default (dict)) -}}
+{{- if not (kindIs "map" $marketplacesRaw) -}}
+  {{- fail "claude_marketplace_manifest.marketplaces must be a map" -}}
+{{- end -}}
+{{- $out := dict
+  "active_marketplaces" (list)
+  "extraKnownMarketplaces" (dict) -}}
+{{- range (keys $marketplacesRaw | sortAlpha | uniq) -}}
+  {{- $name := . -}}
+  {{- $marketplace := (get $marketplacesRaw $name | default (dict)) -}}
+  {{- $active := true -}}
+  {{- $marketplaceType := (get $marketplace "type" | default "common") -}}
+  {{- if and $active (eq $marketplaceType "personal") (not $ctx.personal) -}}
+    {{- $active = false -}}
+  {{- end -}}
+  {{- if and $active (eq $marketplaceType "work") $ctx.personal -}}
+    {{- $active = false -}}
+  {{- end -}}
+  {{- if and $active (not (has $marketplaceType (list "common" "personal" "work"))) -}}
+    {{- fail (printf "unsupported Claude marketplace type %q for %q" $marketplaceType $name) -}}
+  {{- end -}}
+  {{- if not $active -}}
+    {{- continue -}}
+  {{- end -}}
+  {{- $sourceType := (get $marketplace "source" | default "") -}}
+  {{- $source := dict "source" $sourceType -}}
+  {{- if eq $sourceType "github" -}}
+    {{- $repo := (get $marketplace "repo" | default "") -}}
+    {{- if eq $repo "" -}}
+      {{- fail (printf "missing repo for GitHub Claude marketplace %q" $name) -}}
+    {{- end -}}
+    {{- $_ := set $source "repo" $repo -}}
+  {{- else if eq $sourceType "git" -}}
+    {{- $url := (get $marketplace "url" | default "") -}}
+    {{- if eq $url "" -}}
+      {{- fail (printf "missing url for Git Claude marketplace %q" $name) -}}
+    {{- end -}}
+    {{- $_ := set $source "url" $url -}}
+  {{- else -}}
+    {{- fail (printf "unsupported Claude marketplace source %q for %q" $sourceType $name) -}}
+  {{- end -}}
+  {{- $_ := set $out.extraKnownMarketplaces $name (dict "source" $source) -}}
+  {{- $_ := set $out "active_marketplaces" (concat ($out.active_marketplaces | default (list)) (list $name)) -}}
+{{- end -}}
+{{ $out | toJson }}

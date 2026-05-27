@@ -1,0 +1,4 @@
+[claude_marketplace_manifest.marketplaces."agentic-tools"]
+type = "common"
+source = "github"
+repo = "drod3763/agentic-tools"

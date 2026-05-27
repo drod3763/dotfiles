@@ -1,0 +1,4 @@
+[claude_marketplace_manifest.marketplaces."team-rocket-tools"]
+type = "work"
+source = "github"
+repo = "mindbody/team-rocket-tools"

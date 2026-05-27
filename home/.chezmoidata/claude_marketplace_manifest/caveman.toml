@@ -1,0 +1,4 @@
+[claude_marketplace_manifest.marketplaces."caveman"]
+type = "common"
+source = "github"
+repo = "JuliusBrussee/caveman"

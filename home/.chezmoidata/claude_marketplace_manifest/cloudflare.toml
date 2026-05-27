@@ -1,0 +1,4 @@
+[claude_marketplace_manifest.marketplaces."cloudflare"]
+type = "personal"
+source = "github"
+repo = "cloudflare/skills"

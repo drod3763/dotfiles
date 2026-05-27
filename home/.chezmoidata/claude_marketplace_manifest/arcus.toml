@@ -1,0 +1,4 @@
+[claude_marketplace_manifest.marketplaces."arcus"]
+type = "work"
+source = "git"
+url = "git@github.com:mindbody/arcus-agentic-resources.git"
