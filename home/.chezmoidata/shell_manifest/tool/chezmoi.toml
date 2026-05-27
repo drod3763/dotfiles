@@ -3,3 +3,54 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "chezmoi"
+
+[shell_manifest.entries.chezmoi-functions]
+priority = 220
+
+[shell_manifest.entries.chezmoi-functions.rules]
+when_tool = "chezmoi"
+
+[shell_manifest.entries.chezmoi-functions.functions.chezmoi_rerun_script]
+kind = "literal"
+value = """
+chezmoi_rerun_script() {
+  local script_arg target_path target_name script_keys
+
+  script_arg="${1:-}"
+  if [[ -z "${script_arg}" ]]; then
+    echo "usage: chezmoi_rerun_script <target-path|source-path|script-name>" >&2
+    return 1
+  fi
+
+  if [[ "${script_arg}" == /* ]]; then
+    target_path="${script_arg}"
+  elif [[ "${script_arg}" == home/* ]] || [[ "${script_arg}" == .chezmoiscripts/* ]] || [[ "${script_arg}" == private_* ]] || [[ "${script_arg}" == dot_* ]]; then
+    target_path="$(chezmoi target-path --source-path "${script_arg}")"
+  elif [[ "${script_arg}" == */* ]]; then
+    target_path="${HOME}/${script_arg}"
+  else
+    target_path="${HOME}/.chezmoiscripts/macOS/${script_arg%.sh}.sh"
+  fi
+
+  if [[ ! -e "${target_path}" ]]; then
+    echo "chezmoi_rerun_script: target not found: ${target_path}" >&2
+    return 1
+  fi
+
+  target_name="${target_path#${HOME}/}"
+  script_keys="$(chezmoi state dump | jq -r --arg name "${target_name}" '.scriptState | to_entries[]? | select(.value.name == $name) | .key')"
+
+  while IFS= read -r script_key; do
+    [[ -z "${script_key}" ]] && continue
+    chezmoi state delete --bucket=scriptState --key="${script_key}"
+  done <<< "${script_keys}"
+
+  chezmoi state delete --bucket=entryState --key="${target_path}"
+
+  printf 'Cleared chezmoi state for %s\n' "${target_name}"
+}
+"""
+
+[shell_manifest.entries.chezmoi-functions.aliases.cmrs]
+kind = "literal"
+value = "chezmoi_rerun_script"
