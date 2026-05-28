@@ -20,10 +20,10 @@ The shell manifest under `home/.chezmoidata/shell_manifest/` is central to this 
 
 ```bash
 # Format all files (primary linting command)
-nix run .#treefmt
+mise exec -- treefmt --config-file home/treefmt.toml
 
 # Check shell scripts for issues
-nix run .#shellcheck
+mise exec -- shellcheck
 
 # Validate chezmoi templates
 chezmoi execute-template < file.tmpl
@@ -65,10 +65,10 @@ chezmoi data
 chezmoi execute-template < home/dot_zshrc.tmpl
 
 # Check specific shell script
-nix run .#shellcheck -- home/.chezmoiscripts/macOS/run_onchange_before_install-packages.sh.tmpl
+mise exec -- shellcheck home/.chezmoiscripts/macOS/run_onchange_before_install-packages.sh.tmpl
 
 # Format specific file
-nix run .#treefmt -- home/dot_zshrc.tmpl
+mise exec -- treefmt --config-file home/treefmt.toml home/dot_zshrc.tmpl
 ```
 
 ### Development Workflow

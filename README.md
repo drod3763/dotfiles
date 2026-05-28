@@ -84,8 +84,8 @@ The installation script respects the following environment variables:
 
 This repo includes multi-language formatting via `treefmt` configuration at `home/treefmt.toml`.
 
-- Run all formatters: `treefmt`
-- Nix-based run (if available): `nix run .#treefmt`
+- Run all formatters: `mise exec -- treefmt --config-file home/treefmt.toml`
+- Format specific files: `mise exec -- treefmt --config-file home/treefmt.toml <path>...`
 
 Configured formatters include:
 

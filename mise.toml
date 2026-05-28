@@ -1,3 +1,10 @@
 [tools]
+"aqua:koalaman/shellcheck" = "latest"
+"aqua:numtide/treefmt" = "latest"
+"aqua:tamasfe/taplo" = "latest"
+bun = "latest"
 go = "latest"
+rust = "latest"
+"cargo:nixpkgs-fmt" = "latest"
+"go:mvdan.cc/sh/v3/cmd/shfmt" = "latest"
 "npm:@fission-ai/openspec" = "latest"
