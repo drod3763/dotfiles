@@ -2,6 +2,6 @@
 type = "common"
 enabled = true
 depends_on = ["builtin_marketplace:claude-plugins-official"]
-scope = "user"
+scope = "project"
 version = "104d39be10b7"
 git_commit_sha = "55b58ec6e5649104f926ba7558b567dc8d33c5ff"

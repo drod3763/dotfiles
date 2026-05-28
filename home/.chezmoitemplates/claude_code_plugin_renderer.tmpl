@@ -12,7 +12,8 @@
   "active_plugins" (list)
   "enabledPlugins" (dict)
   "install_seeds" (dict)
-  "owned_marketplaces" ($marketplaceManifest.owned_marketplaces | default (list)) -}}
+  "owned_marketplaces" ($marketplaceManifest.owned_marketplaces | default (list))
+-}}
 {{- range (keys $pluginsRaw | sortAlpha | uniq) -}}
   {{- $key := . -}}
   {{- $plugin := (get $pluginsRaw $key | default (dict)) -}}
@@ -43,6 +44,9 @@
   {{- $scope := (get $plugin "scope" | default "") -}}
   {{- if eq $scope "" -}}
     {{- fail (printf "missing scope for Claude plugin %q" $key) -}}
+  {{- end -}}
+  {{- if not (has $scope (list "user" "project")) -}}
+    {{- fail (printf "unsupported scope %q for Claude plugin %q" $scope $key) -}}
   {{- end -}}
   {{- $version := (get $plugin "version" | default "") -}}
   {{- if eq $version "" -}}
