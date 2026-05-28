@@ -1,0 +1,7 @@
+[claude_code.plugins."javascript-typescript@claude-code-workflows"]
+type = "work"
+enabled = true
+depends_on = ["marketplace:claude-code-workflows"]
+scope = "user"
+version = "1.2.2"
+git_commit_sha = "ece811f23310a37ceb43496dbac0e244fe6845b6"

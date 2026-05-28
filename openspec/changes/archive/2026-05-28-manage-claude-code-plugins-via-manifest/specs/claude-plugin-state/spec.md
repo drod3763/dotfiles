@@ -1,68 +1,4 @@
-# claude-plugin-state Specification
-
-## Purpose
-
-Define how chezmoi manages Claude plugin marketplaces, installed plugin metadata, and enabled plugin settings while preserving application-maintained state.
-
-## Requirements
-
-### Requirement: Existing Claude plugin metadata is preserved
-
-The installed plugin modify template SHALL preserve application-maintained metadata for active manifest plugins that already exist in the current Claude state.
-
-#### Scenario: Existing active manifest plugin has current metadata
-
-- **WHEN** an active plugin manifest entry already exists in `installed_plugins.json`
-- **THEN** chezmoi SHALL preserve that plugin entry's current `installPath`, `version`, `gitCommitSha`, `installedAt`, and `lastUpdated` values
-- **AND** chezmoi SHALL NOT rewrite current plugin metadata to manifest seed metadata
-
-#### Scenario: Active manifest plugin is absent
-
-- **WHEN** an active plugin manifest entry is absent from `installed_plugins.json`
-- **THEN** chezmoi SHALL add the plugin using manifest seed metadata
-- **AND** chezmoi SHALL seed `installedAt` and `lastUpdated` with the current render timestamp
-
-### Requirement: Unknown Claude plugin state is preserved
-
-The Claude installed plugin modify template SHALL preserve plugin entries that are outside active owned marketplace pruning scopes. Project-scoped plugin entries SHALL be treated as local state and preserved.
-
-#### Scenario: Unmanaged plugin exists outside owned marketplaces
-
-- **WHEN** `installed_plugins.json` contains a plugin not listed in the active plugin manifest
-- **AND** the plugin's marketplace suffix is not an active marketplace with `owned = true`
-- **THEN** chezmoi SHALL preserve that plugin entry in the rendered output
-
-#### Scenario: Unmanaged plugin exists inside owned marketplace
-
-- **WHEN** `installed_plugins.json` contains a plugin not listed in the active plugin manifest
-- **AND** the plugin's marketplace suffix is an active marketplace with `owned = true`
-- **AND** the installed plugin entry has `scope = "user"`
-- **THEN** chezmoi SHALL remove that plugin entry from the rendered output
-
-#### Scenario: Project-scoped plugin exists inside owned marketplace
-
-- **WHEN** `installed_plugins.json` contains a plugin not listed in the active plugin manifest
-- **AND** the plugin's marketplace suffix is an active marketplace with `owned = true`
-- **AND** the installed plugin entry has `scope = "project"`
-- **THEN** chezmoi SHALL preserve that plugin entry in the rendered output
-
-### Requirement: Managed Claude plugin inventory matches the approved machine baseline
-
-The Claude plugin configuration SHALL encode the approved target machine plugin inventory through individual plugin manifest TOML files, rendered enabled plugin settings, and installed plugin reconciliation.
-
-#### Scenario: Approved marketplace-backed plugin is managed consistently
-
-- **WHEN** a Claude plugin on the current target machine is approved for managed use
-- **THEN** the plugin identifier SHALL be represented by an individual plugin manifest TOML file
-- **AND** the plugin manifest SHALL declare its required marketplace dependency
-- **AND** rendered enabled plugin settings SHALL include the plugin when it is active and intended to be enabled by default
-- **AND** the installed plugin modify template SHALL seed or preserve the plugin as managed state when active
-
-#### Scenario: Plugin excluded from approved baseline is not newly managed
-
-- **WHEN** a Claude plugin present on the current target machine is not approved for the managed baseline
-- **THEN** chezmoi SHALL NOT add that plugin to the managed enabled-plugin set
-- **AND** chezmoi SHALL NOT add a new managed install seed for that plugin unless an individual plugin manifest entry explicitly declares it
+## ADDED Requirements
 
 ### Requirement: Claude Code plugins are declared as individual manifest files
 
@@ -177,3 +113,89 @@ Claude Code `settings.json` `enabledPlugins` SHALL be rendered from active user-
 - **AND** the declaration has `scope = "project"`
 - **THEN** rendered installed plugin reconciliation SHALL include that plugin
 - **AND** rendered `settings.json` SHALL NOT include that plugin under `enabledPlugins`
+
+## MODIFIED Requirements
+
+### Requirement: Existing Claude plugin metadata is preserved
+
+The installed plugin modify template SHALL preserve application-maintained metadata for active manifest plugins that already exist in the current Claude state.
+
+#### Scenario: Existing active manifest plugin has current metadata
+
+- **WHEN** an active plugin manifest entry already exists in `installed_plugins.json`
+- **THEN** chezmoi SHALL preserve that plugin entry's current `installPath`, `version`, `gitCommitSha`, `installedAt`, and `lastUpdated` values
+- **AND** chezmoi SHALL NOT rewrite current plugin metadata to manifest seed metadata
+
+#### Scenario: Active manifest plugin is absent
+
+- **WHEN** an active plugin manifest entry is absent from `installed_plugins.json`
+- **THEN** chezmoi SHALL add the plugin using manifest seed metadata
+- **AND** chezmoi SHALL seed `installedAt` and `lastUpdated` with the current render timestamp
+
+### Requirement: Unknown Claude plugin state is preserved
+
+The Claude installed plugin modify template SHALL preserve plugin entries that are outside active owned marketplace pruning scopes. Project-scoped plugin entries SHALL be treated as local state and preserved.
+
+#### Scenario: Unmanaged plugin exists outside owned marketplaces
+
+- **WHEN** `installed_plugins.json` contains a plugin not listed in the active plugin manifest
+- **AND** the plugin's marketplace suffix is not an active marketplace with `owned = true`
+- **THEN** chezmoi SHALL preserve that plugin entry in the rendered output
+
+#### Scenario: Unmanaged plugin exists inside owned marketplace
+
+- **WHEN** `installed_plugins.json` contains a plugin not listed in the active plugin manifest
+- **AND** the plugin's marketplace suffix is an active marketplace with `owned = true`
+- **AND** the installed plugin entry has `scope = "user"`
+- **THEN** chezmoi SHALL remove that plugin entry from the rendered output
+
+#### Scenario: Project-scoped plugin exists inside owned marketplace
+
+- **WHEN** `installed_plugins.json` contains a plugin not listed in the active plugin manifest
+- **AND** the plugin's marketplace suffix is an active marketplace with `owned = true`
+- **AND** the installed plugin entry has `scope = "project"`
+- **THEN** chezmoi SHALL preserve that plugin entry in the rendered output
+
+### Requirement: Managed Claude plugin inventory matches the approved machine baseline
+
+The Claude plugin configuration SHALL encode the approved target machine plugin inventory through individual plugin manifest TOML files, rendered enabled plugin settings, and installed plugin reconciliation.
+
+#### Scenario: Approved marketplace-backed plugin is managed consistently
+
+- **WHEN** a Claude plugin on the current target machine is approved for managed use
+- **THEN** the plugin identifier SHALL be represented by an individual plugin manifest TOML file
+- **AND** the plugin manifest SHALL declare its required marketplace dependency
+- **AND** rendered enabled plugin settings SHALL include the plugin when it is active and intended to be enabled by default
+- **AND** the installed plugin modify template SHALL seed or preserve the plugin as managed state when active
+
+#### Scenario: Plugin excluded from approved baseline is not newly managed
+
+- **WHEN** a Claude plugin present on the current target machine is not approved for the managed baseline
+- **THEN** chezmoi SHALL NOT add that plugin to the managed enabled-plugin set
+- **AND** chezmoi SHALL NOT add a new managed install seed for that plugin unless an individual plugin manifest entry explicitly declares it
+
+## REMOVED Requirements
+
+### Requirement: Managed Claude plugins use aggregate agentic-tools entries
+
+**Reason**: The approved plugin inventory is moving from hardcoded spec lists to individual plugin manifest files.
+
+**Migration**: Current aggregate `agentic-tools` plugin selections SHALL be represented as plugin TOML entries under `home/.chezmoidata/claude_code/plugins/` when they remain desired.
+
+### Requirement: Desired non-agentic Claude plugins are explicit
+
+**Reason**: Explicit desired plugin selection is now provided by the plugin manifest model for all plugin sources, not by separate non-agentic special cases.
+
+**Migration**: Desired non-agentic plugins such as `codex@openai-codex` SHALL be represented as individual plugin TOML entries.
+
+### Requirement: Claude marketplace state remains content-preserving
+
+**Reason**: Claude Code marketplace source declarations are covered by `claude-code-marketplace-state`, and `known_marketplaces.json` is no longer managed by chezmoi for this use case.
+
+**Migration**: Marketplace availability SHALL be rendered through `settings.json` `extraKnownMarketplaces`; Claude-maintained `known_marketplaces.json` remains outside managed plugin state.
+
+### Requirement: Claude plugin reconciliation preserves existing metadata behavior
+
+**Reason**: Metadata preservation is now covered by the updated existing metadata and owned-pruning requirements.
+
+**Migration**: Existing plugin metadata preservation SHALL continue for active manifest plugins, while owned marketplace pruning SHALL remove omitted plugins from explicitly owned scopes.

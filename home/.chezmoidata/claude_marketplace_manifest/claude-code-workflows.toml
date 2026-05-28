@@ -1,4 +1,0 @@
-[claude_marketplace_manifest.marketplaces."claude-code-workflows"]
-type = "work"
-source = "github"
-repo = "wshobson/agents"

@@ -1,0 +1,5 @@
+[claude_code.marketplaces."claude-code-workflows"]
+type = "work"
+owned = true
+source = "github"
+repo = "wshobson/agents"

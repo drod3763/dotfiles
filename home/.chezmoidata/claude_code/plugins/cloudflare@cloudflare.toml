@@ -1,0 +1,7 @@
+[claude_code.plugins."cloudflare@cloudflare"]
+type = "personal"
+enabled = true
+depends_on = ["marketplace:cloudflare"]
+scope = "user"
+version = "1.0.0"
+git_commit_sha = "7c449def4e0c63daa27212d853094e4c8e37bbe8"

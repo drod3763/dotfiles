@@ -1,0 +1,7 @@
+[claude_code.plugins."slack@claude-plugins-official"]
+type = "work"
+enabled = true
+depends_on = ["builtin_marketplace:claude-plugins-official"]
+scope = "user"
+version = "1.0.0"
+git_commit_sha = "7b9458950d38bb01ddb48b669f9fa89bcdfd98b8"

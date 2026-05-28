@@ -1,0 +1,109 @@
+{{- $ctx := . -}}
+{{- $claudeCode := ($ctx.claude_code | default (dict)) -}}
+{{- $pluginsRaw := (get $claudeCode "plugins" | default (dict)) -}}
+{{- if not (kindIs "map" $pluginsRaw) -}}
+  {{- fail "claude_code.plugins must be a map" -}}
+{{- end -}}
+{{- $marketplaceManifest := includeTemplate "claude_code_marketplace_renderer.tmpl" $ctx | mustFromJson -}}
+{{- $marketplacesRaw := (get $claudeCode "marketplaces" | default (dict)) -}}
+{{- $builtinMarketplaces := list "claude-plugins-official" -}}
+{{- $timestamp := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
+{{- $out := dict
+  "active_plugins" (list)
+  "enabledPlugins" (dict)
+  "install_seeds" (dict)
+  "owned_marketplaces" ($marketplaceManifest.owned_marketplaces | default (list)) -}}
+{{- range (keys $pluginsRaw | sortAlpha | uniq) -}}
+  {{- $key := . -}}
+  {{- $plugin := (get $pluginsRaw $key | default (dict)) -}}
+  {{- $keyParts := splitList "@" $key -}}
+  {{- if ne (len $keyParts) 2 -}}
+    {{- fail (printf "Claude plugin key %q must use plugin@marketplace form" $key) -}}
+  {{- end -}}
+  {{- $pluginName := index $keyParts 0 -}}
+  {{- $marketplaceName := index $keyParts 1 -}}
+  {{- if or (eq $pluginName "") (eq $marketplaceName "") -}}
+    {{- fail (printf "Claude plugin key %q must use non-empty plugin@marketplace form" $key) -}}
+  {{- end -}}
+  {{- $pluginType := (get $plugin "type" | default "") -}}
+  {{- if not (has $pluginType (list "common" "personal" "work")) -}}
+    {{- fail (printf "unsupported Claude plugin type %q for %q" $pluginType $key) -}}
+  {{- end -}}
+  {{- if not (hasKey $plugin "enabled") -}}
+    {{- fail (printf "missing enabled for Claude plugin %q" $key) -}}
+  {{- end -}}
+  {{- $enabled := get $plugin "enabled" -}}
+  {{- if not (kindIs "bool" $enabled) -}}
+    {{- fail (printf "enabled must be a boolean for Claude plugin %q" $key) -}}
+  {{- end -}}
+  {{- $dependsOn := (get $plugin "depends_on" | default (list)) -}}
+  {{- if not (kindIs "slice" $dependsOn) -}}
+    {{- fail (printf "depends_on must be a list for Claude plugin %q" $key) -}}
+  {{- end -}}
+  {{- $scope := (get $plugin "scope" | default "") -}}
+  {{- if eq $scope "" -}}
+    {{- fail (printf "missing scope for Claude plugin %q" $key) -}}
+  {{- end -}}
+  {{- $version := (get $plugin "version" | default "") -}}
+  {{- if eq $version "" -}}
+    {{- fail (printf "missing version for Claude plugin %q" $key) -}}
+  {{- end -}}
+  {{- $gitCommitSha := (get $plugin "git_commit_sha" | default "") -}}
+  {{- if eq $gitCommitSha "" -}}
+    {{- fail (printf "missing git_commit_sha for Claude plugin %q" $key) -}}
+  {{- end -}}
+  {{- $active := true -}}
+  {{- if and $active (eq $pluginType "personal") (not $ctx.personal) -}}
+    {{- $active = false -}}
+  {{- end -}}
+  {{- if and $active (eq $pluginType "work") $ctx.personal -}}
+    {{- $active = false -}}
+  {{- end -}}
+  {{- $hasMatchingDependency := false -}}
+  {{- range $dependsOn -}}
+    {{- $dependency := . -}}
+    {{- if not (kindIs "string" $dependency) -}}
+      {{- fail (printf "depends_on entries must be strings for Claude plugin %q" $key) -}}
+    {{- end -}}
+    {{- $dependencyParts := splitList ":" $dependency -}}
+    {{- if ne (len $dependencyParts) 2 -}}
+      {{- fail (printf "unsupported dependency %q for Claude plugin %q" $dependency $key) -}}
+    {{- end -}}
+    {{- $dependencyKind := index $dependencyParts 0 -}}
+    {{- $dependencyName := index $dependencyParts 1 -}}
+    {{- if eq $dependencyKind "marketplace" -}}
+      {{- if not (hasKey $marketplacesRaw $dependencyName) -}}
+        {{- fail (printf "missing Claude marketplace dependency %q for plugin %q" $dependencyName $key) -}}
+      {{- end -}}
+      {{- if eq $dependencyName $marketplaceName -}}
+        {{- $hasMatchingDependency = true -}}
+      {{- end -}}
+      {{- if not (has $dependencyName ($marketplaceManifest.active_marketplaces | default (list))) -}}
+        {{- $active = false -}}
+      {{- end -}}
+    {{- else if eq $dependencyKind "builtin_marketplace" -}}
+      {{- if not (has $dependencyName $builtinMarketplaces) -}}
+        {{- fail (printf "unsupported built-in Claude marketplace dependency %q for plugin %q" $dependencyName $key) -}}
+      {{- end -}}
+      {{- if eq $dependencyName $marketplaceName -}}
+        {{- $hasMatchingDependency = true -}}
+      {{- end -}}
+    {{- else -}}
+      {{- fail (printf "unsupported dependency kind %q for Claude plugin %q" $dependencyKind $key) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $hasMatchingDependency -}}
+    {{- fail (printf "Claude plugin %q must depend on marketplace suffix %q" $key $marketplaceName) -}}
+  {{- end -}}
+  {{- if not $active -}}
+    {{- continue -}}
+  {{- end -}}
+  {{- $installPath := (list $ctx.chezmoi.homeDir "/.config/claude/plugins/cache/" $marketplaceName "/" $pluginName "/" $version | join "") -}}
+  {{- $seed := dict "scope" $scope "installPath" $installPath "version" $version "installedAt" $timestamp "lastUpdated" $timestamp "gitCommitSha" $gitCommitSha -}}
+  {{- $_ := set $out.install_seeds $key $seed -}}
+  {{- $_ := set $out "active_plugins" (concat ($out.active_plugins | default (list)) (list $key)) -}}
+  {{- if and $enabled (eq $scope "user") -}}
+    {{- $_ := set $out.enabledPlugins $key true -}}
+  {{- end -}}
+{{- end -}}
+{{ $out | toJson }}

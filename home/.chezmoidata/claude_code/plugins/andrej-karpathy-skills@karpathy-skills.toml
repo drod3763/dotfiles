@@ -1,0 +1,7 @@
+[claude_code.plugins."andrej-karpathy-skills@karpathy-skills"]
+type = "common"
+enabled = true
+depends_on = ["marketplace:karpathy-skills"]
+scope = "user"
+version = "1.0.0"
+git_commit_sha = "aa4467f0b33e1e80d11c7c043d4b27e7c79a73a3"

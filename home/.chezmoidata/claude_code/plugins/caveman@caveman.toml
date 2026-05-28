@@ -1,0 +1,7 @@
+[claude_code.plugins."caveman@caveman"]
+type = "common"
+enabled = true
+depends_on = ["marketplace:caveman"]
+scope = "user"
+version = "63e797cd753b"
+git_commit_sha = "63e797cd753b301374947a5ed975c21775d962b9"

@@ -1,4 +1,5 @@
-[claude_marketplace_manifest.marketplaces."worktrunk"]
+[claude_code.marketplaces."worktrunk"]
 type = "common"
+owned = true
 source = "github"
 repo = "max-sixty/worktrunk"

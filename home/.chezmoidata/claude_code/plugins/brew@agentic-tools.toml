@@ -1,0 +1,7 @@
+[claude_code.plugins."brew@agentic-tools"]
+type = "common"
+enabled = true
+depends_on = ["marketplace:agentic-tools"]
+scope = "user"
+version = "9f582fcb4322"
+git_commit_sha = "461fae051db15a65bfca58a9cf649682f40d307b"

@@ -1,14 +1,5 @@
-{{- $marketplaceManifest := includeTemplate "claude_marketplace_manifest_renderer.tmpl" . | mustFromJson -}}
-{{- $extraKnownMarketplaces := get $marketplaceManifest "extraKnownMarketplaces" -}}
-{{- $karpathySkills := get $extraKnownMarketplaces "karpathy-skills" -}}
-{{- $caveman := get $extraKnownMarketplaces "caveman" -}}
-{{- $worktrunk := get $extraKnownMarketplaces "worktrunk" -}}
-{{- $cloudflare := get $extraKnownMarketplaces "cloudflare" -}}
-{{- $arcus := get $extraKnownMarketplaces "arcus" -}}
-{{- $teamRocketTools := get $extraKnownMarketplaces "team-rocket-tools" -}}
-{{- $claudeCodeWorkflows := get $extraKnownMarketplaces "claude-code-workflows" -}}
-{{- $agenticTools := get $extraKnownMarketplaces "agentic-tools" -}}
-{{- $openaiCodex := get $extraKnownMarketplaces "openai-codex" -}}
+{{- $marketplaceManifest := includeTemplate "claude_code_marketplace_renderer.tmpl" . | mustFromJson -}}
+{{- $pluginManifest := includeTemplate "claude_code_plugin_renderer.tmpl" . | mustFromJson -}}
 {
   "env": {
     "BASH_DEFAULT_TIMEOUT_MS": "60000",
@@ -67,89 +58,8 @@
     "command": "bash {{ .chezmoi.homeDir }}/.config/claude/statusline.sh",
     "padding": 0
   },
-  "enabledPlugins": {
-    "skill-creator@claude-plugins-official": true,
-    "andrej-karpathy-skills@karpathy-skills": true,
-    "imessage@claude-plugins-official": true{{ if not .personal }},
-    "slack@claude-plugins-official": true{{ end }},
-    "mcp-server-dev@claude-plugins-official": true,
-    "caveman@caveman": true,
-    "worktrunk@worktrunk": true,
-    "typescript-lsp@claude-plugins-official": true{{ if not .personal }},
-    "csharp-lsp@claude-plugins-official": true,
-    "arcus-build@arcus": true,
-    "arcus-deploy@arcus": true,
-    "arcus-devtools@arcus": true,
-    "arcus-infra@arcus": true,
-    "arcus-overview@arcus": true,
-    "az-access@arcus": true,
-    "javascript-typescript@claude-code-workflows": true,
-    "superpowers@claude-plugins-official": true{{ end }}{{ if .personal }},
-    "cloudflare@cloudflare": true{{ end }},
-    "engineering@agentic-tools": true,
-    "brew@agentic-tools": true,
-    "codex@openai-codex": true,
-    "writing-style@agentic-tools": true{{ if .personal }},
-    "marketplace@agentic-tools": true{{ end }}
-  },
-  "extraKnownMarketplaces": {
-    "karpathy-skills": {
-      "source": {
-        "source": "{{ get $karpathySkills.source "source" }}",
-        "repo": "{{ get $karpathySkills.source "repo" }}"
-      }
-    },
-    "caveman": {
-      "source": {
-        "source": "{{ get $caveman.source "source" }}",
-        "repo": "{{ get $caveman.source "repo" }}"
-      }
-    },
-    "worktrunk": {
-      "source": {
-        "source": "{{ get $worktrunk.source "source" }}",
-        "repo": "{{ get $worktrunk.source "repo" }}"
-      }
-    },{{ if .personal }}
-    "cloudflare": {
-      "source": {
-        "source": "{{ get $cloudflare.source "source" }}",
-        "repo": "{{ get $cloudflare.source "repo" }}"
-      }
-    },
-    {{- else }}
-    "arcus": {
-      "source": {
-        "source": "{{ get $arcus.source "source" }}",
-        "url": "{{ get $arcus.source "url" }}"
-      }
-    },
-    "team-rocket-tools": {
-      "source": {
-        "source": "{{ get $teamRocketTools.source "source" }}",
-        "repo": "{{ get $teamRocketTools.source "repo" }}"
-      }
-    },
-    "claude-code-workflows": {
-      "source": {
-        "source": "{{ get $claudeCodeWorkflows.source "source" }}",
-        "repo": "{{ get $claudeCodeWorkflows.source "repo" }}"
-      }
-    },
-    {{- end }}
-    "agentic-tools": {
-      "source": {
-        "source": "{{ get $agenticTools.source "source" }}",
-        "repo": "{{ get $agenticTools.source "repo" }}"
-      }
-    },
-    "openai-codex": {
-      "source": {
-        "source": "{{ get $openaiCodex.source "source" }}",
-        "repo": "{{ get $openaiCodex.source "repo" }}"
-      }
-    }
-  },
+  "enabledPlugins": {{ get $pluginManifest "enabledPlugins" | toPrettyJson | trimSuffix "\n" | replace "\n" "\n  " }},
+  "extraKnownMarketplaces": {{ get $marketplaceManifest "extraKnownMarketplaces" | toPrettyJson | trimSuffix "\n" | replace "\n" "\n  " }},
   "effortLevel": "high",
   "theme": "dark-daltonized"
 }

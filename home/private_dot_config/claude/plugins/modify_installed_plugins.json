@@ -5,76 +5,45 @@
   {{- $current = $stdin | fromJson -}}
 {{- end -}}
 {{- $modified := deepCopy $current -}}
-{{- $_ := "" -}}
-{{- $timestamp := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
 {{- if not (hasKey $modified "version") -}}
-  {{- $_ = set $modified "version" 2 -}}
+  {{- $_ := set $modified "version" 2 -}}
 {{- end -}}
 {{- $currentPlugins := get $current "plugins" | default (dict) -}}
 {{- $plugins := get $modified "plugins" | default (dict) -}}
-{{- $_ = set $modified "plugins" $plugins -}}
-{{- if .personal -}}
-  {{- $_ = unset $plugins "slack@claude-plugins-official" -}}
-  {{- $_ = unset $plugins "csharp-lsp@claude-plugins-official" -}}
-  {{- $_ = unset $plugins "az-access@arcus" -}}
-  {{- $_ = unset $plugins "arcus-build@arcus" -}}
-  {{- $_ = unset $plugins "arcus-deploy@arcus" -}}
-  {{- $_ = unset $plugins "arcus-devtools@arcus" -}}
-  {{- $_ = unset $plugins "arcus-infra@arcus" -}}
-  {{- $_ = unset $plugins "arcus-overview@arcus" -}}
-  {{- $_ = unset $plugins "add-hook@team-rocket-tools" -}}
-  {{- $_ = unset $plugins "add-mcp-server@team-rocket-tools" -}}
-  {{- $_ = unset $plugins "add-skill@team-rocket-tools" -}}
-  {{- $_ = unset $plugins "mbo-domain-api-mcp-creator@team-rocket-tools" -}}
-  {{- $_ = unset $plugins "javascript-typescript@claude-code-workflows" -}}
-  {{- $_ = unset $plugins "superpowers@claude-plugins-official" -}}
-{{- else -}}
-  {{- $_ = unset $plugins "cloudflare@cloudflare" -}}
-  {{- $_ = unset $plugins "marketplace@agentic-tools" -}}
+{{- $_ := set $modified "plugins" $plugins -}}
+{{- $pluginManifest := includeTemplate "claude_code_plugin_renderer.tmpl" . | mustFromJson -}}
+{{- $activeSeeds := get $pluginManifest "install_seeds" | default (dict) -}}
+{{- $ownedMarketplaces := get $pluginManifest "owned_marketplaces" | default (list) -}}
+{{- range (keys $plugins | sortAlpha | uniq) -}}
+  {{- $name := . -}}
+  {{- $parts := splitList "@" $name -}}
+  {{- if eq (len $parts) 2 -}}
+    {{- $marketplace := index $parts 1 -}}
+    {{- $installedList := get $plugins $name | default (list) -}}
+    {{- $installedPlugin := dict -}}
+    {{- if gt (len $installedList) 0 -}}
+      {{- $installedPlugin = index $installedList 0 -}}
+    {{- end -}}
+    {{- $scope := get $installedPlugin "scope" | default "" -}}
+    {{- if and (eq $scope "user") (has $marketplace $ownedMarketplaces) (not (hasKey $activeSeeds $name)) -}}
+      {{- $_ := unset $plugins $name -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
-{{- $_ = unset $plugins "telegram@claude-plugins-official" -}}
-{{- $managed := dict
-  "skill-creator@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/skill-creator/104d39be10b7" | join "") "version" "104d39be10b7" "installedAt" "2026-03-05T18:20:53.106Z" "lastUpdated" "2026-04-06T18:04:40.278Z" "gitCommitSha" "55b58ec6e5649104f926ba7558b567dc8d33c5ff")
-  "andrej-karpathy-skills@karpathy-skills" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/karpathy-skills/andrej-karpathy-skills/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-03-07T00:37:07.662Z" "lastUpdated" "2026-03-07T00:37:07.662Z" "gitCommitSha" "aa4467f0b33e1e80d11c7c043d4b27e7c79a73a3")
-  "imessage@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/imessage/0.1.0" | join "") "version" "0.1.0" "installedAt" "2026-04-06T18:04:58.261Z" "lastUpdated" "2026-04-06T18:04:58.261Z" "gitCommitSha" "104d39be10b7b1380b2ae23a387a11a297b599c3")
-  "mcp-server-dev@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/mcp-server-dev/104d39be10b7" | join "") "version" "104d39be10b7" "installedAt" "2026-04-14T22:14:28.435Z" "lastUpdated" "2026-04-14T22:14:28.435Z" "gitCommitSha" "104d39be10b7b1380b2ae23a387a11a297b599c3")
-  "caveman@caveman" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/caveman/caveman/63e797cd753b" | join "") "version" "63e797cd753b" "installedAt" "2026-04-14T22:14:28.435Z" "lastUpdated" "2026-04-14T22:14:28.435Z" "gitCommitSha" "63e797cd753b301374947a5ed975c21775d962b9")
-  "worktrunk@worktrunk" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/worktrunk/worktrunk/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-04-14T22:21:55.901Z" "lastUpdated" "2026-04-14T22:21:55.901Z" "gitCommitSha" "62653941825c642b76d723df9cab34eac759203e")
-  "typescript-lsp@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/typescript-lsp/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-04-16T17:51:30.219Z" "lastUpdated" "2026-04-16T17:51:30.219Z" "gitCommitSha" "104d39be10b7b1380b2ae23a387a11a297b599c3")
-  "brew@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/brew/9f582fcb4322" | join "") "version" "9f582fcb4322" "installedAt" "2026-05-14T19:27:38.806Z" "lastUpdated" "2026-05-23T03:53:34.802Z" "gitCommitSha" "461fae051db15a65bfca58a9cf649682f40d307b")
-  "engineering@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/engineering/9f582fcb4322" | join "") "version" "9f582fcb4322" "installedAt" "2026-05-13T15:57:17.919Z" "lastUpdated" "2026-05-23T03:53:34.804Z" "gitCommitSha" "0d252a6ba681576f54ccb5e1a9a74624daff0ae2")
-  "writing-style@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/writing-style/9f582fcb4322" | join "") "version" "9f582fcb4322" "installedAt" "2026-05-23T03:53:51.212Z" "lastUpdated" "2026-05-23T03:53:51.212Z" "gitCommitSha" "9f582fcb432222b5ab6530c85084c561206722d7")
-  "codex@openai-codex" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/openai-codex/codex/1.0.4" | join "") "version" "1.0.4" "installedAt" "2026-05-16T04:39:41.644Z" "lastUpdated" "2026-05-16T04:39:41.644Z" "gitCommitSha" "807e03ac9d5aa23bc395fdec8c3767500a86b3cf") -}}
-{{- if .personal -}}
-  {{- $_ = set $managed "marketplace@agentic-tools" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/agentic-tools/marketplace/9f582fcb4322" | join "") "version" "9f582fcb4322" "installedAt" "2026-05-23T03:54:09.239Z" "lastUpdated" "2026-05-23T03:54:09.239Z" "gitCommitSha" "9f582fcb432222b5ab6530c85084c561206722d7") -}}
-{{- end -}}
-{{- if not .personal -}}
-  {{- $_ = set $managed "slack@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/slack/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-04-06T19:07:03.385Z" "lastUpdated" "2026-04-06T19:07:03.385Z" "gitCommitSha" "7b9458950d38bb01ddb48b669f9fa89bcdfd98b8") -}}
-  {{- $_ = set $managed "csharp-lsp@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/csharp-lsp/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-04-17T20:21:05.183Z" "lastUpdated" "2026-04-17T20:21:05.183Z" "gitCommitSha" "104d39be10b7b1380b2ae23a387a11a297b599c3") -}}
-  {{- $_ = set $managed "arcus-build@arcus" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/arcus/arcus-build/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-20T17:45:05.412Z" "lastUpdated" "2026-05-20T17:45:05.412Z" "gitCommitSha" "39ce57d4de814b8f07a5b866b9f2b7c6d53025bc") -}}
-  {{- $_ = set $managed "arcus-deploy@arcus" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/arcus/arcus-deploy/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-20T17:45:18.096Z" "lastUpdated" "2026-05-20T17:45:18.096Z" "gitCommitSha" "39ce57d4de814b8f07a5b866b9f2b7c6d53025bc") -}}
-  {{- $_ = set $managed "arcus-devtools@arcus" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/arcus/arcus-devtools/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-20T17:45:37.747Z" "lastUpdated" "2026-05-20T17:45:37.747Z" "gitCommitSha" "39ce57d4de814b8f07a5b866b9f2b7c6d53025bc") -}}
-  {{- $_ = set $managed "arcus-infra@arcus" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/arcus/arcus-infra/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-20T17:45:50.769Z" "lastUpdated" "2026-05-20T17:45:50.769Z" "gitCommitSha" "39ce57d4de814b8f07a5b866b9f2b7c6d53025bc") -}}
-  {{- $_ = set $managed "arcus-overview@arcus" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/arcus/arcus-overview/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-20T17:46:03.741Z" "lastUpdated" "2026-05-20T17:46:03.741Z" "gitCommitSha" "39ce57d4de814b8f07a5b866b9f2b7c6d53025bc") -}}
-  {{- $_ = set $managed "az-access@arcus" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/arcus/az-access/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-20T17:46:27.129Z" "lastUpdated" "2026-05-20T17:46:27.129Z" "gitCommitSha" "39ce57d4de814b8f07a5b866b9f2b7c6d53025bc") -}}
-  {{- $_ = set $managed "javascript-typescript@claude-code-workflows" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-code-workflows/javascript-typescript/1.2.2" | join "") "version" "1.2.2" "installedAt" "2026-05-04T22:17:43.253Z" "lastUpdated" "2026-05-04T22:17:43.253Z" "gitCommitSha" "ece811f23310a37ceb43496dbac0e244fe6845b6") -}}
-  {{- $_ = set $managed "superpowers@claude-plugins-official" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/claude-plugins-official/superpowers/5.1.0" | join "") "version" "5.1.0" "installedAt" "2026-05-19T23:21:47.471Z" "lastUpdated" "2026-05-19T23:21:47.471Z" "gitCommitSha" "f2cbfbefebbfef77321e4c9abc9e949826bea9d7") -}}
-{{- end -}}
-{{- if .personal -}}
-  {{- $_ = set $managed "cloudflare@cloudflare" (dict "scope" "user" "installPath" (list .chezmoi.homeDir "/.config/claude/plugins/cache/cloudflare/cloudflare/1.0.0" | join "") "version" "1.0.0" "installedAt" "2026-05-04T03:56:03.542Z" "lastUpdated" "2026-05-04T03:56:03.542Z" "gitCommitSha" "7c449def4e0c63daa27212d853094e4c8e37bbe8") -}}
-{{- end -}}
-{{- range $name, $managedPlugin := $managed -}}
+{{- range (keys $activeSeeds | sortAlpha | uniq) -}}
+  {{- $name := . -}}
+  {{- $managedPlugin := deepCopy (get $activeSeeds $name) -}}
   {{- $currentPlugin := dict -}}
   {{- $currentList := get $currentPlugins $name | default (list) -}}
   {{- if gt (len $currentList) 0 -}}
     {{- $currentPlugin = index $currentList 0 -}}
     {{- range $field := list "installPath" "version" "gitCommitSha" "installedAt" "lastUpdated" -}}
       {{- if hasKey $currentPlugin $field -}}
-        {{- $_ = set $managedPlugin $field (get $currentPlugin $field) -}}
+        {{- $_ := set $managedPlugin $field (get $currentPlugin $field) -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
-  {{- $_ = set $plugins $name (list $managedPlugin) -}}
+  {{- $_ := set $plugins $name (list $managedPlugin) -}}
 {{- end -}}
 {{- if deepEqual $current $modified -}}
 {{ $stdin }}

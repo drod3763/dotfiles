@@ -1,0 +1,7 @@
+[claude_code.plugins."superpowers@claude-plugins-official"]
+type = "work"
+enabled = true
+depends_on = ["builtin_marketplace:claude-plugins-official"]
+scope = "user"
+version = "5.1.0"
+git_commit_sha = "f2cbfbefebbfef77321e4c9abc9e949826bea9d7"

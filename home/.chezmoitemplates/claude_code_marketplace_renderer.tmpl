@@ -1,24 +1,33 @@
 {{- $ctx := . -}}
-{{- $marketplacesRaw := ($ctx.claude_marketplace_manifest.marketplaces | default (dict)) -}}
+{{- $claudeCode := ($ctx.claude_code | default (dict)) -}}
+{{- $marketplacesRaw := (get $claudeCode "marketplaces" | default (dict)) -}}
 {{- if not (kindIs "map" $marketplacesRaw) -}}
-  {{- fail "claude_marketplace_manifest.marketplaces must be a map" -}}
+  {{- fail "claude_code.marketplaces must be a map" -}}
 {{- end -}}
 {{- $out := dict
   "active_marketplaces" (list)
+  "owned_marketplaces" (list)
   "extraKnownMarketplaces" (dict) -}}
 {{- range (keys $marketplacesRaw | sortAlpha | uniq) -}}
   {{- $name := . -}}
   {{- $marketplace := (get $marketplacesRaw $name | default (dict)) -}}
+  {{- if not (hasKey $marketplace "owned") -}}
+    {{- fail (printf "missing owned for Claude Code marketplace %q" $name) -}}
+  {{- end -}}
+  {{- $owned := get $marketplace "owned" -}}
+  {{- if not (kindIs "bool" $owned) -}}
+    {{- fail (printf "owned must be a boolean for Claude Code marketplace %q" $name) -}}
+  {{- end -}}
+  {{- $marketplaceType := (get $marketplace "type" | default "") -}}
+  {{- if not (has $marketplaceType (list "common" "personal" "work")) -}}
+    {{- fail (printf "unsupported Claude marketplace type %q for %q" $marketplaceType $name) -}}
+  {{- end -}}
   {{- $active := true -}}
-  {{- $marketplaceType := (get $marketplace "type" | default "common") -}}
   {{- if and $active (eq $marketplaceType "personal") (not $ctx.personal) -}}
     {{- $active = false -}}
   {{- end -}}
   {{- if and $active (eq $marketplaceType "work") $ctx.personal -}}
     {{- $active = false -}}
-  {{- end -}}
-  {{- if and $active (not (has $marketplaceType (list "common" "personal" "work"))) -}}
-    {{- fail (printf "unsupported Claude marketplace type %q for %q" $marketplaceType $name) -}}
   {{- end -}}
   {{- if not $active -}}
     {{- continue -}}
@@ -42,5 +51,8 @@
   {{- end -}}
   {{- $_ := set $out.extraKnownMarketplaces $name (dict "source" $source) -}}
   {{- $_ := set $out "active_marketplaces" (concat ($out.active_marketplaces | default (list)) (list $name)) -}}
+  {{- if $owned -}}
+    {{- $_ := set $out "owned_marketplaces" (concat ($out.owned_marketplaces | default (list)) (list $name)) -}}
+  {{- end -}}
 {{- end -}}
 {{ $out | toJson }}

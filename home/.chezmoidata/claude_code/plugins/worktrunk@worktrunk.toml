@@ -1,0 +1,7 @@
+[claude_code.plugins."worktrunk@worktrunk"]
+type = "common"
+enabled = true
+depends_on = ["marketplace:worktrunk"]
+scope = "user"
+version = "1.0.0"
+git_commit_sha = "62653941825c642b76d723df9cab34eac759203e"

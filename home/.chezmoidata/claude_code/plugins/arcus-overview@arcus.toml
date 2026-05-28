@@ -1,0 +1,7 @@
+[claude_code.plugins."arcus-overview@arcus"]
+type = "work"
+enabled = true
+depends_on = ["marketplace:arcus"]
+scope = "user"
+version = "1.0.0"
+git_commit_sha = "39ce57d4de814b8f07a5b866b9f2b7c6d53025bc"

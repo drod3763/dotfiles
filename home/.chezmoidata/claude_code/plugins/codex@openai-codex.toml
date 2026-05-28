@@ -1,0 +1,7 @@
+[claude_code.plugins."codex@openai-codex"]
+type = "common"
+enabled = true
+depends_on = ["marketplace:openai-codex"]
+scope = "user"
+version = "1.0.4"
+git_commit_sha = "807e03ac9d5aa23bc395fdec8c3767500a86b3cf"
