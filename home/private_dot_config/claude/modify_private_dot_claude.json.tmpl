@@ -36,4 +36,5 @@ mcp_servers_json=$(cat <<'JSON'
 JSON
 )
 
-jq --argjson mcpServers "${mcp_servers_json}" '.mcpServers = $mcpServers' "${current_file}"
+updated_json="$(jq --argjson mcpServers "${mcp_servers_json}" '.mcpServers = $mcpServers' "${current_file}")"
+printf '%s' "${updated_json}"
