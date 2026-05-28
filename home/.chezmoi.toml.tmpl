@@ -91,6 +91,10 @@ osID = {{ $osID | quote }}
 personal = {{ $personal }}
 shell = {{ $shell | quote }}
 transient = {{ $transient }}
+{{- if lookPath "diffnav" }}
+[diff]
+pager = "diffnav"
+{{- end }}
 [edit]
 apply = true
 autoCommit = true

@@ -23,7 +23,7 @@
 {{- end -}}
 
 {{- if lookPath "diffnav"}}
-{{- $diffPager = "diffnav" -}}
+{{- $diffPager = "diffnav --watch" -}}
 {{- end -}}
 
 {{- if and (eq .chezmoi.os "linux") (lookPath "bcompare") }}
