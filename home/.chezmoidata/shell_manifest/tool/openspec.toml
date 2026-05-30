@@ -1,9 +1,0 @@
-[shell_manifest.entries.openspec]
-priority = 224
-
-[shell_manifest.entries.openspec.rules]
-when_tool = "openspec"
-
-[shell_manifest.entries.openspec.exports.OPENSPEC_TELEMETRY]
-kind = "literal"
-value = "0"
