@@ -43,6 +43,15 @@
       "mcp__azure-devops__advsec_get_alerts"
     ]
   },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Bash(gh api graphql *)",
+      "Bash(gh api repos/*/pulls/*/reviews/*/dismissals *)",
+      "Bash(gh api repos/*/pulls/*/requested_reviewers *)"
+    ]
+  },
+  "defaultMode": "plan",
   "model": "opusplan",
   "enableAllProjectMcpServers": true,
   "hooks": {
