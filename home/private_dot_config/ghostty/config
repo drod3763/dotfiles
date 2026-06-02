@@ -1,10 +1,9 @@
+background-blur-radius = 20
+copy-on-select = true
+cursor-style-blink = false
 font-family = "PragmataPro VF Mono Liga"
 font-size = 16
-theme = dark:Catppuccin Mocha,light:Catppuccin Latte
-cursor-style-blink = false
-copy-on-select = true
-quick-terminal-position = top
-quick-terminal-screen = mouse
+keybind = shift+enter=text:\n
 macos-non-native-fullscreen = visible-menu
 macos-option-as-alt = true
 
@@ -12,5 +11,8 @@ macos-option-as-alt = true
 # With some window managers and window transparency settings, you may
 # find false more visually appealing.
 macos-window-shadow = true
-
-keybind = shift+enter=text:\n
+mouse-hide-while-typing = true
+quick-terminal-position = top
+quick-terminal-screen = mouse
+theme = dark:Catppuccin Mocha,light:Catppuccin Latte
+window-decoration = false
