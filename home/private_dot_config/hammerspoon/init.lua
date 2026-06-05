@@ -48,6 +48,36 @@ spoon.SpoonInstall:andUse("PaperWM", {
         local pip_title = "[Pp]icture[%- ]in[%- ]Picture"
         pwm.window_filter:setAppFilter("Zen", { rejectTitles = pip_title })
 
+        local tiled_border_color = "0xffff4d4f"
+        local floating_border_color = "0xff56b4e9"
+        local unmanaged_border_color = "0xffcc79a7"
+
+        local function update_border_color(window)
+            if not window then
+                return
+            end
+
+            local color = unmanaged_border_color
+            if pwm.floating.isFloating(window) then
+                color = floating_border_color
+            elseif pwm.state.windowIndex(window) then
+                color = tiled_border_color
+            end
+            hs.task.new("/opt/homebrew/bin/borders", nil, { "active_color=" .. color }):start()
+        end
+
+        hs.window.filter.default:subscribe(hs.window.filter.windowFocused, update_border_color)
+
+        if pwm.floating and pwm.floating.toggleFloating then
+            local original_toggle_floating = pwm.floating.toggleFloating
+            pwm.floating.toggleFloating = function(window)
+                original_toggle_floating(window)
+                update_border_color(window or hs.window.focusedWindow())
+            end
+        end
+
+        update_border_color(hs.window.focusedWindow())
+
         if pwm.windows and pwm.windows.addWindow then
             local original_add_window = pwm.windows.addWindow
             pwm.windows.addWindow = function(window)

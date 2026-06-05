@@ -15,4 +15,4 @@ mouse-hide-while-typing = true
 quick-terminal-position = top
 quick-terminal-screen = mouse
 theme = dark:Catppuccin Mocha,light:Catppuccin Latte
-window-decoration = false
+window-decoration = true
