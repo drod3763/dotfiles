@@ -4,6 +4,7 @@ cursor-style-blink = false
 font-family = "PragmataPro VF Mono Liga"
 font-size = 16
 keybind = shift+enter=text:\n
+keybind = super+t=unbind
 macos-non-native-fullscreen = visible-menu
 macos-option-as-alt = true
 
