@@ -95,7 +95,7 @@ value = "source ~/.zshrc"
 
 [shell_manifest.entries.zsh-core.aliases.clear]
 kind = "literal"
-value = "z4h-clear-screen-soft-bottom"
+value = "clear-soft-bottom"
 
 [shell_manifest.entries.zsh-core.functions.alias]
 kind = "literal"
@@ -107,4 +107,154 @@ alias() {
     builtin alias "$@"
   fi
 }
+'''
+
+# --- Completion system. Runs after zsh-completions adds to fpath (priority 40)
+#     and before bashcompinit (zsh-core, priority 180). ---
+[shell_manifest.entries.zsh-completion]
+priority = 60
+
+[shell_manifest.entries.zsh-completion.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zsh-completion.init.compinit]
+kind = "literal"
+value = '''
+autoload -Uz compinit compaudit
+# Homebrew makes its share dirs group-writable, which compinit reports as insecure
+# and prompts about. Strip group/other write from whatever compaudit flags (we own
+# these dirs), so compinit never prompts. Self-heals after a brew install/reinstall
+# re-adds group write.
+() {
+  local -a insecure
+  insecure=(${(f)"$(compaudit 2>/dev/null)"})
+  (( $#insecure )) && chmod go-w -- $insecure 2>/dev/null
+}
+() {
+  local dump="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump"
+  [[ -d "${dump:h}" ]] || mkdir -p -- "${dump:h}"
+  compinit -d "$dump"
+}
+'''
+
+# --- Custom ZLE widgets (replaces zsh4humans widgets). The key bindings that
+#     reference these live in home/.chezmoitemplates/bindkeys.tmpl. ---
+[shell_manifest.entries.zsh-widgets]
+priority = 190
+
+[shell_manifest.entries.zsh-widgets.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zsh-widgets.init.widgets]
+kind = "literal"
+value = '''
+autoload -Uz add-zsh-hook
+
+# Directory history navigation (Alt + arrow keys), modeled on z4h-cd-*.
+typeset -gi DIRHISTORY_SIZE=30
+typeset -ga _dirhist_past=("$PWD") _dirhist_future=()
+typeset -gi _dirhist_lock=0
+
+_dirhist_record() {
+  (( _dirhist_lock )) && return
+  [[ "${_dirhist_past[-1]}" == "$PWD" ]] && return
+  _dirhist_past+=("$PWD")
+  (( ${#_dirhist_past} > DIRHISTORY_SIZE )) && _dirhist_past=("${(@)_dirhist_past[2,-1]}")
+  _dirhist_future=()
+}
+add-zsh-hook chpwd _dirhist_record
+
+dirhistory-back() {
+  (( ${#_dirhist_past} > 1 )) || return
+  _dirhist_future+=("${_dirhist_past[-1]}")
+  _dirhist_past=("${(@)_dirhist_past[1,-2]}")
+  _dirhist_lock=1; builtin cd -- "${_dirhist_past[-1]}" 2>/dev/null; _dirhist_lock=0
+  zle && zle reset-prompt
+}
+zle -N dirhistory-back
+
+dirhistory-forward() {
+  (( ${#_dirhist_future} > 0 )) || return
+  local d="${_dirhist_future[-1]}"
+  _dirhist_future=("${(@)_dirhist_future[1,-2]}")
+  _dirhist_past+=("$d")
+  _dirhist_lock=1; builtin cd -- "$d" 2>/dev/null; _dirhist_lock=0
+  zle && zle reset-prompt
+}
+zle -N dirhistory-forward
+
+dirhistory-up() {
+  builtin cd -- .. 2>/dev/null
+  zle && zle reset-prompt
+}
+zle -N dirhistory-up
+
+dirhistory-down() {
+  local -a children=(*(/N))
+  (( ${#children} )) || return
+  builtin cd -- "${children[1]}" 2>/dev/null
+  zle && zle reset-prompt
+}
+zle -N dirhistory-down
+
+# Soft clear: scroll the prompt to the bottom, preserving scrollback.
+clear-soft-bottom() {
+  printf '\n%.0s' {1.."$LINES"}
+  command clear
+}
+zsh-clear-soft-bottom() {
+  printf '\n%.0s' {1.."$LINES"}
+  zle && zle reset-prompt
+}
+zle -N zsh-clear-soft-bottom
+
+# Backward-kill a whitespace-delimited word (z4h-backward-kill-zword).
+backward-kill-zword() {
+  local WORDCHARS='*?_-.[]~=/&;!#$%^(){}<>|'
+  zle backward-kill-word
+}
+zle -N backward-kill-zword
+
+# Ctrl+D exits on an empty line; otherwise deletes a character.
+zsh-eof() {
+  if [[ -n "$BUFFER" ]]; then
+    zle delete-char-or-list
+  else
+    exit
+  fi
+}
+zle -N zsh-eof
+'''
+
+# --- Terminal title: working dir while idle, command while running. ---
+[shell_manifest.entries.zsh-term-title]
+priority = 195
+
+[shell_manifest.entries.zsh-term-title.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zsh-term-title.init.term-title]
+kind = "literal"
+value = '''
+autoload -Uz add-zsh-hook
+
+_term_title() { print -rn -- $'\e]0;'"$1"$'\a' }
+
+_term_title_precmd() {
+  if [[ -n "$SSH_CONNECTION" ]]; then
+    _term_title "${(%):-%n@%m: %~}"
+  else
+    _term_title "${(%):-%~}"
+  fi
+}
+_term_title_preexec() {
+  local cmd="${1//$'\n'/ }"
+  if [[ -n "$SSH_CONNECTION" ]]; then
+    _term_title "${(%):-%n@%m}: ${cmd}"
+  else
+    _term_title "$cmd"
+  fi
+}
+add-zsh-hook precmd  _term_title_precmd
+add-zsh-hook preexec _term_title_preexec
 '''

@@ -5,3 +5,5 @@
 .npmrc
 .zshrc
 .zsh_history
+.cache/zsh4humans
+.config/zsh/.zshenv

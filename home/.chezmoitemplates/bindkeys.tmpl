@@ -1,8 +1,31 @@
-z4h bindkey redo Alt+/              # redo the last undone command line change
-z4h bindkey undo Ctrl+/ Shift+Tab   # undo the last command line change
-z4h bindkey z4h-backward-kill-word  Ctrl+Backspace     Ctrl+H
-z4h bindkey z4h-backward-kill-zword Ctrl+Alt+Backspace
-z4h bindkey z4h-cd-back    Alt+Left   # cd into the previous directory
-z4h bindkey z4h-cd-down    Alt+Down   # cd into a child directory
-z4h bindkey z4h-cd-forward Alt+Right  # cd into the next directory
-z4h bindkey z4h-cd-up      Alt+Up     # cd into the parent directory
+{{- /* Key bindings. The ZLE widgets are defined in the zsh shell manifest
+(sections/init.zsh); plugin widgets (history-substring-search) are sourced there
+too, so this partial is included after that file in .zshrc. */ -}}
+# Directory history navigation (Alt + arrow keys; xterm modifier 3 and 9 forms).
+bindkey '^[[1;3D' dirhistory-back
+bindkey '^[[1;9D' dirhistory-back
+bindkey '^[[1;3C' dirhistory-forward
+bindkey '^[[1;9C' dirhistory-forward
+bindkey '^[[1;3A' dirhistory-up
+bindkey '^[[1;9A' dirhistory-up
+bindkey '^[[1;3B' dirhistory-down
+bindkey '^[[1;9B' dirhistory-down
+
+# Line editing.
+bindkey '^L'   zsh-clear-soft-bottom
+bindkey '^D'   zsh-eof
+bindkey '^_'   undo
+bindkey '^[[Z' undo
+bindkey '^[/'  redo
+bindkey '^H'   backward-kill-word
+bindkey '^[^H' backward-kill-zword
+bindkey '^[^?' backward-kill-zword
+
+# History prefix search (zsh-history-substring-search). No-ops if the widget is
+# absent (plugin not installed).
+bindkey '^[[A' history-substring-search-up
+bindkey '^[OA' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+bindkey '^[OB' history-substring-search-down
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down

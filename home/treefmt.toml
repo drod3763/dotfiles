@@ -67,7 +67,13 @@ options = ["prettier", "--write"]
 
 [formatter.go-template]
 command = "bunx"
-excludes = ["home/private_dot_config/git/config.tmpl"]
+excludes = [
+  "home/private_dot_config/git/config.tmpl",
+  # Render-only shell templates: prettier reflows shell runs as prose and breaks
+  # the rendered output. Keep them out of the go-template formatter.
+  "home/private_dot_config/zsh/dot_zshrc.tmpl",
+  "home/.chezmoitemplates/bindkeys.tmpl",
+]
 includes = ["*.tmpl"]
 options = [
   "prettier",

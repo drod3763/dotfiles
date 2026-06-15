@@ -1,0 +1,28 @@
+[package_catalog.packages."fzf-tab"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "fzf-tab"
+
+# Replace zsh's completion menu with fzf. Must load after compinit (priority 60)
+# and before zsh-syntax-highlighting (priority 380).
+[shell_manifest.entries.fzf-tab]
+priority = 355
+
+[shell_manifest.entries.fzf-tab.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.fzf-tab.init.fzf-tab]
+kind = "literal"
+value = '''
+() {
+  local p
+  for p in "$HOMEBREW_PREFIX/share/fzf-tab/fzf-tab.zsh" \
+           "$HOMEBREW_PREFIX/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh"; do
+    [[ -r "$p" ]] && { source "$p"; break }
+  done
+}
+# Recurse into directories and keep Tab repeating inside fzf (z4h parity).
+zstyle ':fzf-tab:*' continuous-trigger 'tab'
+zstyle ':fzf-tab:*' fzf-bindings 'tab:accept'
+'''

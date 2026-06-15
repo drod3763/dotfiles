@@ -1,0 +1,21 @@
+[package_catalog.packages."powerlevel10k"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "powerlevel10k"
+
+[shell_manifest.entries.powerlevel10k]
+priority = 100
+
+[shell_manifest.entries.powerlevel10k.rules]
+when_shell = ["zsh"]
+
+# Load the prompt theme and the tuned configuration. The instant-prompt preamble
+# lives at the top of .zshrc; this finalizes the real prompt.
+[shell_manifest.entries.powerlevel10k.init.powerlevel10k]
+kind = "literal"
+value = '''
+[[ -r "$HOMEBREW_PREFIX/share/powerlevel10k/powerlevel10k.zsh-theme" ]] &&
+  source "$HOMEBREW_PREFIX/share/powerlevel10k/powerlevel10k.zsh-theme"
+[[ -r "$ZDOTDIR/.p10k.zsh" ]] && source "$ZDOTDIR/.p10k.zsh"
+'''

@@ -1,0 +1,22 @@
+[package_catalog.packages."zsh-history-substring-search"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "zsh-history-substring-search"
+
+# Prefix history search on Up/Down (z4h parity). Per the plugin's docs it MUST be
+# sourced last — after zsh-syntax-highlighting (priority 380).
+[shell_manifest.entries.zsh-history-substring-search]
+priority = 400
+
+[shell_manifest.entries.zsh-history-substring-search.rules]
+when_shell = ["zsh"]
+
+# Key bindings (Up/Down/vicmd) live in home/.chezmoitemplates/bindkeys.tmpl, which
+# .zshrc includes after this section is sourced.
+[shell_manifest.entries.zsh-history-substring-search.init.zsh-history-substring-search]
+kind = "literal"
+value = '''
+[[ -r "$HOMEBREW_PREFIX/share/zsh-history-substring-search/zsh-history-substring-search.zsh" ]] &&
+  source "$HOMEBREW_PREFIX/share/zsh-history-substring-search/zsh-history-substring-search.zsh"
+'''

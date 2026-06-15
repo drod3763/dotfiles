@@ -1,0 +1,20 @@
+[package_catalog.packages."zsh-completions"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "zsh-completions"
+
+# Prepend the extra completion definitions to fpath before compinit runs
+# (compinit lives in shell/zsh.toml at priority 60).
+[shell_manifest.entries.zsh-completions]
+priority = 40
+
+[shell_manifest.entries.zsh-completions.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zsh-completions.init.zsh-completions]
+kind = "literal"
+value = '''
+[[ -d "$HOMEBREW_PREFIX/share/zsh-completions" ]] &&
+  fpath=("$HOMEBREW_PREFIX/share/zsh-completions" $fpath)
+'''

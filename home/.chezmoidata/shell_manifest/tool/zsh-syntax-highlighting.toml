@@ -1,0 +1,23 @@
+[package_catalog.packages."zsh-syntax-highlighting"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "zsh-syntax-highlighting"
+
+# Command-line syntax highlighting. Must load after autosuggestions and after all
+# custom widgets are defined, and before history-substring-search (priority 400).
+[shell_manifest.entries.zsh-syntax-highlighting]
+priority = 380
+
+[shell_manifest.entries.zsh-syntax-highlighting.rules]
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zsh-syntax-highlighting.init.zsh-syntax-highlighting]
+kind = "literal"
+value = '''
+[[ -r "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] &&
+  source "$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+# Catppuccin Macchiato styles (fetched via .chezmoiexternal.toml).
+[[ -r "$ZDOTDIR/catppuccin_macchiato-zsh-syntax-highlighting.zsh" ]] &&
+  source "$ZDOTDIR/catppuccin_macchiato-zsh-syntax-highlighting.zsh"
+'''

@@ -10,15 +10,35 @@ priority = 305
 [shell_manifest.entries.fzf.rules]
 when_tool = "fzf"
 
+# Key bindings (Ctrl+R history, Ctrl+T files, Alt+C cd) and completion.
+# Replaces z4h's fzf integration.
+[shell_manifest.entries.fzf-init-zsh]
+priority = 306
+
+[shell_manifest.entries.fzf-init-zsh.rules]
+when_tool = "fzf"
+when_shell = ["zsh"]
+
+[shell_manifest.entries.fzf-init-zsh.init.fzf]
+kind = "literal"
+value = 'source <(fzf --zsh)'
+
+[shell_manifest.entries.fzf-init-bash]
+priority = 306
+
+[shell_manifest.entries.fzf-init-bash.rules]
+when_tool = "fzf"
+when_shell = ["bash"]
+
+[shell_manifest.entries.fzf-init-bash.init.fzf]
+kind = "literal"
+value = 'eval "$(fzf --bash)"'
+
+# Single line: the exports renderer quotes this value, which would escape embedded
+# newlines/backslashes into literal \n that fzf rejects at parse time.
 [shell_manifest.entries.fzf.exports.FZF_DEFAULT_OPTS]
 kind = "literal"
-value = '''
---color=bg+:#414559,bg:#303446,spinner:#F2D5CF,hl:#E78284 \
---color=fg:#C6D0F5,header:#E78284,info:#CA9EE6,pointer:#F2D5CF \
---color=marker:#BABBF1,fg+:#C6D0F5,prompt:#CA9EE6,hl+:#E78284 \
---color=selected-bg:#51576D \
---color=border:#737994,label:#C6D0F5
-'''
+value = "--color=bg+:#414559,bg:#303446,spinner:#F2D5CF,hl:#E78284 --color=fg:#C6D0F5,header:#E78284,info:#CA9EE6,pointer:#F2D5CF --color=marker:#BABBF1,fg+:#C6D0F5,prompt:#CA9EE6,hl+:#E78284 --color=selected-bg:#51576D --color=border:#737994,label:#C6D0F5"
 
 [shell_manifest.entries.fzf.aliases.cpf]
 kind = "literal"

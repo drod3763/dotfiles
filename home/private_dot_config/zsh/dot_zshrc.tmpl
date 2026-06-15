@@ -1,151 +1,64 @@
-{{- /* Personal Zsh configuration file. It is strongly recommended to keep all
-shell customization and configuration (including exported environment
-variables such as PATH) in this file or in files sourced from it.
+{{- /* Personal Zsh configuration (vanilla zsh; plugins sourced from Homebrew).
+Shell behavior is defined in home/.chezmoidata/shell_manifest/**.toml and rendered
+into $ZDOTDIR/sections/*.zsh. Keep customization there, not inline here. */ -}}
+# Powerlevel10k instant prompt. Must stay close to the top of .zshrc; console
+# output before it (e.g. echo) breaks the instant prompt. The real theme is loaded
+# from the init section below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
 
-Documentation: https://github.com/romkatv/zsh4humans/blob/v5/README.md.
+{{ if eq .chezmoi.os "darwin" -}}
+# Ensure HOMEBREW_PREFIX et al. are set before the PATH section uses them.
+[[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
+[[ -x /usr/local/bin/brew ]] && eval "$(/usr/local/bin/brew shellenv)"
+{{ end -}}
 
-Periodic auto-update on Zsh startup: 'ask' or 'no'.
-You can manually run `z4h update` to update everything. */ -}}
-# Zsh4Humans configuration
-zstyle ':z4h:' auto-update      'no'
-zstyle ':z4h:' auto-update-days '28' {{/* Ask whether to auto-update this often; has no effect if auto-update is 'no'. */}}
-zstyle ':z4h:' prompt-at-bottom 'yes' {{/* Move prompt to the bottom when zsh starts and on Ctrl+L. */}}
+# Source a file, compiling it to a .zwc bytecode cache first for faster startup
+# (replaces z4h's `z4h source --compile`).
+_zsh_source() {
+  local f=$1
+  [[ -r $f ]] || return
+  if [[ ! -e $f.zwc || $f -nt $f.zwc ]]; then
+    zcompile -R -- $f.zwc $f 2>/dev/null
+  fi
+  source $f
+}
 
-{{- /* Keyboard type: 'mac' or 'pc'. */}}
-{{- if eq .chezmoi.os "darwin" }}
-zstyle ':z4h:bindkey' keyboard 'mac'
-{{- else }}
-zstyle ':z4h:bindkey' keyboard 'pc'
-{{- end }}
-{{- /* Make transient prompt work consistently when closing an SSH connection */}}
-z4h bindkey z4h-eof Ctrl+D
-setopt ignore_eof
-
-{{- /* Fix terminal titles */}}
-zstyle ':z4h:term-title:ssh'   preexec '%n@${${${Z4H_SSH##*:}//\%/%%}:-%m}: ${1//\%/%%}'
-zstyle ':z4h:term-title:ssh'   precmd  '%n@${${${Z4H_SSH##*:}//\%/%%}:-%m}: %~'
-zstyle ':z4h:term-title:local' preexec '${1//\%/%%}'
-zstyle ':z4h:term-title:local' precmd  '%~'
-
-{{- /* Mark up shell's output with semantic information. */}}
-zstyle ':z4h:' term-shell-integration 'yes'
-
-{{- /* Right-arrow key accepts one character ('partial-accept') from
-command autosuggestions or the whole thing ('accept')? */}}
-zstyle ':z4h:autosuggestions' forward-char 'partial-accept'
-zstyle ':z4h:autosuggestions' end-of-line  partial-accept
-zstyle ':z4h:fzf-complete' recurse-dirs 'yes' {{/* Recursively traverse directories when TAB-completing files. */}}
-zstyle ':z4h:fzf-complete' fzf-bindings tab:repeat {{/* Rebind Tab in fzf from up to repeat: */}}
-zstyle ':z4h:direnv'         enable 'no' {{/* Enable direnv to automatically source .envrc files. */}}
-zstyle ':z4h:direnv:success' notify 'no' {{/* Show "loading" and "unloading" notifications from direnv. */}}
-
-{{- /* Enable ('yes') or disable ('no') automatic teleportation of z4h over
-SSH when connecting to these hosts.
-zstyle ':z4h:ssh:example-hostname1'   enable 'yes'
-zstyle ':z4h:ssh:*.example-hostname2' enable 'no'
-The default value if none of the overrides above match the hostname.
-zstyle ':z4h:ssh:*'                     enable 'no'
-
-# Send these files over to the remote host when connecting over SSH to the
-# enabled hosts.
-# zstyle ':z4h:ssh:*' send-extra-files '~/.nanorc' '~/.env.zsh'
-
-# Clone additional Git repositories from GitHub.
-#
-# This doesn't do anything apart from cloning the repository and keeping it
-# up-to-date. Cloned files can be used after `z4h init`. This is just an
-# example. If you don't plan to use Oh My Zsh, delete this line.
-# z4h install ohmyzsh/ohmyzsh || return
-
-# Install or update core components (fzf, zsh-autosuggestions, etc.) and
-# initialize Zsh. After this point console I/O is unavailable until Zsh
-# is fully initialized. Everything that requires user interaction or can
-# perform network I/O must be done above. Everything else is best done below. */}}
-z4h init || return
-
-# Export environment variables.
-z4h source --compile "$ZDOTDIR/sections/exports.zsh"
-
-# Extend PATH.
-z4h source --compile "$ZDOTDIR/sections/path.zsh"
-
-{{- /* Source additional local files if they exist.
-z4h source ~/.env.zsh */}}
-
-{{- /* Use additional Git repositories pulled in with `z4h install`.
-
- This is just an example that you should delete. It does nothing useful.
- z4h source ohmyzsh/ohmyzsh/lib/diagnostics.zsh  # source an individual file
- z4h load   ohmyzsh/ohmyzsh/plugins/emoji-clock  # load a plugin */}}
-
-# Key Bindings
-{{- /* Define key bindings. */}}
-{{ template "bindkeys.tmpl" . }}
+# Export environment variables, then extend PATH.
+_zsh_source "$ZDOTDIR/sections/exports.zsh"
+_zsh_source "$ZDOTDIR/sections/path.zsh"
 
 # Autoload functions.
 autoload -Uz zmv
 
-# Functions
-{{- /* Define functions and completions.
-function md() { [[ $# == 1 ]] && mkdir -p -- "$1" && cd -- "$1" }
-compdef _directories md */}}
-z4h source --compile "$ZDOTDIR/sections/functions.zsh"
+# Functions and aliases.
+_zsh_source "$ZDOTDIR/sections/functions.zsh"
+_zsh_source "$ZDOTDIR/sections/aliases.zsh"
 
-# Aliases
-{{- /* Define aliases. */}}
+# History. z4h used to configure these; set them explicitly now.
+HISTFILE="$ZDOTDIR/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
 
-{{- /* Define named directories: ~w <=> Windows home directory on WSL.
-[[ -z $z4h_win_home ]] || hash -d w=$z4h_win_home */}}
-
-{{- /* Define aliases.
-alias tree='tree -a -I .git' */}}
-z4h source --compile "$ZDOTDIR/sections/aliases.zsh"
-
-{{- /* Add flags to existing aliases.
-alias ls="${aliases[ls]:-ls} -A" */}}
-
-# Options
-{{- /* # Set shell options: http://zsh.sourceforge.net/Doc/Release/Options.html. */}}
-setopt glob_dots     # no special treatment for file names with a leading dot
-setopt no_auto_menu  # require an extra TAB press to open the completion menu
-{{- /* Options enabled by Z4H by default:
-    'always_to_end' - move to the end of the word after a completion
-    'auto_cd' - shell will automatically change directory if you don't type CD
-    'auto_menu'
-    'auto_param_slash'
-    'auto_pushd'
-    'c_bases'
-    'extended_glob'
-    'extended_history' - adds a bit more data to the history entries
-    'hist_expire_dups_first'
-    'hist_find_no_dups'
-    'hist_ignore_dups' - do not store duplications
-    'hist_ignore_space'
-    'hist_save_no_dups'
-    'hist_verify'
-    'interactive_comments'
-    'multios'
-    'no_aliases'
-    'no_auto_remove_slash'
-    'no_beep'
-    'no_bg_nice'
-    'no_bg_nice'
-    'no_flow_control'
-    'no_list_types'
-    'no_prompt_bang'
-    'no_prompt_subst'
-    'prompt_cr'
-    'prompt_percent'
-    'prompt_sp'
-    'share_history' - share history across multiple zsh sessions
-    'typeset_silent'
-*/}}
-setopt append_history # append to history
-setopt inc_append_history # adds commands as they are typed, not at shell exit
-setopt hist_reduce_blanks # removes blank lines from history
-setopt no_case_glob # case insensitive globbing
-setopt hash_list_all # update list of commands so you don't get corrections for real things
+# Shell options. Reproduces the set z4h enabled by default, plus local overrides.
+setopt auto_cd auto_pushd pushd_ignore_dups pushd_silent  # smarter cd / dir stack
+setopt extended_glob glob_dots no_case_glob               # globbing
+setopt always_to_end auto_param_slash no_auto_remove_slash
+setopt interactive_comments multios no_beep no_flow_control c_bases
+setopt no_auto_menu                                       # extra TAB to open menu
+setopt hash_list_all                                      # rehash command list
+setopt extended_history hist_verify hist_reduce_blanks
+setopt hist_ignore_dups hist_ignore_space hist_find_no_dups
+setopt hist_save_no_dups hist_expire_dups_first
+setopt append_history inc_append_history share_history
 chpwd() { ll }
 
-# Initialize Software
-z4h source --compile "$ZDOTDIR/sections/init.zsh"
+# Completion, plugins and prompt, ordered by manifest priority. This is the only
+# place plugins are sourced (zsh-syntax-highlighting renders last, followed by
+# zsh-history-substring-search per its required load order). ZLE widgets are
+# defined here too.
+_zsh_source "$ZDOTDIR/sections/init.zsh"
+
+# Key bindings. Included after init.zsh so every widget it binds already exists.
+{{ template "bindkeys.tmpl" . }}

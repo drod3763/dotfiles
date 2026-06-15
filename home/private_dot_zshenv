@@ -1,2 +1,7 @@
+# Zsh bootstrap. zsh reads ~/.zshenv before ZDOTDIR is known, so it must live in
+# $HOME. Relocate all other zsh config under XDG; interactive/login config lives
+# in $ZDOTDIR/.zshrc.
 ZDOTDIR=~/.config/zsh
-source -- "$ZDOTDIR"/.zshenv
+
+# Do not create world-writable files by default.
+umask o-w
