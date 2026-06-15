@@ -1,0 +1,5 @@
+[package_catalog.packages."tap-dlvhdr-formulae"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_tap_name = "dlvhdr/formulae"

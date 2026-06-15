@@ -1,5 +1,5 @@
 [package_catalog.packages."tap-felixkratz-formulae"]
 os = "mac"
-type = "work"
+type = "common"
 target_class = "all"
 brew_tap_name = "felixkratz/formulae"

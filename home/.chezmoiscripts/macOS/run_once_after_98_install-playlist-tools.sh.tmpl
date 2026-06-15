@@ -38,6 +38,7 @@ gh auth setup-git
 echo "Installing playlist-tech tools..."
 
 brew tap playlist-tech/tap
+brew trust playlist-tech/tap
 
 if brew list --formula pipemind >/dev/null 2>&1; then
   echo "Skipping pipemind install: already installed."
