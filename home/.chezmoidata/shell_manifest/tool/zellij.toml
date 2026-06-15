@@ -3,3 +3,33 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "zellij"
+
+# Auto-start zellij on interactive shell load: always create a new session.
+# Attach to existing sessions manually from inside zellij. The `[[ -z "$ZELLIJ" ]]`
+# guard prevents nesting inside an existing session. Runs last (priority 900+) so
+# PATH, plugins, prompt, and completion are set up first. Skipped on transient
+# machines and where zellij is absent.
+
+[shell_manifest.entries.zellij-zsh]
+priority = 900
+
+[shell_manifest.entries.zellij-zsh.rules]
+when_tool = "zellij"
+when_transient = false
+when_shell = ["zsh"]
+
+[shell_manifest.entries.zellij-zsh.init.zellij]
+kind = "literal"
+value = '[[ -z "$ZELLIJ" ]] && zellij'
+
+[shell_manifest.entries.zellij-bash]
+priority = 901
+
+[shell_manifest.entries.zellij-bash.rules]
+when_tool = "zellij"
+when_transient = false
+when_shell = ["bash"]
+
+[shell_manifest.entries.zellij-bash.init.zellij]
+kind = "literal"
+value = '[[ -z "$ZELLIJ" ]] && zellij'
