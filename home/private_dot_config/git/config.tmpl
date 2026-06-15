@@ -63,6 +63,8 @@ dlc = diff --cached HEAD^
 dr  = "!f() { git diff "$1"^.."$1"; }; f"
 lc  = "!f() { git ll "$1"^.."$1"; }; f"
 diffr  = "!f() { git diff "$1"^.."$1"; }; f"
+# mark untracked files intent-to-add, then diff (so new files show up); used by gd
+diffn = "!f() { git add --intent-to-add :/ >/dev/null 2>&1; git diff \"$@\"; }; f"
 # Find a file path in codebase
 f = "!git ls-files | grep -i"
 # Search/grep your entire codebase for a string
