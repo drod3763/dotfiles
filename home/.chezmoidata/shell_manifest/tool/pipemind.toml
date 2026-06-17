@@ -1,0 +1,9 @@
+# Installed first by run_once_after_98_install-playlist-tools (needs gh auth for
+# the private tap). Declared here, guarded on its own binary, so it is listed in
+# the Brewfile only once present and survives `brew bundle cleanup --zap`.
+[package_catalog.packages."pipemind"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "playlist-tech/tap/pipemind"
+when_tool = "pipemind"

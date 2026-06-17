@@ -1,0 +1,10 @@
+# Private work tap. Guarded on pipemind so it is only listed in the generated
+# Brewfile once the tools are installed (by run_once_after_98_install-playlist-tools).
+# This keeps `brew bundle cleanup --zap` from removing the tap on machines that
+# already have it, while never force-tapping it on a fresh machine before gh auth.
+[package_catalog.packages."tap-playlist-tech-tap"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_tap_name = "playlist-tech/tap"
+when_tool = "pipemind"

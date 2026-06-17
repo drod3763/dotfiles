@@ -1,0 +1,9 @@
+# Installed alongside pipemind by run_once_after_98_install-playlist-tools.
+# Guarded on pipemind (installed together) as a reliable proxy so it is listed
+# only when the playlist tools are present and survives `brew bundle cleanup --zap`.
+[package_catalog.packages."sonar-cli"]
+os = "mac"
+type = "work"
+target_class = "all"
+brew_formula_name = "playlist-tech/tap/sonar-cli"
+when_tool = "pipemind"
