@@ -99,7 +99,9 @@ helper = !/opt/homebrew/bin/gh auth git-credential
 {{- end }}
 {{- if eq $pager "delta" }}
 [delta]
-features = catppuccin-frappe
+detect-dark-light = system-global
+dark-features  = catppuccin-mocha
+light-features = catppuccin-latte
 hyperlinks = true
 navigate = true
 side-by-side = true
@@ -125,7 +127,7 @@ pruneTags = true
 autocorrect = 5
 {{- if eq $pager "delta" }}
 [include]
-path = "$XDG_CONFIG_HOME"/delta/catppuccin.gitconfig
+path = ~/.config/delta/catppuccin.gitconfig
 {{- end }}
 [init]
 defaultBranch = "main"
