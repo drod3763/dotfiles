@@ -3,6 +3,7 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "drod3763/tap/git-delta-fork"
+brew_formula_args = "args: [\"HEAD\"]"
 
 [shell_manifest.entries.delta]
 priority = 256

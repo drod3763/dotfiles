@@ -1,0 +1,6 @@
+[package_catalog.packages."VidHub"]
+os = "mac"
+type = "personal"
+target_class = "all"
+host_only = true
+mas_app_id = 1659622164
