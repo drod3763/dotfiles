@@ -1,0 +1,9 @@
+[package_catalog.packages."herdr"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "herdr"
+# Agent multiplexer. Autostart is handled by its Homebrew launchd service rather than a
+# shell init snippet, so register it in the Brewfile with start_service so `brew bundle`
+# starts (and keeps) the herdr server running after install.
+brew_formula_args = "start_service: true"
