@@ -1,0 +1,5 @@
+[package_catalog.packages."moshi-hook"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "moshi-hook"

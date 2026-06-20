@@ -1,0 +1,5 @@
+[package_catalog.packages."tap-rjyo-moshi"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_tap_name = "rjyo/moshi"
