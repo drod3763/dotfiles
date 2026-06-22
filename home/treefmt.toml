@@ -73,6 +73,9 @@ excludes = [
   # the rendered output. Keep them out of the go-template formatter.
   "home/private_dot_config/zsh/dot_zshrc.tmpl",
   "home/.chezmoitemplates/bindkeys.tmpl",
+  # TOML-producing templates: prettier has no TOML parser and reflows the body
+  # into invalid output. Handled by [formatter.toml-template] instead.
+  "*.toml.tmpl",
 ]
 includes = ["*.tmpl"]
 options = [
@@ -83,6 +86,18 @@ options = [
   "go-template",
   "--write",
 ]
+
+# Two-step formatter for TOML-producing templates: normalizes Go expressions,
+# then renders the template and applies `taplo` whitespace back onto the static
+# TOML lines (see scripts/format_toml_template.js). Skips files that cannot
+# render here. `.chezmoi.toml.tmpl` is bootstrap config with intentional
+# nested-action indentation and never renders via execute-template, so it is
+# hand-maintained (excluded from both template formatters).
+[formatter.toml-template]
+command = "bun"
+excludes = ["home/.chezmoi.toml.tmpl"]
+includes = ["*.toml.tmpl"]
+options = ["scripts/format_toml_template.js"]
 
 [formatter.shfmt]
 command = "shfmt"

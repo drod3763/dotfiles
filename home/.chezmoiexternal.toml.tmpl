@@ -1,28 +1,28 @@
 [".config/bat/themes/Catppuccin-frappe.tmTheme"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Frappe.tmTheme"
+type = "file"
+url = "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Frappe.tmTheme"
 [".config/delta/catppuccin.gitconfig"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/catppuccin/delta/refs/heads/main/catppuccin.gitconfig"
+type = "file"
+url = "https://raw.githubusercontent.com/catppuccin/delta/refs/heads/main/catppuccin.gitconfig"
 [".config/hammerspoon/Spoons/WarpMouse.spoon/init.lua"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/mogenson/WarpMouse.spoon/refs/heads/main/init.lua"
+type = "file"
+url = "https://raw.githubusercontent.com/mogenson/WarpMouse.spoon/refs/heads/main/init.lua"
 [".config/hammerspoon/Spoons/Swipe.spoon/init.lua"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/mogenson/Swipe.spoon/refs/heads/main/init.lua"
+type = "file"
+url = "https://raw.githubusercontent.com/mogenson/Swipe.spoon/refs/heads/main/init.lua"
 [".config/hammerspoon/Spoons/ActiveSpace.spoon/init.lua"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/mogenson/ActiveSpace.spoon/refs/heads/main/init.lua"
+type = "file"
+url = "https://raw.githubusercontent.com/mogenson/ActiveSpace.spoon/refs/heads/main/init.lua"
 [".config/micro/colorschemes/catppuchin-frappe.micro"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/catppuccin/micro/main/themes/catppuccin-frappe.micro"
+type = "file"
+url = "https://raw.githubusercontent.com/catppuccin/micro/main/themes/catppuccin-frappe.micro"
 [".config/zsh/catppuccin_macchiato-zsh-syntax-highlighting.zsh"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/catppuccin/zsh-syntax-highlighting/main/themes/catppuccin_macchiato-zsh-syntax-highlighting.zsh"
+type = "file"
+url = "https://raw.githubusercontent.com/catppuccin/zsh-syntax-highlighting/main/themes/catppuccin_macchiato-zsh-syntax-highlighting.zsh"
 {{ if lookPath "op" -}}
 {{ $dropbox := .onepassword.items.dropbox -}}
 ["Library/Fonts/"]
-    type = "archive"
-    url = {{- includeTemplate "onepassword_url_label.tmpl" (dict "item" $dropbox.item "vault" $dropbox.vault "label" "private font download") | quote }}
-    include = ['**/*.otf', '**/*.ttf']
+type = "archive"
+url = {{- includeTemplate "onepassword_url_label.tmpl" (dict "item" $dropbox.item "vault" $dropbox.vault "label" "private font download") | quote }}
+include = ['**/*.otf', '**/*.ttf']
 {{ end -}}

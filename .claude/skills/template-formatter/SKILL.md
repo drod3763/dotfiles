@@ -10,6 +10,13 @@ description: Keep render-only chezmoi templates formatter-clean by comparing ren
 - Any formatter-rule change that affects rendered output (for example `home/treefmt.toml`).
 - Any request to make template source match formatter output without flattening template logic.
 
+> Note: `*.toml.tmpl` files are handled automatically by `[formatter.toml-template]`
+> in `home/treefmt.toml` (`scripts/format_toml_template.js`), which renders the
+> template and maps `taplo` formatting back onto the static TOML lines. This skill
+> covers the remaining render-only templates (shell, json, yaml) and any manual
+> reconciliation. `home/.chezmoi.toml.tmpl` is hand-maintained (excluded from both
+> template formatters) because it never renders via `execute-template`.
+
 ## Guardrails
 - Never overwrite template logic with rendered output.
 - Keep edits source-level and minimal (whitespace, indentation, trim markers, comment placement).
