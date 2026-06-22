@@ -3,7 +3,6 @@
 {{- $diffCmd := "" -}}
 {{- $mergeCmd := "" -}}
 {{- $pager := "" -}}
-{{- $diffPager := "" -}}
 {{- $github := .onepassword.items.github -}}
 
 {{- if and (eq .chezmoi.os "darwin") (stat "/Applications/Komet.app") -}}
@@ -16,14 +15,10 @@
 {{- $editor = "nano" -}}
 {{- end -}}
 
-{{- if lookPath "delta"}}
-{{- $pager = "delta" -}}
+{{- if lookPath "hunk"}}
+{{- $pager = "hunk pager" -}}
 {{- else -}}
 {{- $pager = "less" -}}
-{{- end -}}
-
-{{- if lookPath "diffnav"}}
-{{- $diffPager = "diffnav --watch" -}}
 {{- end -}}
 
 {{- if and (eq .chezmoi.os "linux") (lookPath "bcompare") }}
@@ -84,11 +79,7 @@ dell = branch -d
 [core]
 editor = {{ $editor }}
 pager = {{ $pager }}
-[pager]
-{{- if not (empty $diffPager) }}
-diff = {{ $diffPager }}
-show = {{ $diffPager }}
-{{- end }}
+
 [checkout]
 workers = -1
 {{- if lookPath "gh" }}
@@ -96,15 +87,6 @@ workers = -1
 helper = !/opt/homebrew/bin/gh auth git-credential
 [credential "https://gist.github.com"]
 helper = !/opt/homebrew/bin/gh auth git-credential
-{{- end }}
-{{- if eq $pager "delta" }}
-[delta]
-detect-dark-light = system-global
-dark-features  = catppuccin-mocha
-light-features = catppuccin-latte
-hyperlinks = true
-navigate = true
-side-by-side = true
 {{- end }}
 [diff]
 algorithm = histogram
@@ -125,16 +107,8 @@ pruneTags = true
 [help]
 {{/* Autocorrect commands. Set to 10 tenths of a second or 1 second */ -}}
 autocorrect = 5
-{{- if eq $pager "delta" }}
-[include]
-path = ~/.config/delta/catppuccin.gitconfig
-{{- end }}
 [init]
 defaultBranch = "main"
-{{- if eq $pager "delta" }}
-[interactive]
-diffFilter = delta --color-only
-{{- end }}
 {{- if lookPath "batman" }}
 [man.viewer]
 cmd = "batman"

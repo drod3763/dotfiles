@@ -8,12 +8,12 @@ brew_formula_name = "git"
 priority = 300
 
 [shell_manifest.entries.git-diff-untracked.rules]
-when_tool = "diffnav"
+when_tool = "hunk"
 
 [shell_manifest.entries.git-diff-untracked.functions.gd]
 kind = "literal"
 value = """
 gd() {
-  diffnav --watch --watch-cmd "git diffn $*"
+  hunk diff --watch "$@"
 }
 """
