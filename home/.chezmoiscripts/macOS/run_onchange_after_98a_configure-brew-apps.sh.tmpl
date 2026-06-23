@@ -30,6 +30,15 @@ if [[ ! -d "${HOME}/.config/yazi/flavors/catppuccin-mocha.yazi" ]]; then
 fi
 {{ end -}}
 
+{{ if lookPath "tailscale" -}}
+# Tailscale: register the root system daemon so tailscaled always runs at boot.
+# `sudo brew services` installs to /Library/LaunchDaemons (root) — needed because default
+# -tun utun requires root; a user-level service fails / freezes on sleep.
+if [[ ! -f /Library/LaunchDaemons/homebrew.mxcl.tailscale.plist ]]; then
+  with_sudo brew services start tailscale
+fi
+{{ end -}}
+
 # Enable Touch ID / Apple Watch for sudo via /etc/pam.d/sudo_local.
 if [[ -f /etc/pam.d/sudo_local.template ]]; then
   if [[ ! -f /etc/pam.d/sudo_local ]]; then
