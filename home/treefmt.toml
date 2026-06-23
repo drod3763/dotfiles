@@ -99,14 +99,22 @@ excludes = ["home/.chezmoi.toml.tmpl"]
 includes = ["*.toml.tmpl"]
 options = ["scripts/format_toml_template.js"]
 
+# NOTE: home/private_dot_config/claude/hooks/executable_herdr-agent-state.sh is a
+# third-party hook script written and overwritten by `herdr integration install`.
+# It is excluded from shfmt/shellcheck below so it stays byte-identical to herdr's
+# shipped version (re-capturing after a herdr upgrade remains a clean copy).
 [formatter.shfmt]
 command = "shfmt"
-excludes = []
+excludes = [
+  "home/private_dot_config/claude/hooks/executable_herdr-agent-state.sh",
+]
 includes = ["*.sh", "*.bash", "*.envrc", "*.envrc.*"]
 options = ["-s", "-w", "-i", "2"]
 
 [formatter.shellcheck]
 command = "shellcheck"
-excludes = []
+excludes = [
+  "home/private_dot_config/claude/hooks/executable_herdr-agent-state.sh",
+]
 includes = ["*.sh", "*.bash", "*.envrc", "*.envrc.*"]
 options = []

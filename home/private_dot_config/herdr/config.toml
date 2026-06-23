@@ -1,0 +1,13 @@
+onboarding = false
+
+[ui.toast]
+delivery = "system"
+
+[theme]
+name = "catppuccin"
+
+[experimental]
+pane_history = false
+
+[ui]
+agent_panel_scope = "all"
