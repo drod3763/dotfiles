@@ -76,6 +76,10 @@ excludes = [
   # TOML-producing templates: prettier has no TOML parser and reflows the body
   # into invalid output. Handled by [formatter.toml-template] instead.
   "*.toml.tmpl",
+  # JSON-producing template: prettier's go-template parser cannot handle the
+  # interpolated values (e.g. {{ ... | toPrettyJson }} in value position) and
+  # reflows the whole document into an unreadable blob. Hand-maintained.
+  "home/private_dot_config/claude/settings.json.tmpl",
 ]
 includes = ["*.tmpl"]
 options = [

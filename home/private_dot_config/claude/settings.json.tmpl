@@ -52,7 +52,6 @@
       "Bash(gh api repos/*/pulls/*/requested_reviewers *)"
     ]
   },
-  "model": "opusplan",
   "enableAllProjectMcpServers": true,
   "hooks": {
     "Notification": [
@@ -82,5 +81,5 @@
   "enabledPlugins": {{ get $pluginManifest "enabledPlugins" | toPrettyJson | trimSuffix "\n" | replace "\n" "\n  " }},
   "extraKnownMarketplaces": {{ get $marketplaceManifest "extraKnownMarketplaces" | toPrettyJson | trimSuffix "\n" | replace "\n" "\n  " }},
   "effortLevel": "high",
-  "theme": "dark-daltonized"
+  "theme": "auto"
 }
