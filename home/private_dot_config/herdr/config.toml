@@ -4,10 +4,13 @@ onboarding = false
 delivery = "system"
 
 [theme]
-name = "catppuccin"
+name = "catppuccin-latte"
 
+auto_switch = false
 [experimental]
 pane_history = false
 
 [ui]
 agent_panel_scope = "all"
+show_agent_labels_on_pane_borders = true
+agent_panel_sort = "spaces"
