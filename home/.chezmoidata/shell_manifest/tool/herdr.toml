@@ -2,5 +2,5 @@
 os = "mac"
 type = "common"
 target_class = "all"
-brew_formula_name = "herdr"
+brew_formula_name = "drod3763/tap/herdr-mx"
 brew_formula_args = "start_service: true"
