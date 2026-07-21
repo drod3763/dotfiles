@@ -1,0 +1,7 @@
+[package_catalog.packages."amphetamine-power-protect"]
+os = "mac"
+type = "work"
+target_class = "all"
+host_only = true
+brew_cask_name = "drod3763/tap/amphetamine-power-protect"
+when_stat = "/Applications/Amphetamine.app"

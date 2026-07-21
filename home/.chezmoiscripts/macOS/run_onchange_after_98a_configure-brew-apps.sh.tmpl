@@ -39,6 +39,16 @@ if [[ ! -f /Library/LaunchDaemons/homebrew.mxcl.tailscale.plist ]]; then
 fi
 {{ end -}}
 
+{{ if and (not .personal) (not .transient) -}}
+# Power Protect for Amphetamine: companion cask whose installer requires Amphetamine.
+# The Brewfile only includes it once Amphetamine exists at render time; this covers the
+# fresh-machine first apply, where mas installs Amphetamine after the cask phase.
+if [[ -d "/Applications/Amphetamine.app" ]] &&
+  ! brew list --cask amphetamine-power-protect >/dev/null 2>&1; then
+  brew install --cask drod3763/tap/amphetamine-power-protect
+fi
+{{ end -}}
+
 # Enable Touch ID / Apple Watch for sudo via /etc/pam.d/sudo_local.
 if [[ -f /etc/pam.d/sudo_local.template ]]; then
   if [[ ! -f /etc/pam.d/sudo_local ]]; then
