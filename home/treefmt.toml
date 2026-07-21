@@ -73,6 +73,9 @@ excludes = [
   # the rendered output. Keep them out of the go-template formatter.
   "home/private_dot_config/zsh/dot_zshrc.tmpl",
   "home/.chezmoitemplates/bindkeys.tmpl",
+  # Shell-producing lifecycle scripts: same prose-reflow breakage as above, and
+  # redirects like `>/dev/null 2>&1; then` crash prettier's go-template parser.
+  "*.sh.tmpl",
   # TOML-producing templates: prettier has no TOML parser and reflows the body
   # into invalid output. Handled by [formatter.toml-template] instead.
   "*.toml.tmpl",
