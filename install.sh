@@ -98,6 +98,8 @@ if [[ -f $0 ]]; then
   chezmoi init --source="$script_dir"
 else
   chezmoi init drod3763
+  # init leaves an existing clone untouched; pull so re-runs pick up fixes
+  chezmoi git pull -- --ff-only || true
 fi
 
 # Determine verbosity
