@@ -62,7 +62,9 @@
 {{- end -}}
 
 {{- $onepasswordMode := "service" -}}
-{{- if and (eq .chezmoi.os "darwin") (stat "/Applications/1Password.app") -}}
+{{/* A set token means the user is mid-bootstrap with a service account;
+account mode + token makes chezmoi's onepassword function error out. */ -}}
+{{- if and (eq .chezmoi.os "darwin") (stat "/Applications/1Password.app") (not (env "OP_SERVICE_ACCOUNT_TOKEN")) -}}
 {{-     $onepasswordMode = "account" -}}
 {{- end -}}
 
