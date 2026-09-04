@@ -8,12 +8,13 @@ brew_formula_name = "git"
 priority = 300
 
 [shell_manifest.entries.git-diff-untracked.rules]
-when_tool = "hunk"
+when_tool = "tuicr"
 
 [shell_manifest.entries.git-diff-untracked.functions.gd]
 kind = "literal"
 value = """
 gd() {
-  hunk diff --watch "$@"
+  git add --intent-to-add :/ >/dev/null 2>&1
+  tuicr -w "$@"
 }
 """
