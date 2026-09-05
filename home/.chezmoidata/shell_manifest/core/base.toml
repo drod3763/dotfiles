@@ -24,11 +24,3 @@ value = "${XDG_CONFIG_HOME}/readline/inputrc"
 [shell_manifest.entries.base.exports.LESSHISTFILE]
 kind = "literal"
 value = "${XDG_CACHE_HOME}/less/history"
-
-[shell_manifest.entries.base.exports.TERMINFO]
-kind = "literal"
-value = "${XDG_DATA_HOME}/terminfo"
-
-[shell_manifest.entries.base.exports.TERMINFO_DIRS]
-kind = "literal"
-value = "${XDG_DATA_HOME}/terminfo:/usr/share/terminfo"
