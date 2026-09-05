@@ -91,7 +91,7 @@ value = "autoload -Uz bashcompinit && bashcompinit"
 
 [shell_manifest.entries.zsh-core.aliases.reload]
 kind = "literal"
-value = "source ~/.zshrc"
+value = "exec zsh"
 
 [shell_manifest.entries.zsh-core.aliases.clear]
 kind = "literal"
