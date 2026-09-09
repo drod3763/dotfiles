@@ -27,7 +27,11 @@ url = {{- includeTemplate "onepassword_url_label.tmpl" (dict "item" $dropbox.ite
 include = ['**/*.otf', '**/*.ttf']
 # Dropbox folder zips contain a bare "/" root entry that chezmoi rejects;
 # re-pack through bsdtar, which strips it, and tell chezmoi the result is tar.
+# chezmoi feeds the filter on a pipe, and bsdtar cannot read a zip from a
+# non-seekable stream: without the central directory (stored at the end of the
+# file) it falls back to streaming mode and emits every entry as 0 bytes. Spool
+# stdin to a temp file first so bsdtar gets a seekable archive.
 format = "tar"
-filter.command = "bsdtar"
-filter.args = ["-cf", "-", "--format=ustar", "@-"]
+filter.command = "sh"
+filter.args = ["-c", 't=$(mktemp); trap "rm -f $t" EXIT; cat >"$t"; bsdtar -cf - --format=ustar @"$t"']
 {{ end -}}
