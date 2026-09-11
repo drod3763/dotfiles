@@ -39,6 +39,18 @@ if [[ "${1:-}" == "shellenv" ]]; then
   exit 0
 fi
 
+if [[ "${1:-}" == "--cellar" ]]; then
+  printf '%s\n' "${MOCK_BREW_CELLAR:-}"
+  exit 0
+fi
+
+if [[ "${1:-}" == "cleanup" && "${2:-}" == "--dry-run" ]]; then
+  if [[ -f "${MOCK_BREW_CLEANUP_DRY_RUN_FILE:-}" ]]; then
+    cat "${MOCK_BREW_CLEANUP_DRY_RUN_FILE}"
+  fi
+  exit 0
+fi
+
 exit 0
 EOF
 
@@ -88,6 +100,11 @@ if [[ "${1:-}" == "-v" ]]; then
   exit 0
 fi
 
+if [[ "${1:-}" == "rm" ]]; then
+  printf '%s\n' "$*" >> "${MOCK_SUDO_CALLS_FILE:?}"
+  exec "$@"
+fi
+
 exit 0
 EOF
 
@@ -134,7 +151,8 @@ render_with_mocked_brew_paths() {
   run bash "${RENDERED_SCRIPT}"
 
   [ "${status}" -eq 0 ]
-  [ "$(cat "${MOCK_BREW_COUNTER_FILE}")" -eq 2 ]
+  # failed install, then successful install + cleanup on the retry
+  [ "$(cat "${MOCK_BREW_COUNTER_FILE}")" -eq 3 ]
 }
 
 @test "GIVEN brew bundle keeps failing EXPECT script exits after max attempts" {
@@ -265,4 +283,96 @@ render_with_mocked_brew_paths() {
   [ "${status}" -eq 0 ]
   run grep -q '^-v$' "${MOCK_SUDO_CALLS_FILE}"
   [ "${status}" -eq 0 ]
+}
+
+setup_stale_keg() {
+  MOCK_CELLAR="${TEST_TMPDIR}/Cellar"
+  STALE_KEG="${MOCK_CELLAR}/tailscale/1.98.5"
+  mkdir -p "${STALE_KEG}/bin"
+  : > "${STALE_KEG}/bin/tailscaled"
+  export MOCK_BREW_CELLAR="${MOCK_CELLAR}"
+  export MOCK_BREW_CLEANUP_DRY_RUN_FILE="${TEST_TMPDIR}/brew-cleanup.dry-run"
+  printf 'Would remove: %s (11 files, 37.3MB)\n' "${STALE_KEG}" > "${MOCK_BREW_CLEANUP_DRY_RUN_FILE}"
+}
+
+# Files cannot be chown'd to root inside the test, so make `id -un` report
+# `root` instead: every user-owned mock keg file then looks foreign-owned to
+# the script. (`find -user` needs a real account name, so not an arbitrary string.)
+mock_foreign_owner() {
+  cat > "${MOCK_BIN_DIR}/id" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "-un" ]]; then
+  printf '%s\n' 'root'
+  exit 0
+fi
+exec /usr/bin/id "$@"
+EOF
+  chmod +x "${MOCK_BIN_DIR}/id"
+}
+
+@test "GIVEN stale keg with root-owned files EXPECT script removes it with sudo before cleanup" {
+  setup_stale_keg
+  mock_foreign_owner
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Removing root-owned stale keg with sudo: ${STALE_KEG}"* ]]
+  run grep -q "^rm -rf ${STALE_KEG}\$" "${MOCK_SUDO_CALLS_FILE}"
+  [ "${status}" -eq 0 ]
+  [ ! -d "${STALE_KEG}" ]
+  [ "$(cat "${MOCK_BREW_COUNTER_FILE}")" -eq 2 ]
+}
+
+@test "GIVEN stale keg fully user-owned EXPECT script leaves it for brew cleanup" {
+  setup_stale_keg
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"Removing root-owned stale keg"* ]]
+  run grep -q '^rm ' "${MOCK_SUDO_CALLS_FILE}"
+  [ "${status}" -ne 0 ]
+  [ -d "${STALE_KEG}" ]
+}
+
+@test "GIVEN dry-run lists root-owned path outside the Cellar EXPECT script ignores it" {
+  setup_stale_keg
+  mock_foreign_owner
+  outside_path="${TEST_TMPDIR}/Caches/Homebrew/foo"
+  mkdir -p "${outside_path}"
+  printf 'Would remove: %s (1 file, 1MB)\n' "${outside_path}" > "${MOCK_BREW_CLEANUP_DRY_RUN_FILE}"
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q '^rm ' "${MOCK_SUDO_CALLS_FILE}"
+  [ "${status}" -ne 0 ]
+  [ -d "${outside_path}" ]
+  [ -d "${STALE_KEG}" ]
+}
+
+@test "GIVEN brew --cellar returns nothing EXPECT prune step is a no-op" {
+  setup_stale_keg
+  mock_foreign_owner
+  export MOCK_BREW_CELLAR=""
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  run grep -q '^rm ' "${MOCK_SUDO_CALLS_FILE}"
+  [ "${status}" -ne 0 ]
+  [ -d "${STALE_KEG}" ]
+}
+
+@test "GIVEN brew bundle install fails EXPECT prune and cleanup are skipped until install succeeds" {
+  setup_stale_keg
+  mock_foreign_owner
+  export MOCK_BREW_FAILS_BEFORE_SUCCESS=1
+
+  run bash "${RENDERED_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  [ ! -d "${STALE_KEG}" ]
+  [ "$(cat "${MOCK_BREW_COUNTER_FILE}")" -eq 3 ]
 }

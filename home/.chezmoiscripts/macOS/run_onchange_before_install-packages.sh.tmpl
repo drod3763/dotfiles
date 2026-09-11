@@ -26,6 +26,28 @@ if ! command -v brew >/dev/null 2>&1; then
   exit 127
 fi
 
+# `sudo brew services start <formula>` takes root ownership (+ sticky bit) of the
+# formula's keg bin/opt paths (Homebrew services/cli.rb). An unprivileged
+# `brew cleanup` cannot prune those old kegs, which makes `brew bundle cleanup`
+# fail with the real error hidden on stderr. Remove such stale kegs with sudo first.
+prune_root_owned_stale_kegs() {
+  local cellar keg current_user foreign_owned
+  cellar="$(brew --cellar 2>/dev/null || true)"
+  [[ -n "${cellar}" ]] || return 0
+  current_user="$(id -un)"
+
+  while IFS= read -r keg; do
+    [[ -d "${keg}" ]] || continue
+    foreign_owned="$(find "${keg}" ! -user "${current_user}" -print -quit 2>/dev/null || true)"
+    if [[ -n "${foreign_owned}" ]]; then
+      echo "Removing root-owned stale keg with sudo: ${keg}" >&2
+      with_sudo rm -rf "${keg}"
+    fi
+  done < <(brew cleanup --dry-run 2>/dev/null |
+    sed -n 's/^Would remove: \(.*\) (.*/\1/p' |
+    grep "^${cellar}/" || true)
+}
+
 {{ $packageCatalog := includeTemplate "package_catalog_resolver.tmpl" . | mustFromJson -}}
 {{ $taps := ($packageCatalog.brew_taps | default (list)) -}}
 {{ $brews := ($packageCatalog.brew_formulas | default (list)) -}}
@@ -65,9 +87,11 @@ EOF
 while true; do
   # 'brew bundle --cleanup --zap' flags were removed; cleanup is now its own
   # subcommand. Install first, then prune anything not in the Brewfile.
-  if brew bundle install --verbose --force --file=<(printf '%s' "${brewfile_content}") &&
-    brew bundle cleanup --force --zap --file=<(printf '%s' "${brewfile_content}"); then
-    break
+  if brew bundle install --verbose --force --file=<(printf '%s' "${brewfile_content}"); then
+    prune_root_owned_stale_kegs
+    if brew bundle cleanup --force --zap --file=<(printf '%s' "${brewfile_content}"); then
+      break
+    fi
   fi
 
   if [[ "${attempt}" -ge "${max_attempts}" ]]; then
