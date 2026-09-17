@@ -1,0 +1,6 @@
+[package_catalog.packages."parsec"]
+os = "mac"
+type = "personal"
+target_class = "all"
+host_only = true
+brew_cask_name = "parsec"
