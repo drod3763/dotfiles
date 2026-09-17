@@ -37,6 +37,37 @@ fi
 if [[ ! -f /Library/LaunchDaemons/homebrew.mxcl.tailscale.plist ]]; then
   with_sudo brew services start tailscale
 fi
+
+# The daemon comes up logged out and stays that way silently. Registering a node needs a real
+# browser SSO round-trip, so the click itself cannot be automated away — but we can start the
+# login and open the URL. Interactive only: the -t 0 guard keeps unattended applies from stalling.
+if [[ -t 0 ]] && tailscale status --json 2>/dev/null |
+  jq -e '.BackendState == "NeedsLogin"' >/dev/null 2>&1; then
+  printf '\n%s\n' "Tailscale is installed but not logged in. Starting login..."
+
+  # Prime sudo in the foreground first; a password prompt inside a background job would hang.
+  start_sudo_keepalive
+  # --timeout is required here: the default (0s) blocks forever.
+  sudo tailscale up --ssh --operator="${USER}" --timeout=120s &
+  tailscale_login_pid=$!
+
+  # tailscaled only publishes AuthURL once the login is in flight.
+  for _ in {1..10}; do
+    tailscale_auth_url="$(tailscale status --json 2>/dev/null | jq -r '.AuthURL // empty')"
+    if [[ -n "${tailscale_auth_url}" ]]; then
+      open "${tailscale_auth_url}"
+      break
+    fi
+    sleep 1
+  done
+
+  # Never fail the apply over a declined or timed-out login.
+  if ! wait "${tailscale_login_pid}"; then
+    printf '%s\n' "Tailscale login did not complete. Run it manually:"
+    # shellcheck disable=SC2016
+    printf '  %s\n\n' 'sudo tailscale up --ssh --operator=$USER'
+  fi
+fi
 {{ end -}}
 
 {{ if and (not .personal) (not .transient) -}}
