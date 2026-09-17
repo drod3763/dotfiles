@@ -50,7 +50,9 @@ render_with_overrides() {
   render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/aliases.tmpl" false false "${aliases_file}"
   render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/exports.tmpl" false false "${exports_file}"
 
-  run grep -q "^alias tsfix='sudo ./tailscaled install-system-daemon'" "${aliases_file}"
+  # Fixed-string match: the alias value contains '$(brew --prefix)', and a mid-pattern '$' is
+  # an anchor under ugrep (the grep on PATH here) though literal under BSD/GNU grep.
+  run grep -qF "alias tsfix='sudo \$(brew --prefix)/opt/tailscale/bin/tailscaled install-system-daemon'" "${aliases_file}"
   [ "${status}" -eq 0 ]
 
   run grep -q '^export CLAUDE_CONFIG_DIR=' "${exports_file}"
