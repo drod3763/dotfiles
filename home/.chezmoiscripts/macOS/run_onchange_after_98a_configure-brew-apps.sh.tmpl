@@ -34,8 +34,35 @@ fi
 # Tailscale: register the root system daemon so tailscaled always runs at boot.
 # `sudo brew services` installs to /Library/LaunchDaemons (root) — needed because default
 # -tun utun requires root; a user-level service fails / freezes on sleep.
-if [[ ! -f /Library/LaunchDaemons/homebrew.mxcl.tailscale.plist ]]; then
+# Homebrew renamed generated service files from homebrew.mxcl.<name> to sh.brew.<name>;
+# machines keep whichever name was written first, so accept either. Checking the plist is
+# free, whereas `brew services info` without sudo reports the user domain (loaded: false,
+# a ~/Library/LaunchAgents path) even while the root daemon is running.
+if [[ ! -f /Library/LaunchDaemons/homebrew.mxcl.tailscale.plist ]] &&
+  [[ ! -f /Library/LaunchDaemons/sh.brew.tailscale.plist ]]; then
   with_sudo brew services start tailscale
+fi
+
+# `brew upgrade tailscale` swaps the keg but leaves the old tailscaled running. The plist
+# points at a stable opt symlink, so drift is invisible by path: compare builds instead.
+# The CLI is always the freshly installed keg; the daemon reports its own build over the
+# local API. An unreachable daemon yields an empty version — never restart on that.
+tailscale_installed_build="$(tailscale version 2>/dev/null |
+  awk '/^[[:space:]]*long version:/ { print $3; exit }')"
+tailscale_running_build="$(tailscale status --json 2>/dev/null |
+  jq -r '.Version // empty' 2>/dev/null || true)"
+
+if [[ -n "${tailscale_installed_build}" ]] &&
+  [[ -n "${tailscale_running_build}" ]] &&
+  [[ "${tailscale_installed_build}" != "${tailscale_running_build}" ]]; then
+  if [[ -n "${SSH_CONNECTION:-}" ]]; then
+    # Restarting tailscaled drops the tunnel, which would kill an apply running over
+    # Tailscale SSH (see enablePasswordlessSsh / sshTailnetOnly in .chezmoi.toml.tmpl).
+    printf '%s\n' "tailscaled is running ${tailscale_running_build} but ${tailscale_installed_build} is installed."
+    printf '%s\n' "Skipping restart over SSH. Run locally: sudo brew services restart tailscale"
+  else
+    with_sudo brew services restart tailscale
+  fi
 fi
 
 # The daemon comes up logged out and stays that way silently. Registering a node needs a real
