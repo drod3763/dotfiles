@@ -5,4 +5,5 @@
 .zshrc
 .zsh_history
 .cache/zsh4humans
+.config/docker/daemon.json
 .config/zsh/.zshenv
