@@ -47,12 +47,15 @@ if [[ -t 0 ]] && tailscale status --json 2>/dev/null |
 
   # Prime sudo in the foreground first; a password prompt inside a background job would hang.
   start_sudo_keepalive
-  # Deliberately no --ssh: it makes tailscaled claim port 22 for peer traffic, and when its
-  # SSH server does not actually start (RunSSH true, RunningSSHServer null) inbound SSH is
-  # accepted and then silently never answered. Native sshd serves the tailnet correctly and
-  # is what mosh needs, so leave port 22 with it.
+  # --ssh serves SSH from tailscaled itself, authenticated by tailnet identity and governed by
+  # the tailnet ACL. That removes the need for macOS Remote Login, native sshd on port 22, and
+  # authorized_keys entirely (see enablePasswordlessSsh, off by default). mosh bootstraps
+  # through it fine -- verified against a node serving SSH-2.0-Tailscale.
+  # Note: the server silently fails to start on some builds (RunSSH true but Hostinfo
+  # advertises no sshHostKeys). Check with:
+  #   tailscale debug netmap | jq '.SelfNode.Hostinfo.sshHostKeys'
   # --timeout is required here: the default (0s) blocks forever.
-  sudo tailscale up --operator="${USER}" --timeout=120s &
+  sudo tailscale up --ssh --operator="${USER}" --timeout=120s &
   tailscale_login_pid=$!
 
   # tailscaled only publishes AuthURL once the login is in flight.
@@ -69,7 +72,7 @@ if [[ -t 0 ]] && tailscale status --json 2>/dev/null |
   if ! wait "${tailscale_login_pid}"; then
     printf '%s\n' "Tailscale login did not complete. Run it manually:"
     # shellcheck disable=SC2016
-    printf '  %s\n\n' 'sudo tailscale up --operator=$USER'
+    printf '  %s\n\n' 'sudo tailscale up --ssh --operator=$USER'
   fi
 fi
 {{ end -}}

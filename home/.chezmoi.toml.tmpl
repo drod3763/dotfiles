@@ -2,7 +2,7 @@
 {{- $headless := false -}}{{/* true if this machine does not have a screen and keyboard */}}
 {{- $transient := false -}}{{/* true if this machine is temporary, e.g. a cloud or VM instance */}}
 {{- $personal := promptBool "Is this a personal machine" false -}}{{/* true if this machine should have personal secrets */}}
-{{- $enablePasswordlessSsh := true -}}{{/* true if this machine should accept hardened key-only SSH logins */}}
+{{- $enablePasswordlessSsh := false -}}{{/* true to enable macOS Remote Login + key-only sshd; prefer Tailscale SSH, which needs neither */}}
 {{- $sshTailnetOnly := true -}}{{/* true if SSH logins are restricted to Tailscale source addresses */}}
 {{- "" -}}
 
