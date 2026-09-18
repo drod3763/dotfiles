@@ -164,6 +164,22 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
+@test "GIVEN enablePasswordlessSsh false EXPECT the rendered default is false" {
+  # Regression guard: `get . "x" | default true` renders true even when x is false,
+  # because sprig's default treats false as empty. That made the flag unsettable.
+  override="${TEST_TMPDIR}/off.json"
+  printf '%s\n' '{"enablePasswordlessSsh": false}' > "${override}"
+  rendered="${TEST_TMPDIR}/rendered-off.sh"
+  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override}" \
+    < "${TEMPLATE_PATH}" > "${rendered}"
+
+  run grep -qF 'CHEZMOI_ENABLE_PASSWORDLESS_SSH:-false' "${rendered}"
+  [[ "${status}" -eq 0 ]]
+
+  run grep -qF 'CHEZMOI_ENABLE_PASSWORDLESS_SSH:-true' "${rendered}"
+  [[ "${status}" -ne 0 ]]
+}
+
 @test "GIVEN sshTailnetOnly EXPECT AllowUsers is scoped to Tailscale source ranges" {
   printf '%s\n' 'ssh-ed25519 AAAATEST derick@example' > "${CHEZMOI_SSH_AUTHORIZED_KEYS}"
 
