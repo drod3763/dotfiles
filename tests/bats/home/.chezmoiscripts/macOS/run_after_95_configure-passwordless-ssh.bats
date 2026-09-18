@@ -164,6 +164,23 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
+@test "GIVEN sshTailnetOnly EXPECT AllowUsers is scoped to Tailscale source ranges" {
+  printf '%s\n' 'ssh-ed25519 AAAATEST derick@example' > "${CHEZMOI_SSH_AUTHORIZED_KEYS}"
+
+  run env CHEZMOI_ENABLE_PASSWORDLESS_SSH=true bash "${RENDERED_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  # Fixed-string matches: the CIDRs contain '.' and '/' that would otherwise be regex.
+  run grep -qF '@100.64.0.0/10' "${MOCK_ETC}/sshd_config.d/99-chezmoi-passwordless.conf"
+  [[ "${status}" -eq 0 ]]
+  run grep -qF '@fd7a:115c:a1e0::/48' "${MOCK_ETC}/sshd_config.d/99-chezmoi-passwordless.conf"
+  [[ "${status}" -eq 0 ]]
+
+  # An unscoped AllowUsers would accept logins from any source address.
+  run grep -qE '^AllowUsers [^@]+$' "${MOCK_ETC}/sshd_config.d/99-chezmoi-passwordless.conf"
+  [[ "${status}" -ne 0 ]]
+}
+
 @test "GIVEN authorized_keys present EXPECT missing host keys are generated" {
   printf '%s\n' 'ssh-ed25519 AAAATEST derick@example' > "${CHEZMOI_SSH_AUTHORIZED_KEYS}"
 

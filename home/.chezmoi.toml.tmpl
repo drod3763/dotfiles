@@ -3,6 +3,7 @@
 {{- $transient := false -}}{{/* true if this machine is temporary, e.g. a cloud or VM instance */}}
 {{- $personal := promptBool "Is this a personal machine" false -}}{{/* true if this machine should have personal secrets */}}
 {{- $enablePasswordlessSsh := true -}}{{/* true if this machine should accept hardened key-only SSH logins */}}
+{{- $sshTailnetOnly := true -}}{{/* true if SSH logins are restricted to Tailscale source addresses */}}
 {{- "" -}}
 
 {{/* determine whether the current machine is a laptop or desktop */}}
@@ -92,6 +93,7 @@ hostname = {{ $hostname | quote }} {{/* the pipe quote is necessary for strings 
 osID = {{ $osID | quote }}
 personal = {{ $personal }}
 shell = {{ $shell | quote }}
+sshTailnetOnly = {{ $sshTailnetOnly }}
 transient = {{ $transient }}
 [diff]
 {{- if lookPath "hunk" }}
