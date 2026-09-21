@@ -1,7 +1,8 @@
 #!/bin/bash
-# Re-run whenever the agent or its program changes:
+# Re-run whenever the agent definition changes. Reloading the agent restarts the launcher,
+# which stops the server and every pane under it, so the ctl script is deliberately not
+# part of this key: it is read fresh on every invocation and needs no reload.
 # plist: {{ include "private_Library/LaunchAgents/local.herdr-server.plist.tmpl" | sha256sum }}
-# ctl:   {{ include "dot_local/bin/executable_herdr-server-ctl" | sha256sum }}
 
 set -euo pipefail
 
@@ -31,9 +32,36 @@ launcher="${HERDR_SERVER_APP:-/Applications/Herdr Server.app}/Contents/MacOS/her
 if [[ ! -x "${launcher}" ]]; then
   printf '%s\n' "herdr: ${launcher} missing; install drod3763/tap/herdr-server and re-run this script."
 elif [[ -f "${plist}" ]]; then
-  "${launchctl_bin}" bootout "${domain}/${label}" >/dev/null 2>&1 || true
-  if ! "${launchctl_bin}" bootstrap "${domain}" "${plist}" >/dev/null 2>&1; then
-    printf '%s\n' "herdr: could not load ${label} into ${domain} (no GUI session?); it loads at next login."
+  # Reloading restarts the launcher and therefore the server and every pane under it, so
+  # only do it when the agent is missing or the plist changed since it was last registered.
+  stamp_dir="${HOME}/.cache/herdr-server-ctl"
+  stamp="${stamp_dir}/local.herdr-server.plist.sha256"
+  plist_sum="$(shasum -a 256 "${plist}" | cut -d' ' -f1)"
+  if "${launchctl_bin}" print "${domain}/${label}" >/dev/null 2>&1 &&
+    [[ -f "${stamp}" ]] && [[ "$(cat "${stamp}")" == "${plist_sum}" ]]; then
+    printf '%s\n' "herdr: ${label} already loaded with the current plist."
+  else
+    # bootout returns before the service is gone; a bootstrap issued too early fails and
+    # leaves no agent at all, after which the next remote attach spawns a tainted server.
+    "${launchctl_bin}" bootout "${domain}/${label}" >/dev/null 2>&1 || true
+    for _ in $(seq 1 50); do
+      "${launchctl_bin}" print "${domain}/${label}" >/dev/null 2>&1 || break
+      sleep 0.1
+    done
+    loaded=false
+    for _ in 1 2 3 4 5; do
+      if "${launchctl_bin}" bootstrap "${domain}" "${plist}" >/dev/null 2>&1; then
+        loaded=true
+        break
+      fi
+      sleep 1
+    done
+    if [[ "${loaded}" == true ]]; then
+      mkdir -p "${stamp_dir}"
+      printf '%s\n' "${plist_sum}" >"${stamp}"
+    else
+      printf '%s\n' "herdr: could not load ${label} into ${domain} (no GUI session?); it loads at next login."
+    fi
   fi
 fi
 

@@ -35,6 +35,14 @@ EOF
   cat >"${MOCK_BIN_DIR}/launchctl" <<'EOF'
 #!/bin/bash
 printf 'launchctl %s\n' "$*" >>"${MOCK_CALLS_FILE:?}"
+# `print` reports the agent as loaded until a bootout has been recorded, after which the
+# script's wait loop must see it fail. MOCK_AGENT_LOADED=0 means "never loaded".
+if [[ "$1" == "print" ]]; then
+  [[ "${MOCK_AGENT_LOADED:-1}" == "1" && ! -f "${MOCK_BOOTOUT_MARKER:?}" ]] && exit 0
+  exit 113
+fi
+[[ "$1" == "bootout" ]] && touch "${MOCK_BOOTOUT_MARKER:?}"
+exit 0
 EOF
 
   cat >"${TEST_HOME}/.local/bin/herdr-server-ctl" <<'EOF'
@@ -48,6 +56,8 @@ EOF
   chmod +x "${MOCK_BIN_DIR}"/* "${TEST_HOME}/.local/bin/herdr-server-ctl"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
   export CHEZMOI_LAUNCHCTL_BIN="${MOCK_BIN_DIR}/launchctl"
+  export MOCK_BOOTOUT_MARKER="${TEST_TMPDIR}/booted-out"
+  export MOCK_AGENT_LOADED="0"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_98b_configure-herdr-service.sh"
   "${REAL_CHEZMOI_BIN}" execute-template <"${TEMPLATE_PATH}" >"${RENDERED_SCRIPT}"
@@ -101,6 +111,32 @@ run_rendered_script() {
   [[ "${output}" == *"install drod3763/tap/herdr-server"* ]]
   run grep -q '^launchctl' "${MOCK_CALLS_FILE}"
   [[ "${status}" -ne 0 ]]
+}
+
+@test "GIVEN agent loaded with the current plist EXPECT script leaves it alone" {
+  export MOCK_AGENT_LOADED="1"
+  mkdir -p "${TEST_HOME}/.cache/herdr-server-ctl"
+  shasum -a 256 "${TEST_HOME}/Library/LaunchAgents/local.herdr-server.plist" | cut -d' ' -f1 \
+    >"${TEST_HOME}/.cache/herdr-server-ctl/local.herdr-server.plist.sha256"
+
+  run_rendered_script
+
+  [[ "${status}" -eq 0 ]]
+  [[ "${output}" == *"already loaded"* ]]
+  run grep -q 'bootout\|bootstrap' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]]
+}
+
+@test "GIVEN agent loaded with a changed plist EXPECT script reloads it and records the stamp" {
+  export MOCK_AGENT_LOADED="1"
+  printf 'old\n' >"${TEST_HOME}/Library/LaunchAgents/local.herdr-server.plist"
+
+  run_rendered_script
+
+  [[ "${status}" -eq 0 ]]
+  run grep -qx "launchctl bootstrap gui/$(id -u) ${TEST_HOME}/Library/LaunchAgents/local.herdr-server.plist" "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+  [[ "$(cat "${TEST_HOME}/.cache/herdr-server-ctl/local.herdr-server.plist.sha256")" == "$(shasum -a 256 "${TEST_HOME}/Library/LaunchAgents/local.herdr-server.plist" | cut -d' ' -f1)" ]]
 }
 
 @test "GIVEN healthy stale server EXPECT script hands off via ctl fix" {
