@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Hosts `herdr server` under Herdr Server.app (drod3763/tap/herdr-server) so macOS has
+	     a bundle to grant Local Network / TCC consent against (herdrdev/herdr#808). Replaces
+	     `brew services start herdr`, whose launchd-spawned bare binary has no grantable
+	     identity. The launcher stays resident as the server's responsible parent, respawns it,
+	     and stands by behind a live-handoff replacement, so KeepAlive is safe here. -->
+	<key>Label</key>
+	<string>local.herdr-server</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Applications/Herdr Server.app/Contents/MacOS/herdr-server-launcher</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>LimitLoadToSessionType</key>
+	<string>Aqua</string>
+	<key>StandardOutPath</key>
+	<string>{{ .chezmoi.homeDir }}/Library/Logs/herdr-server.log</string>
+	<key>StandardErrorPath</key>
+	<string>{{ .chezmoi.homeDir }}/Library/Logs/herdr-server.log</string>
+</dict>
+</plist>

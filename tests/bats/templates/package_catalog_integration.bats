@@ -8,8 +8,8 @@ setup() {
   TEST_TMPDIR="$(mktemp -d)"
   MOCK_BIN_DIR="${TEST_TMPDIR}/bin"
   mkdir -p "${MOCK_BIN_DIR}"
-  touch "${MOCK_BIN_DIR}/saml2aws"
-  chmod +x "${MOCK_BIN_DIR}/saml2aws"
+  touch "${MOCK_BIN_DIR}/saml2aws" "${MOCK_BIN_DIR}/herdr"
+  chmod +x "${MOCK_BIN_DIR}/saml2aws" "${MOCK_BIN_DIR}/herdr"
   export PATH="${MOCK_BIN_DIR}:${PATH}"
 }
 
@@ -56,6 +56,38 @@ render_with_overrides() {
   [ "${status}" -eq 0 ]
 
   run grep -q '^export CLAUDE_CONFIG_DIR=' "${exports_file}"
+  [ "${status}" -eq 0 ]
+}
+
+@test "GIVEN darwin context EXPECT herdr ships the fix alias and the attribution warning" {
+  aliases_file="${TEST_TMPDIR}/aliases-herdr.sh"
+  init_file="${TEST_TMPDIR}/init-herdr.sh"
+  render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/aliases.tmpl" false false "${aliases_file}"
+  render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/init.tmpl" false false "${init_file}"
+
+  run grep -qF "alias herdr-fix='herdr-server-ctl fix'" "${aliases_file}"
+  [ "${status}" -eq 0 ]
+
+  run grep -qF '/.local/bin/herdr-server-ctl" status --quiet' "${init_file}"
+  [ "${status}" -eq 0 ]
+}
+
+@test "GIVEN herdr package EXPECT resolver installs it without a brew service" {
+  resolver_json="${TEST_TMPDIR}/resolver-herdr.json"
+  render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/package_catalog_resolver.tmpl" false false "${resolver_json}"
+
+  run jq -e '.brew_formulas | index("herdr") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  # A brew-services server is launchd-spawned and has no grantable app identity
+  # (herdrdev/herdr#808); the LaunchAgent under Library/LaunchAgents replaces it.
+  run jq -e '.brew_formula_args | has("herdr") | not' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.active_config_paths | index("Library/LaunchAgents/local.herdr-server.plist") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
+  run jq -e '.brew_casks | index("drod3763/tap/herdr-server") != null' "${resolver_json}"
   [ "${status}" -eq 0 ]
 }
 

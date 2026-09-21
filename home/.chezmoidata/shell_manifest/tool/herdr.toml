@@ -3,4 +3,54 @@ os = "mac"
 type = "common"
 target_class = "all"
 brew_formula_name = "herdr"
-brew_formula_args = "start_service: true"
+# No `start_service`: a brew-services server is spawned by launchd with no grantable app
+# identity (herdrdev/herdr#808). The herdr-server cask + LaunchAgent host it instead.
+config_file_locations = [
+  ".config/herdr",
+  ".local/bin/herdr-server-ctl",
+  "Library/LaunchAgents/local.herdr-server.plist",
+]
+
+# Herdr Server.app: a bundled, resident parent for `herdr server` (drod3763/herdr-server-app).
+# The local.herdr-server LaunchAgent runs its launcher; run_onchange_after_98b registers it.
+[package_catalog.packages."herdr-server"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_cask_name = "drod3763/tap/herdr-server"
+
+[shell_manifest.entries.herdr-darwin]
+priority = 230
+
+[shell_manifest.entries.herdr-darwin.rules]
+when_os = ["darwin"]
+when_tool = "herdr"
+
+[shell_manifest.entries.herdr-darwin.aliases.herdr-fix]
+kind = "literal"
+value = "herdr-server-ctl fix"
+
+[shell_manifest.entries.herdr-attribution-check-zsh]
+priority = 340
+
+[shell_manifest.entries.herdr-attribution-check-zsh.rules]
+when_os = ["darwin"]
+when_shell = ["zsh"]
+when_tool = "herdr"
+
+[shell_manifest.entries.herdr-attribution-check-zsh.init.herdr_attribution_check]
+kind = "literal"
+value = """
+# Warn when panes would lack Local Network / 1Password consent (herdrdev/herdr#808).
+if [[ -o interactive && -z "${HERDR_SKIP_ATTRIBUTION_CHECK:-}" && -x "${HOME}/.local/bin/herdr-server-ctl" ]]; then
+  "${HOME}/.local/bin/herdr-server-ctl" status --quiet
+  case $? in
+    1) print -P '%F{yellow}herdr: server is not attributed to an app; op and LAN access fail in panes. Run herdr-fix.%f' ;;
+    0)
+      if [[ "$(herdr status --json 2>/dev/null | jq -r '.update.server_binary_stale // false' 2>/dev/null)" == true ]]; then
+        print -P '%F{yellow}herdr: server binary is stale; a remote attach would restart it un-attributed. Run herdr-fix (lossless handoff).%f'
+      fi
+      ;;
+  esac
+fi
+"""

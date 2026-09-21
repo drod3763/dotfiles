@@ -1,0 +1,225 @@
+#!/bin/bash
+#
+# Keep the herdr server attributed to Herdr Server.app (workaround for herdrdev/herdr#808).
+#
+# macOS records a "responsible process" for every process at spawn time and inherits it
+# from the parent. TCC and Local Network Privacy resolve consent against that process, so a
+# `herdr server` started by launchd (brew services) or by an incoming SSH attach has no
+# grantable identity: `op` prompts on every call and non-Apple binaries get EHOSTUNREACH on
+# the LAN. The `local.herdr-server` LaunchAgent runs Herdr Server.app's launcher, which
+# stays resident as the server's parent, so the server (and every pane process under it)
+# resolves to a bundle that can be granted once.
+#
+# Attribution reverts to self when the responsible process exits, and a live handoff makes
+# the *old* server spawn the new one: handoff preserves attribution but cannot repair it.
+# Curing a tainted server therefore means stopping it and letting the launcher respawn it.
+#
+# Usage:
+#   herdr-server-ctl status [--quiet]   exit 0 attributed to a .app, 1 tainted, 2 no server, 3 no probe
+#   herdr-server-ctl start              kick the LaunchAgent if no server is running
+#   herdr-server-ctl fix [-y]           handoff when healthy but stale; stop + respawn under the launcher when tainted
+
+set -euo pipefail
+
+export PATH="${PATH}:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+herdr_bin="${HERDR_CTL_HERDR_BIN:-$(command -v herdr || true)}"
+launchctl_bin="${HERDR_CTL_LAUNCHCTL_BIN:-/bin/launchctl}"
+agent_label="${HERDR_CTL_AGENT_LABEL:-local.herdr-server}"
+agent_target="gui/$(id -u)/${agent_label}"
+server_pattern='^[^ ]*/herdr server( |$)'
+
+server_pid() {
+  # Anchored to argv[0]: a plain 'herdr server' also matches processes whose arguments
+  # merely mention it.
+  pgrep -o -f "${server_pattern}" 2>/dev/null || true
+}
+
+responsible_pid() {
+  local pid="$1"
+  command -v python3 >/dev/null 2>&1 || return 1
+  python3 - "${pid}" <<'PY'
+import ctypes, sys
+f = ctypes.CDLL("/usr/lib/libSystem.B.dylib").responsibility_get_pid_responsible_for_pid
+f.argtypes = [ctypes.c_int]
+f.restype = ctypes.c_int
+print(f(int(sys.argv[1])))
+PY
+}
+
+is_app_path() {
+  [[ "$1" == *.app/Contents/MacOS/* ]]
+}
+
+server_binary_stale() {
+  [[ -n "${herdr_bin}" ]] || return 1
+  [[ "$("${herdr_bin}" status --json 2>/dev/null | jq -r '.update.server_binary_stale // false' 2>/dev/null)" == "true" ]]
+}
+
+agent_loaded() {
+  "${launchctl_bin}" print "${agent_target}" >/dev/null 2>&1
+}
+
+cmd_status() {
+  local quiet=false pid resp resp_path
+  [[ "${1:-}" == "--quiet" ]] && quiet=true
+
+  pid="$(server_pid)"
+  if [[ -z "${pid}" ]]; then
+    [[ "${quiet}" == true ]] || echo "herdr server: not running"
+    return 2
+  fi
+
+  if ! resp="$(responsible_pid "${pid}")"; then
+    [[ "${quiet}" == true ]] || echo "herdr server: pid=${pid} (python3 unavailable, cannot probe responsible process)" >&2
+    return 3
+  fi
+  resp_path="$(ps -o comm= -p "${resp}" 2>/dev/null || true)"
+
+  if is_app_path "${resp_path}"; then
+    [[ "${quiet}" == true ]] || echo "herdr server: pid=${pid} responsible=${resp} (${resp_path}) ok"
+    return 0
+  fi
+  [[ "${quiet}" == true ]] || echo "herdr server: pid=${pid} responsible=${resp} (${resp_path:-unknown}) NOT attributed to an app"
+  return 1
+}
+
+require_agent() {
+  if [[ -z "${herdr_bin}" ]]; then
+    echo "herdr-server-ctl: herdr not found on PATH" >&2
+    return 1
+  fi
+  if ! agent_loaded; then
+    echo "herdr-server-ctl: ${agent_label} is not loaded; run 'chezmoi apply' (installs drod3763/tap/herdr-server and the LaunchAgent)" >&2
+    return 1
+  fi
+}
+
+# Restart the launcher so it spawns immediately instead of waiting out its standby poll.
+kick_agent() {
+  "${launchctl_bin}" kickstart -k "${agent_target}"
+}
+
+wait_for_server() {
+  local previous_pid="${1:-}" attempts="${2:-75}" pid i
+  for ((i = 0; i < attempts; i++)); do
+    pid="$(server_pid)"
+    if [[ -n "${pid}" && "${pid}" != "${previous_pid}" ]]; then
+      return 0
+    fi
+    sleep 0.2
+  done
+  return 1
+}
+
+wait_for_exit() {
+  local attempts="${1:-50}" i
+  for ((i = 0; i < attempts; i++)); do
+    [[ -z "$(server_pid)" ]] && return 0
+    sleep 0.2
+  done
+  return 1
+}
+
+cmd_start() {
+  if [[ -n "$(server_pid)" ]]; then
+    echo "herdr server already running"
+    return 0
+  fi
+  require_agent
+  kick_agent
+  if ! wait_for_server ""; then
+    echo "herdr-server-ctl: server did not come up; see ~/Library/Logs/herdr-server.log" >&2
+    return 1
+  fi
+  cmd_status
+}
+
+cmd_fix() {
+  local assume_yes=false state=0 pid
+  [[ "${1:-}" == "-y" ]] && assume_yes=true
+
+  cmd_status --quiet || state=$?
+  case "${state}" in
+  2)
+    cmd_start
+    ;;
+  3)
+    cmd_status || true
+    return 3
+    ;;
+  0)
+    if server_binary_stale; then
+      # The old server spawns the replacement, so a healthy server stays healthy and
+      # every pane process survives. Doing this now keeps the next remote attach from
+      # restarting the server itself (which would spawn it under sshd/tailscaled).
+      echo "herdr server is attributed to an app but runs a stale binary; handing off panes to the installed binary..."
+      "${herdr_bin}" server live-handoff
+      cmd_status
+    else
+      cmd_status
+      echo "nothing to do"
+    fi
+    ;;
+  1)
+    cmd_status || true
+    require_agent
+    if [[ "${assume_yes}" != true ]]; then
+      echo "Restarting kills every pane process (workspaces and tabs are restored from session.json)."
+      if [[ -n "${HERDR_ENV:-}" ]]; then
+        echo "You are inside a herdr pane: this pane will close; reattach with 'herdr' afterwards."
+      fi
+      printf 'Stop the server and let %s respawn it? [y/N] ' "${agent_label}"
+      local answer
+      read -r answer
+      [[ "${answer}" =~ ^[Yy]$ ]] || {
+        echo "aborted"
+        return 1
+      }
+    fi
+    # An attached remote client respawns the server the instant it dies, and that spawn is
+    # attributed to sshd/tailscaled; it beats the launcher every time. Disconnect the local
+    # bridges first: their clients reconnect over SSH, which takes longer than the launcher
+    # needs to spawn, and then they attach to the launcher's server instead. Retry in case
+    # one still slips through.
+    local attempt
+    for attempt in 1 2 3; do
+      pid="$(server_pid)"
+      pkill -f '^[^ ]*/herdr remote-client-bridge' 2>/dev/null || true
+      "${herdr_bin}" server stop >/dev/null 2>&1 || true
+      if ! wait_for_exit; then
+        echo "herdr-server-ctl: server pid=${pid} did not exit after stop" >&2
+        return 1
+      fi
+      kick_agent
+      if ! wait_for_server "${pid}" 150; then
+        echo "herdr-server-ctl: replacement server did not come up; see ~/Library/Logs/herdr-server.log" >&2
+        return 1
+      fi
+      cmd_status --quiet && break
+      echo "attempt ${attempt}: a remote client respawned the server first; retrying"
+      sleep 2
+    done
+    cmd_status
+    ;;
+  esac
+}
+
+case "${1:-}" in
+status)
+  shift
+  cmd_status "$@"
+  ;;
+start)
+  shift
+  cmd_start "$@"
+  ;;
+fix)
+  shift
+  cmd_fix "$@"
+  ;;
+*)
+  sed -n '/^# Usage:/,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2
+  exit 64
+  ;;
+esac

@@ -1,0 +1,58 @@
+#!/bin/bash
+# Re-run whenever the agent or its program changes:
+# plist: {{ include "private_Library/LaunchAgents/local.herdr-server.plist.tmpl" | sha256sum }}
+# ctl:   {{ include "dot_local/bin/executable_herdr-server-ctl" | sha256sum }}
+
+set -euo pipefail
+
+{{ if lookPath "herdr" -}}
+launchctl_bin="${CHEZMOI_LAUNCHCTL_BIN:-/bin/launchctl}"
+ctl="${HOME}/.local/bin/herdr-server-ctl"
+plist="${HOME}/Library/LaunchAgents/local.herdr-server.plist"
+label="local.herdr-server"
+domain="gui/$(id -u)"
+
+# herdr: a launchd-spawned server has no grantable app identity (herdrdev/herdr#808), so the
+# Homebrew service was dropped from the package catalog. Unload it where it was installed
+# earlier; `brew services stop` also removes the plist, so this is a one-shot.
+for brew_plist in "${HOME}/Library/LaunchAgents/sh.brew.herdr.plist" \
+  "${HOME}/Library/LaunchAgents/homebrew.mxcl.herdr.plist"; do
+  if [[ -f "${brew_plist}" ]]; then
+    brew services stop herdr
+    break
+  fi
+done
+
+# (Re)register the replacement agent: Herdr Server.app's launcher (drod3763/tap/herdr-server,
+# installed by the package catalog) hosts the server at login. bootout is a no-op when
+# nothing is loaded. Without a GUI session (apply over SSH before anyone logged in at the
+# Mac) bootstrap into gui/ fails; the agent loads at the next login.
+launcher="${HERDR_SERVER_APP:-/Applications/Herdr Server.app}/Contents/MacOS/herdr-server-launcher"
+if [[ ! -x "${launcher}" ]]; then
+  printf '%s\n' "herdr: ${launcher} missing; install drod3763/tap/herdr-server and re-run this script."
+elif [[ -f "${plist}" ]]; then
+  "${launchctl_bin}" bootout "${domain}/${label}" >/dev/null 2>&1 || true
+  if ! "${launchctl_bin}" bootstrap "${domain}" "${plist}" >/dev/null 2>&1; then
+    printf '%s\n' "herdr: could not load ${label} into ${domain} (no GUI session?); it loads at next login."
+  fi
+fi
+
+# A healthy server left on a stale binary (brew upgrade) gets restarted by the next remote
+# attach, and that respawn lands under sshd/tailscaled. Handing off now is lossless and keeps
+# the attribution. A tainted server is only reported: fixing it kills pane processes.
+if [[ -x "${ctl}" ]]; then
+  state=0
+  "${ctl}" status --quiet || state=$?
+  case "${state}" in
+    0)
+      if [[ "$(herdr status --json 2>/dev/null | jq -r '.update.server_binary_stale // false' 2>/dev/null)" == "true" ]]; then
+        "${ctl}" fix -y
+      fi
+      ;;
+    1)
+      "${ctl}" status || true
+      printf '%s\n' "herdr: run 'herdr-fix' to respawn the server under Herdr Server.app (closes pane processes)."
+      ;;
+  esac
+fi
+{{ end -}}
