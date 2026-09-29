@@ -26,9 +26,10 @@ priority = 230
 when_os = ["darwin"]
 when_tool = "herdr"
 
+# ~/.local/bin is not on PATH in this shell config; use the absolute path like the init check.
 [shell_manifest.entries.herdr-darwin.aliases.herdr-fix]
 kind = "literal"
-value = "herdr-server-ctl fix"
+value = "\"${HOME}/.local/bin/herdr-server-ctl\" fix"
 
 [shell_manifest.entries.herdr-attribution-check-zsh]
 priority = 340

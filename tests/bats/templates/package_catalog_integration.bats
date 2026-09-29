@@ -65,7 +65,7 @@ render_with_overrides() {
   render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/aliases.tmpl" false false "${aliases_file}"
   render_with_overrides "${REPO_ROOT}/home/.chezmoitemplates/init.tmpl" false false "${init_file}"
 
-  run grep -qF "alias herdr-fix='herdr-server-ctl fix'" "${aliases_file}"
+  run grep -qF "alias herdr-fix='\"\${HOME}/.local/bin/herdr-server-ctl\" fix'" "${aliases_file}"
   [ "${status}" -eq 0 ]
 
   run grep -qF '/.local/bin/herdr-server-ctl" status --quiet' "${init_file}"
