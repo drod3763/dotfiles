@@ -1,0 +1,27 @@
+{{ if lookPath "moshi-hook" -}}
+#!/bin/bash
+
+set -euo pipefail
+
+# `brew upgrade` swaps the moshi-hook keg but leaves the old `moshi-hook serve` running, and
+# `moshi` then refuses to start against the stale daemon. `moshi-hook probe` reports the CLI's
+# own version, not the daemon's, so compare the running executable with the installed one.
+# Runs every apply to catch upgrades made outside chezmoi (brewup). Never restart on empty data.
+moshi_hook_pid="$(pgrep -f '/moshi-hook serve$' | head -n1 || true)"
+if [[ -z "${moshi_hook_pid}" ]]; then
+  exit 0
+fi
+
+moshi_hook_running="$(lsof -a -p "${moshi_hook_pid}" -d txt -Fn 2>/dev/null |
+  sed -n 's/^n//p' | head -n1 || true)"
+moshi_hook_installed="$(realpath "$(command -v moshi-hook)" 2>/dev/null || true)"
+
+if [[ -n "${moshi_hook_running}" ]] &&
+  [[ -n "${moshi_hook_installed}" ]] &&
+  [[ "${moshi_hook_running}" != "${moshi_hook_installed}" ]]; then
+  printf '%s\n' "moshi-hook daemon is running ${moshi_hook_running}, installed ${moshi_hook_installed}; restarting."
+  if ! brew services restart moshi-hook; then
+    printf '%s\n' "Failed to restart moshi-hook. Run: brew services restart moshi-hook" >&2
+  fi
+fi
+{{ end -}}
