@@ -1,0 +1,6 @@
+[package_catalog.packages."sleepwatcher"]
+os = "mac"
+type = "common"
+target_class = "all"
+brew_formula_name = "sleepwatcher"
+brew_formula_args = "restart_service: :changed"
