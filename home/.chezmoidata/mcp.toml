@@ -14,6 +14,12 @@ args = ["-y", "@azure-devops/mcp", "mindbody"]
 [mcp.shared.servers.launchdarkly]
 type = "stdio"
 command = "bunx"
-args = ["-y", "@launchdarkly/mcp-server", "start", "--scope", "read", "--api-key"]
+args = [
+  "-y",
+  "@launchdarkly/mcp-server",
+  "start",
+  "--scope",
+  "read",
+  "--api-key",
+]
 env = {}
-

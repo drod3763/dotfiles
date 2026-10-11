@@ -7,7 +7,7 @@ if ! command -v gitleaks >/dev/null 2>&1; then
 fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [[ -z "${repo_root}" ]]; then
+if [[ -z ${repo_root} ]]; then
   echo "Not inside a git repository." >&2
   exit 1
 fi

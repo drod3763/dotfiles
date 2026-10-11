@@ -5,10 +5,10 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ignore_file="${repo_root}/scripts/config_alignment.ignore"
 
 declare -a ignore_args=()
-while IFS= read -r pattern || [[ -n "${pattern}" ]]; do
-  [[ -z "${pattern}" || "${pattern}" == \#* ]] && continue
+while IFS= read -r pattern || [[ -n ${pattern} ]]; do
+  [[ -z ${pattern} || ${pattern} == \#* ]] && continue
   ignore_args+=(--ignore "${pattern}")
-done < "${ignore_file}"
+done <"${ignore_file}"
 
 python3 "${repo_root}/scripts/config_alignment.py" \
   --repo-root "${repo_root}" \

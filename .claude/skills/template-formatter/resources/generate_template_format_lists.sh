@@ -18,30 +18,30 @@ render_only_tmp="$(mktemp)"
 trap 'rm -f "${candidates_tmp}" "${source_safe_tmp}" "${render_only_tmp}"' EXIT
 
 while IFS= read -r path; do
-	[[ -n "${path}" ]] || continue
-	case "${path}" in
-	home/.chezmoiscripts/*) continue ;;
-	home/.chezmoitemplates/*) continue ;;
-	*.age.tmpl) continue ;;
-	*license*.tmpl | *.lic.tmpl | *.key.tmpl | *.dat.tmpl) continue ;;
-	esac
-	printf '%s\n' "${path}" >>"${candidates_tmp}"
+  [[ -n ${path} ]] || continue
+  case "${path}" in
+  home/.chezmoiscripts/*) continue ;;
+  home/.chezmoitemplates/*) continue ;;
+  *.age.tmpl) continue ;;
+  *license*.tmpl | *.lic.tmpl | *.key.tmpl | *.dat.tmpl) continue ;;
+  esac
+  printf '%s\n' "${path}" >>"${candidates_tmp}"
 done <<<"${all_tmpl}"
 
 declare -a source_safe=(
-	"home/private_dot_config/claude/symlink_ide.tmpl"
+  "home/private_dot_config/claude/symlink_ide.tmpl"
 )
 
 for path in "${source_safe[@]}"; do
-	printf '%s\n' "${path}" >>"${source_safe_tmp}"
+  printf '%s\n' "${path}" >>"${source_safe_tmp}"
 done
 
 while IFS= read -r path; do
-	[[ -n "${path}" ]] || continue
-	if grep -Fxq "${path}" "${source_safe_tmp}"; then
-		continue
-	fi
-	printf '%s\n' "${path}" >>"${render_only_tmp}"
+  [[ -n ${path} ]] || continue
+  if grep -Fxq "${path}" "${source_safe_tmp}"; then
+    continue
+  fi
+  printf '%s\n' "${path}" >>"${render_only_tmp}"
 done <"${candidates_tmp}"
 
 sort "${candidates_tmp}" >"${all_candidates_out}"
