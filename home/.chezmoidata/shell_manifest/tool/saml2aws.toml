@@ -36,7 +36,7 @@ value = "AWS_SDK_LOAD_CONFIG=0 saml2aws"
 kind = "literal"
 value = """
 loginarcus() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force --profile default
+  saml2aws login --skip-prompt --force --profile default
 }
 """
 
@@ -44,7 +44,7 @@ loginarcus() {
 kind = "literal"
 value = """
 loginarcussu() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a superuser --profile default_su
+  saml2aws login --skip-prompt --force -a superuser --profile default_su
 }
 """
 
@@ -52,7 +52,7 @@ loginarcussu() {
 kind = "literal"
 value = """
 logininternaltools() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a internaltools --profile internaltools
+  saml2aws login --skip-prompt --force -a internaltools --profile internaltools
 }
 """
 
@@ -60,7 +60,7 @@ logininternaltools() {
 kind = "literal"
 value = """
 logininternaltoolssu() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a internaltools_superuser --profile internaltools_su
+  saml2aws login --skip-prompt --force -a internaltools_superuser --profile internaltools_su
 }
 """
 
@@ -68,7 +68,7 @@ logininternaltoolssu() {
 kind = "literal"
 value = """
 loginaccelerator() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a accelerator --profile accelerator
+  saml2aws login --skip-prompt --force -a accelerator --profile accelerator
 }
 """
 
@@ -76,6 +76,6 @@ loginaccelerator() {
 kind = "literal"
 value = """
 loginacceleratorsu() {
-  saml2aws login --browser-executable-path="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --skip-prompt --force -a accelerator_superuser --profile accelerator_su
+  saml2aws login --skip-prompt --force -a accelerator_superuser --profile accelerator_su
 }
 """
