@@ -12,3 +12,4 @@
 .local/bin/herdr-server-ctl
 Library/LaunchAgents/local.herdr-server.plist
 .config/opencode
+.config/hammerspoon

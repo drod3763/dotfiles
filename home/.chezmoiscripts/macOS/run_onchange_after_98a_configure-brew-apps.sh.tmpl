@@ -19,11 +19,6 @@ curl --location https://iterm2.com/shell_integration/install_shell_integration_a
 tldr --update
 {{ end -}}
 
-{{ if or (lookPath "hammerspoon") (stat "/Applications/Hammerspoon.app") -}}
-# Use XDG-style Hammerspoon config path
-defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua"
-{{ end -}}
-
 {{ if lookPath "ya" -}}
 if [[ ! -d "${HOME}/.config/yazi/flavors/catppuccin-mocha.yazi" ]]; then
   ya pkg add yazi-rs/flavors:catppuccin-mocha

@@ -10,12 +10,7 @@
 
 # Exclude files or directories matching the specified globs
 # Env $TREEFMT_EXCLUDES
-excludes = [
-  ".git/**",
-  "tmp/**",
-  "home/private_dot_config/hammerspoon/Spoons/**",
-  "**/*.age",
-]
+excludes = [".git/**", "tmp/**", "**/*.age"]
 
 # Exit with error if any changes were made during execution
 # Useful for CI
