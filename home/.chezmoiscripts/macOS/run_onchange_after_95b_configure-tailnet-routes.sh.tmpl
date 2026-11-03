@@ -1,0 +1,112 @@
+#!/bin/bash
+
+set -euo pipefail
+
+{{- $routes := list }}
+{{- if not .personal }}
+{{-   if hasKey . "tailnetRoutes" }}
+{{-     $routes = dig "work" list .tailnetRoutes }}
+{{-   else }}
+{{-     $routes = dig "work" list (include ".tailnet_routes.toml.age" | decrypt | fromToml) }}
+{{-   end }}
+{{- end }}
+
+label="local.tailnet-routes"
+helper="${CHEZMOI_TAILNET_ROUTES_HELPER:-/usr/local/libexec/tailnet-routes}"
+plist="${CHEZMOI_TAILNET_ROUTES_PLIST:-/Library/LaunchDaemons/${label}.plist}"
+launchctl_bin="${CHEZMOI_LAUNCHCTL_BIN:-/bin/launchctl}"
+
+run_as_root() {
+  if [[ "${EUID}" -eq 0 ]]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
+{{ if not $routes -}}
+if [[ -f "${plist}" || -f "${helper}" ]]; then
+  run_as_root "${launchctl_bin}" bootout "system/${label}" >/dev/null 2>&1 || true
+  run_as_root rm -f "${plist}" "${helper}"
+  echo "Removed ${label}."
+fi
+exit 0
+{{- else -}}
+helper_tmp="$(mktemp)"
+plist_tmp="$(mktemp)"
+trap 'rm -f "${helper_tmp}" "${plist_tmp}"' EXIT
+
+# Another VPN on this Mac can claim all of 100.64.0.0/10, which swallows tailnet traffic.
+# Host routes for specific peers are more specific, so they win.
+cat > "${helper_tmp}" <<'EOF'
+#!/bin/bash
+set -euo pipefail
+
+tailscale_bin="${TAILNET_ROUTES_TAILSCALE_BIN:-{{ lookPath "tailscale" | default "/opt/homebrew/bin/tailscale" }}}"
+route_bin="${TAILNET_ROUTES_ROUTE_BIN:-/sbin/route}"
+ifconfig_bin="${TAILNET_ROUTES_IFCONFIG_BIN:-/sbin/ifconfig}"
+peers=(
+{{- range $routes }}
+  {{ .ip | quote }}
+{{- end }}
+)
+
+self_ip="$("${tailscale_bin}" ip -4 2>/dev/null | head -n 1 || true)"
+if [[ -z "${self_ip}" ]]; then
+  exit 0
+fi
+
+# The utun number is not stable across tailscaled restarts, so find it by address.
+ts_if="$("${ifconfig_bin}" | awk -v ip="${self_ip}" '
+  /^[a-z]/ { iface = $1; sub(/:$/, "", iface) }
+  $1 == "inet" && $2 == ip { print iface; exit }
+')"
+if [[ -z "${ts_if}" ]]; then
+  exit 0
+fi
+
+for peer in "${peers[@]}"; do
+  current="$("${route_bin}" -n get "${peer}" 2>/dev/null | awk '/interface:/ { print $2 }')"
+  if [[ "${current}" != "${ts_if}" ]]; then
+    "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
+    "${route_bin}" -n add -host "${peer}" -interface "${ts_if}" >/dev/null
+    echo "Routed ${peer} via ${ts_if} (was ${current:-none})."
+  fi
+done
+EOF
+
+cat > "${plist_tmp}" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>${label}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>${helper}</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>60</integer>
+  <key>WatchPaths</key>
+  <array>
+    <string>/Library/Preferences/SystemConfiguration</string>
+  </array>
+  <key>StandardOutPath</key>
+  <string>/var/log/${label}.log</string>
+  <key>StandardErrorPath</key>
+  <string>/var/log/${label}.log</string>
+</dict>
+</plist>
+EOF
+
+run_as_root mkdir -p "$(dirname "${helper}")"
+run_as_root install -m 0755 "${helper_tmp}" "${helper}"
+run_as_root install -m 0644 "${plist_tmp}" "${plist}"
+
+run_as_root "${launchctl_bin}" bootout "system/${label}" >/dev/null 2>&1 || true
+run_as_root "${launchctl_bin}" bootstrap system "${plist}"
+echo "Loaded ${label}."
+{{- end }}
