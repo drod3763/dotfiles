@@ -7,3 +7,7 @@
 .cache/zsh4humans
 .config/docker/daemon.json
 .config/zsh/.zshenv
+.config/claude/hooks/herdr-agent-state.sh
+.config/herdr
+.local/bin/herdr-server-ctl
+Library/LaunchAgents/local.herdr-server.plist
