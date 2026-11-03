@@ -185,7 +185,7 @@ render_with_mocked_brew_paths() {
   run grep -q 'brew "awscli"' "${rendered_file}"
   [ "${status}" -eq 1 ]
 
-  run grep -q 'cask "brave-browser"' "${rendered_file}"
+  run grep -q 'cask "bruno"' "${rendered_file}"
   [ "${status}" -eq 1 ]
 
   run grep -q 'cask "docker-desktop"' "${rendered_file}"
@@ -214,7 +214,7 @@ render_with_mocked_brew_paths() {
   run grep -q 'mas "Amphetamine", id: 937984704' "${rendered_file}"
   [ "${status}" -eq 0 ]
 
-  run grep -q 'cask "brave-browser"' "${rendered_file}"
+  run grep -q 'cask "bruno"' "${rendered_file}"
   [ "${status}" -eq 0 ]
 
   run grep -q 'cask "docker-desktop"' "${rendered_file}"
