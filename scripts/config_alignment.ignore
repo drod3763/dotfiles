@@ -12,7 +12,6 @@
 */chezmoistate.boltdb
 */.cagent_first_run
 claude/**
-opencode/**
 dotnet/**
 github-copilot/**
 zed/**
