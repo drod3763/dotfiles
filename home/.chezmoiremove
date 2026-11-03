@@ -13,3 +13,6 @@
 Library/LaunchAgents/local.herdr-server.plist
 .config/opencode
 .config/hammerspoon
+.config/borders
+Library/LaunchAgents/homebrew.mxcl.borders.plist
+Library/LaunchAgents/homebrew.mxcl.herdr-mx.plist

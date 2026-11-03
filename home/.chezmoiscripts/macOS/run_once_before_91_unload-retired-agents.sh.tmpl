@@ -1,0 +1,14 @@
+#!/bin/bash
+# Must run before install-packages: `brew bundle cleanup --zap` removes these agents' programs,
+# and a still-loaded KeepAlive agent would respawn-loop against the missing binary.
+set -euo pipefail
+
+launchctl_bin="${CHEZMOI_LAUNCHCTL_BIN:-/bin/launchctl}"
+domain="gui/$(id -u)"
+
+for label in local.herdr-server homebrew.mxcl.borders homebrew.mxcl.herdr-mx; do
+  if "${launchctl_bin}" print "${domain}/${label}" >/dev/null 2>&1; then
+    "${launchctl_bin}" bootout "${domain}/${label}" >/dev/null 2>&1 || true
+    printf '%s\n' "unloaded retired agent ${label}."
+  fi
+done
