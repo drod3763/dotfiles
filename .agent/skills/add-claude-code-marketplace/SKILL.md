@@ -21,7 +21,6 @@ description: Add Claude Code marketplace TOML under home/.chezmoidata/claude_cod
 6. Use `source = "github"` with `repo = "owner/name"`, or `source = "git"` with `url = "..."`.
 7. Do not manage or edit `known_marketplaces.json`.
 8. Render `home/private_dot_config/claude/settings.json.tmpl` and validate JSON.
-9. Run `mise exec -- openspec validate manage-claude-code-plugins-via-manifest --strict` when working in that change.
 
 ## Template
 

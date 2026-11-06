@@ -2,7 +2,7 @@
 
 ## Repository Overview
 
-This is a sophisticated chezmoi-managed dotfiles repository with cross-platform support, templating, encryption, and spec-driven development via OpenSpec.
+This is a sophisticated chezmoi-managed dotfiles repository with cross-platform support, templating, and encryption.
 
 ## Shell Manifest First
 
@@ -191,14 +191,6 @@ fi
 - Prefer native PowerShell patterns for Windows setup/remove flows
 - Keep Windows-specific logic out of shared shell templates
 
-## OpenSpec Integration
-
-- All changes should follow spec-driven development
-- Run OpenSpec commands via `mise exec -- openspec ...` (avoid relying on global PATH)
-- Use `openspec/changes/` for proposals
-- Reference `openspec/specs/` for capability definitions
-- Follow existing AI agent workflows in `.agent/`
-
 ## File Organization
 
 - `home/` - Main dotfiles directory
@@ -207,8 +199,6 @@ fi
 - `home/.chezmoidata/shell_manifest/` - Canonical shell behavior definitions for aliases, exports, functions, and init
 - `home/.chezmoitemplates/` - Reusable template partials
 - `home/private_*` - Restricted permission files
-- `.agent/workflows/` - Repository-specific OpenSpec helper workflows
-- `openspec/` - Specifications and change proposals
 - `flake.nix` - Nix flakes configuration
 
 ## Destination Mapping
