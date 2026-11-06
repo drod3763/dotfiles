@@ -108,7 +108,13 @@ printf '%s\n' "${input}" |
   sed -n "s/.*\"${mock_jq_key}\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p"
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/tldr" "${MOCK_BIN_DIR}/defaults" "${MOCK_BIN_DIR}/ya" "${MOCK_BIN_DIR}/java" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/curl" "${MOCK_BIN_DIR}/tailscale" "${MOCK_BIN_DIR}/jq"
+  # The sudo keepalive's `sleep 10` outlives stop_sudo_keepalive and holds bats' fds open for 10s.
+  cat > "${MOCK_BIN_DIR}/sleep" <<'EOF'
+#!/usr/bin/env bash
+/bin/sleep 0.01
+EOF
+
+  chmod +x "${MOCK_BIN_DIR}/tldr" "${MOCK_BIN_DIR}/defaults" "${MOCK_BIN_DIR}/ya" "${MOCK_BIN_DIR}/java" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/curl" "${MOCK_BIN_DIR}/tailscale" "${MOCK_BIN_DIR}/jq" "${MOCK_BIN_DIR}/sleep"
 
   export PATH="${MOCK_BIN_DIR}:${PATH}"
   export MOCK_YA_CALLS_FILE="${TEST_TMPDIR}/ya.calls"

@@ -197,7 +197,13 @@ EOF
 exit 0
 EOF
 
-  chmod +x "${MOCK_BIN_DIR}/uname" "${MOCK_BIN_DIR}/git" "${MOCK_BIN_DIR}/chezmoi" "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/arch" "${MOCK_BIN_DIR}/softwareupdate" "${MOCK_BIN_DIR}/caffeinate" "${MOCK_BIN_DIR}/curl" "${MOCK_BIN_DIR}/xcode-select" "${MOCK_BIN_DIR}/sqlite3" "${MOCK_BIN_DIR}/sh"
+  # The sudo keepalive's `sleep 60` outlives cleanup's kill and holds bats' fds open for 60s.
+  cat > "${MOCK_BIN_DIR}/sleep" <<'EOF'
+#!/usr/bin/env bash
+/bin/sleep 0.01
+EOF
+
+  chmod +x "${MOCK_BIN_DIR}/uname" "${MOCK_BIN_DIR}/git" "${MOCK_BIN_DIR}/chezmoi" "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/op" "${MOCK_BIN_DIR}/age" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/arch" "${MOCK_BIN_DIR}/softwareupdate" "${MOCK_BIN_DIR}/caffeinate" "${MOCK_BIN_DIR}/curl" "${MOCK_BIN_DIR}/xcode-select" "${MOCK_BIN_DIR}/sqlite3" "${MOCK_BIN_DIR}/sh" "${MOCK_BIN_DIR}/sleep"
 
   export MOCK_CHEZMOI_CALLS_FILE="${TEST_TMPDIR}/chezmoi.calls"
   export MOCK_BREW_CALLS_FILE="${TEST_TMPDIR}/brew.calls"

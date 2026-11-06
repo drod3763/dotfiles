@@ -180,7 +180,7 @@ teardown() {
   export MOCK_OP_FAIL=1
   render_non_personal_script
 
-  run bash "${RENDERED_SCRIPT}"
+  run bash "${RENDERED_SCRIPT}" </dev/null
 
   [[ "${status}" -ne 0 ]]
 }
