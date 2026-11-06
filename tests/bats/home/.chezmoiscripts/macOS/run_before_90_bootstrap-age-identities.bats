@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_once_before_90_bootstrap-age-identities.sh.tmpl"
@@ -55,7 +57,7 @@ EOF
   export MOCK_OP_COUNTER_FILE="${TEST_TMPDIR}/op.counter"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/age-bootstrap.sh"
-  "${REAL_CHEZMOI_BIN}" execute-template --source "${REPO_ROOT}" < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
+  chezmoi_execute_template --source "${REPO_ROOT}" < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
 

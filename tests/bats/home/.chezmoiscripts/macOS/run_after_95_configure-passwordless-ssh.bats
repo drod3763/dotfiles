@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_onchange_after_95_configure-passwordless-ssh.sh.tmpl"
@@ -110,7 +112,7 @@ EOF
   chmod +x "${MOCK_BIN_DIR}/mosh-server"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_95_configure-passwordless-ssh.sh"
-  "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
+  chezmoi_execute_template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
 
@@ -170,7 +172,7 @@ teardown() {
   override="${TEST_TMPDIR}/off.json"
   printf '%s\n' '{"enablePasswordlessSsh": false}' > "${override}"
   rendered="${TEST_TMPDIR}/rendered-off.sh"
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override}" \
+  chezmoi_execute_template --override-data-file "${override}" \
     < "${TEMPLATE_PATH}" > "${rendered}"
 
   run grep -qF 'CHEZMOI_ENABLE_PASSWORDLESS_SSH:-false' "${rendered}"

@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_after_99_refresh-shell-session.sh.tmpl"
@@ -7,7 +9,7 @@ setup() {
 
   TEST_TMPDIR="$(mktemp -d)"
   RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_99_refresh-shell-session.sh"
-  "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
+  chezmoi_execute_template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
 

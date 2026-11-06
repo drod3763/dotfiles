@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Every item gets the same response, so it carries each field id, label and URL label templates look up.
+case "$*" in
+  signin*)
+    printf '%s\n' 'mock-session'
+    ;;
+  *"item get"*)
+    cat <<'JSON'
+{
+  "fields": [
+    { "id": "dx7si3rrpbwq2vbg23odtjvmbu", "label": "email", "value": "mock@example.com" },
+    { "id": "ffpafb4xoc64jwnrtqgktcjiyq", "label": "github mcp pat", "value": "ghp_mock" },
+    { "id": "credential", "label": "credential", "value": "sk-mock" },
+    { "id": "username", "label": "username", "value": "mock-user" },
+    { "id": "launchdarkly-token", "label": "launchdarkly reader token", "value": "ld_mock" }
+  ],
+  "urls": [
+    { "label": "clients_local_domain", "href": "corp.example.test" }
+  ]
+}
+JSON
+    ;;
+  *)
+    printf 'mock op: unsupported command: %s\n' "$*" >&2
+    exit 1
+    ;;
+esac

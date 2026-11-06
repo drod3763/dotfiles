@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_onchange_after_95b_configure-tailnet-routes.sh.tmpl"
@@ -62,7 +64,7 @@ EOF
 
 render() {
   printf '%s\n' "$2" > "${TEST_TMPDIR}/$1.json"
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${TEST_TMPDIR}/$1.json" \
+  chezmoi_execute_template --override-data-file "${TEST_TMPDIR}/$1.json" \
     < "${TEMPLATE_PATH}" > "${TEST_TMPDIR}/$1.sh"
 }
 

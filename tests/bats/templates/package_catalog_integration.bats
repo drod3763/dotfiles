@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../helpers/chezmoi"
+
 setup() {
   bats_require_minimum_version 1.5.0
 
@@ -25,7 +27,7 @@ render_with_overrides() {
 
   local override_file="${TEST_TMPDIR}/override-${personal}-${transient}.json"
   printf '{"personal":%s,"transient":%s}\n' "${personal}" "${transient}" > "${override_file}"
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" < "${template_path}" > "${output_path}"
+  chezmoi_execute_template --override-data-file "${override_file}" < "${template_path}" > "${output_path}"
 }
 
 @test "GIVEN non-personal host EXPECT saml2aws package function is included" {

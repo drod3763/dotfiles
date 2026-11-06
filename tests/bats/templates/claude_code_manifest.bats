@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../helpers/chezmoi"
+
 setup() {
   bats_require_minimum_version 1.5.0
 
@@ -19,7 +21,7 @@ render_template() {
 
   local override_file="${TEST_TMPDIR}/override-${personal}.json"
   printf '{"personal":%s}\n' "${personal}" >"${override_file}"
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" <"${template_path}" >"${output_path}"
+  chezmoi_execute_template --override-data-file "${override_file}" <"${template_path}" >"${output_path}"
 }
 
 @test "GIVEN work profile EXPECT work marketplaces and plugins are active" {
@@ -82,7 +84,7 @@ render_template() {
 }
 JSON
 
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" <"${REPO_ROOT}/home/.chezmoitemplates/claude_code_plugin_renderer.tmpl" >"${plugin_json}"
+  chezmoi_execute_template --override-data-file "${override_file}" <"${REPO_ROOT}/home/.chezmoitemplates/claude_code_plugin_renderer.tmpl" >"${plugin_json}"
 
   run jq -e '.install_seeds."disabled-test@agentic-tools"["version"] == "1.0.0"' "${plugin_json}"
   [ "${status}" -eq 0 ]
@@ -96,7 +98,7 @@ JSON
 
   jq -n --arg stdin '{"version":2,"plugins":{"old-user@agentic-tools":[{"scope":"user"}],"old-project@agentic-tools":[{"scope":"project"}],"local@random":[{"scope":"user"}]}}' '{"chezmoi":{"stdin":$stdin}}' >"${override_file}"
 
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" <"${REPO_ROOT}/home/private_dot_config/claude/plugins/modify_installed_plugins.json" >"${output_json}"
+  chezmoi_execute_template --override-data-file "${override_file}" <"${REPO_ROOT}/home/private_dot_config/claude/plugins/modify_installed_plugins.json" >"${output_json}"
 
   run jq -e '.plugins."old-user@agentic-tools" == null' "${output_json}"
   [ "${status}" -eq 0 ]
@@ -128,7 +130,7 @@ JSON
 }
 JSON
 
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" <"${REPO_ROOT}/home/.chezmoitemplates/claude_code_plugin_renderer.tmpl" >"${plugin_json}"
+  chezmoi_execute_template --override-data-file "${override_file}" <"${REPO_ROOT}/home/.chezmoitemplates/claude_code_plugin_renderer.tmpl" >"${plugin_json}"
 
   run jq -e '.install_seeds."project-test@agentic-tools".scope == "project"' "${plugin_json}"
   [ "${status}" -eq 0 ]

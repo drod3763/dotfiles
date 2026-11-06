@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_after_98c_restart-stale-moshi-hook.sh.tmpl"
@@ -54,7 +56,7 @@ EOF
   export MOCK_MOSHI_HOOK_RUNNING="${MOCK_MOSHI_HOOK_INSTALLED}"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_98c_restart-stale-moshi-hook.sh"
-  "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
+  chezmoi_execute_template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
 

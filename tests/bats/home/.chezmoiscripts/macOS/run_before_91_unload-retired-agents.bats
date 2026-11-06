@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   bats_require_minimum_version 1.5.0
 
@@ -26,7 +28,7 @@ EOF
   export CHEZMOI_LAUNCHCTL_BIN="${MOCK_BIN_DIR}/launchctl"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/run_before_91_unload-retired-agents.sh"
-  chezmoi execute-template <"${TEMPLATE_PATH}" >"${RENDERED_SCRIPT}"
+  chezmoi_execute_template <"${TEMPLATE_PATH}" >"${RENDERED_SCRIPT}"
 }
 
 teardown() {

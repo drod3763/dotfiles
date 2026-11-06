@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   bats_require_minimum_version 1.5.0
 
@@ -116,7 +118,7 @@ EOF
   chmod +x "${MOCK_BIN_DIR}/brew" "${MOCK_BIN_DIR}/sudo" "${MOCK_BIN_DIR}/sleep" "${MOCK_FALLBACK_HOME}/opt/homebrew/bin/brew"
 
   RENDERED_SCRIPT="${TEST_TMPDIR}/install-packages.sh"
-  chezmoi execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
+  chezmoi_execute_template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 
   export MOCK_BREW_COUNTER_FILE="${TEST_TMPDIR}/brew-bundle-count"
@@ -132,7 +134,7 @@ render_with_overrides() {
 
   local override_file="${TEST_TMPDIR}/override-${personal}-${transient}.json"
   printf '{"personal":%s,"transient":%s}\n' "${personal}" "${transient}" > "${override_file}"
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" < "${TEMPLATE_PATH}" > "${output_path}"
+  chezmoi_execute_template --override-data-file "${override_file}" < "${TEMPLATE_PATH}" > "${output_path}"
 }
 
 teardown() {

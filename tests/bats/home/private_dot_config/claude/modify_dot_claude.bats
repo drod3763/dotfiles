@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/private_dot_config/claude/modify_private_dot_claude.json.tmpl"
@@ -11,41 +13,8 @@ setup() {
 
   export PATH="${MOCK_BIN_DIR}:${PATH}"
 
-  cat >"${MOCK_BIN_DIR}/op" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-if [[ "${1:-}" == "signin" ]]; then
-  printf '%s\n' 'mock-session'
-  exit 0
-fi
-
-if [[ "$*" == *"item get"* ]]; then
-  cat <<'JSON'
-{
-  "fields": [
-    {
-      "id": "ffpafb4xoc64jwnrtqgktcjiyq",
-      "value": "ghp_mock"
-    },
-    {
-      "id": "launchdarkly-token",
-      "label": "launchdarkly reader token",
-      "value": "ld_mock"
-    }
-  ]
-}
-JSON
-  exit 0
-fi
-
-exit 1
-EOF
-
-  chmod +x "${MOCK_BIN_DIR}/op"
-
   RENDERED_SCRIPT="${TEST_TMPDIR}/modify_dot_claude"
-  "${REAL_CHEZMOI_BIN}" execute-template <"${TEMPLATE_PATH}" >"${RENDERED_SCRIPT}"
+  chezmoi_execute_template <"${TEMPLATE_PATH}" >"${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   SCRIPT="${REPO_ROOT}/scripts/format_toml_template.js"
@@ -79,13 +81,13 @@ k=1
 EOF
 
   local before
-  before="$(chezmoi execute-template < "${f}" | taplo format --no-auto-config -o reorder_keys=false -)"
+  before="$(chezmoi_execute_template < "${f}" | taplo format --no-auto-config -o reorder_keys=false -)"
 
   fmt "${f}"
   [ "${status}" -eq 0 ]
 
   local after
-  after="$(chezmoi execute-template < "${f}" | taplo format --no-auto-config -o reorder_keys=false -)"
+  after="$(chezmoi_execute_template < "${f}" | taplo format --no-auto-config -o reorder_keys=false -)"
   [ "${before}" = "${after}" ]
 }
 

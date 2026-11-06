@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_onchange_after_94_install-helpers.sh.tmpl"
@@ -24,7 +26,7 @@ EOF
 
   RENDERED_SCRIPT_RAW="${TEST_TMPDIR}/run_after_94_install-helpers.raw.sh"
   RENDERED_SCRIPT="${TEST_TMPDIR}/run_after_94_install-helpers.sh"
-  "${REAL_CHEZMOI_BIN}" execute-template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT_RAW}"
+  chezmoi_execute_template < "${TEMPLATE_PATH}" > "${RENDERED_SCRIPT_RAW}"
   sed "s|/Applications|${MOCK_APPS_DIR}|g" "${RENDERED_SCRIPT_RAW}" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }

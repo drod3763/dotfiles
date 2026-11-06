@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
+
 setup() {
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   TEMPLATE_PATH="${REPO_ROOT}/home/.chezmoiscripts/macOS/run_onchange_after_98a_configure-brew-apps.sh.tmpl"
@@ -132,7 +134,7 @@ render_script() {
   local override_json="$1"
   local override_file="${TEST_TMPDIR}/override.json"
   printf '%s\n' "${override_json}" > "${override_file}"
-  "${REAL_CHEZMOI_BIN}" execute-template --override-data-file "${override_file}" < "${TEMPLATE_PATH}" |
+  chezmoi_execute_template --override-data-file "${override_file}" < "${TEMPLATE_PATH}" |
     sed "s|/Library/LaunchDaemons|${TEST_LAUNCHDAEMONS_DIR}|g" > "${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
 }
