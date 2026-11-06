@@ -1,5 +1,5 @@
 [package_catalog.packages."tap-stablyai-orca"]
 os = "mac"
-type = "common"
+type = "personal"
 target_class = "all"
 brew_tap_name = "stablyai/orca"

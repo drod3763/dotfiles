@@ -1,5 +1,5 @@
 [package_catalog.packages."zellij"]
 os = "mac"
-type = "common"
+type = "personal"
 target_class = "all"
 brew_formula_name = "zellij"
