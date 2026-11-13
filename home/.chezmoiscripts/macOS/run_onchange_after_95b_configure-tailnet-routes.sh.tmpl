@@ -2,15 +2,6 @@
 
 set -euo pipefail
 
-{{- $routes := list }}
-{{- if not .personal }}
-{{-   if hasKey . "tailnetRoutes" }}
-{{-     $routes = dig "work" list .tailnetRoutes }}
-{{-   else }}
-{{-     $routes = dig "work" list (include ".tailnet_routes.toml.age" | decrypt | fromToml) }}
-{{-   end }}
-{{- end }}
-
 label="local.tailnet-routes"
 helper="${CHEZMOI_TAILNET_ROUTES_HELPER:-/usr/local/libexec/tailnet-routes}"
 plist="${CHEZMOI_TAILNET_ROUTES_PLIST:-/Library/LaunchDaemons/${label}.plist}"
@@ -24,7 +15,7 @@ run_as_root() {
   fi
 }
 
-{{ if not $routes -}}
+{{ if .personal -}}
 if [[ -f "${plist}" || -f "${helper}" ]]; then
   run_as_root "${launchctl_bin}" bootout "system/${label}" >/dev/null 2>&1 || true
   run_as_root rm -f "${plist}" "${helper}"
@@ -37,19 +28,21 @@ plist_tmp="$(mktemp)"
 trap 'rm -f "${helper_tmp}" "${plist_tmp}"' EXIT
 
 # Another VPN on this Mac can claim all of 100.64.0.0/10, which swallows tailnet traffic.
-# Host routes for specific peers are more specific, so they win.
+# A host route per peer is more specific, so it wins.
 cat > "${helper_tmp}" <<'EOF'
 #!/bin/bash
 set -euo pipefail
 
 tailscale_bin="${TAILNET_ROUTES_TAILSCALE_BIN:-{{ lookPath "tailscale" | default "/opt/homebrew/bin/tailscale" }}}"
+# launchd's PATH lacks Homebrew; macOS ships jq here.
+jq_bin="${TAILNET_ROUTES_JQ_BIN:-/usr/bin/jq}"
 route_bin="${TAILNET_ROUTES_ROUTE_BIN:-/sbin/route}"
 ifconfig_bin="${TAILNET_ROUTES_IFCONFIG_BIN:-/sbin/ifconfig}"
-peers=(
-{{- range $routes }}
-  {{ .ip | quote }}
-{{- end }}
-)
+
+peer_ipv4s() {
+  "${tailscale_bin}" status --json 2>/dev/null |
+    "${jq_bin}" -r '(.Peer // {})[].TailscaleIPs[]? | select(test("^[0-9.]+$"))' 2>/dev/null || true
+}
 
 self_ip="$("${tailscale_bin}" ip -4 2>/dev/null | head -n 1 || true)"
 if [[ -z "${self_ip}" ]]; then
@@ -65,14 +58,14 @@ if [[ -z "${ts_if}" ]]; then
   exit 0
 fi
 
-for peer in "${peers[@]}"; do
+while IFS= read -r peer; do
   current="$("${route_bin}" -n get "${peer}" 2>/dev/null | awk '/interface:/ { print $2 }')"
   if [[ "${current}" != "${ts_if}" ]]; then
     "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
     "${route_bin}" -n add -host "${peer}" -interface "${ts_if}" >/dev/null
     echo "Routed ${peer} via ${ts_if} (was ${current:-none})."
   fi
-done
+done < <(peer_ipv4s)
 EOF
 
 cat > "${plist_tmp}" <<EOF

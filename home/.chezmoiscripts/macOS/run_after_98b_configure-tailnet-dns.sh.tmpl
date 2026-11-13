@@ -1,0 +1,66 @@
+#!/bin/bash
+
+set -euo pipefail
+
+tailscale_bin="${CHEZMOI_TAILSCALE_BIN:-tailscale}"
+resolver_dir="${CHEZMOI_RESOLVER_DIR:-/etc/resolver}"
+marker="# managed by chezmoi: tailnet-dns"
+quad100="100.100.100.100"
+
+run_as_root() {
+  if [[ "${EUID}" -eq 0 ]]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
+remove_managed_resolvers() {
+  local keep="${1:-}" file
+  for file in "${resolver_dir}"/*; do
+    [[ -f "${file}" ]] || continue
+    [[ "$(basename "${file}")" == "${keep}" ]] && continue
+    if grep -qxF "${marker}" "${file}"; then
+      run_as_root rm -f "${file}"
+      echo "Removed stale tailnet resolver ${file}."
+    fi
+  done
+}
+
+{{ if .personal -}}
+remove_managed_resolvers
+exit 0
+{{- else -}}
+if ! command -v "${tailscale_bin}" >/dev/null 2>&1; then
+  exit 0
+fi
+
+status_json="$("${tailscale_bin}" status --json 2>/dev/null || true)"
+backend_state="$(jq -r '.BackendState // empty' <<<"${status_json}" 2>/dev/null || true)"
+suffix="$(jq -r '.MagicDNSSuffix // empty' <<<"${status_json}" 2>/dev/null || true)"
+if [[ "${backend_state}" != "Running" || -z "${suffix}" ]]; then
+  exit 0
+fi
+
+# Work VPN serves intranet DNS. With "Override local DNS" on, tailscaled would replace it
+# as the default resolver and send intranet lookups to public nameservers.
+if "${tailscale_bin}" debug prefs 2>/dev/null | jq -e '.CorpDNS == true' >/dev/null 2>&1; then
+  "${tailscale_bin}" set --accept-dns=false 2>/dev/null ||
+    run_as_root "${tailscale_bin}" set --accept-dns=false
+  echo "Disabled Tailscale DNS takeover."
+fi
+
+# Keeps MagicDNS names resolving. No "Added by tailscaled" header, so tailscaled leaves it alone.
+resolver_file="${resolver_dir}/${suffix}"
+desired="$(printf '%s\nnameserver %s\n' "${marker}" "${quad100}")"
+if [[ "$(cat "${resolver_file}" 2>/dev/null || true)" != "${desired}" ]]; then
+  resolver_tmp="$(mktemp)"
+  trap 'rm -f "${resolver_tmp}"' EXIT
+  printf '%s\n' "${desired}" > "${resolver_tmp}"
+  run_as_root mkdir -p "${resolver_dir}"
+  run_as_root install -m 0644 "${resolver_tmp}" "${resolver_file}"
+  echo "Wrote ${resolver_file}."
+fi
+
+remove_managed_resolvers "${suffix}"
+{{- end }}
