@@ -34,15 +34,25 @@ cat > "${helper_tmp}" <<'EOF'
 set -euo pipefail
 
 tailscale_bin="${TAILNET_ROUTES_TAILSCALE_BIN:-{{ lookPath "tailscale" | default "/opt/homebrew/bin/tailscale" }}}"
-# launchd's PATH lacks Homebrew; macOS ships jq here.
-jq_bin="${TAILNET_ROUTES_JQ_BIN:-/usr/bin/jq}"
 route_bin="${TAILNET_ROUTES_ROUTE_BIN:-/sbin/route}"
 ifconfig_bin="${TAILNET_ROUTES_IFCONFIG_BIN:-/sbin/ifconfig}"
+# Cleared at boot, like the routes it tracks.
+state_file="${TAILNET_ROUTES_STATE_FILE:-/var/run/local.tailnet-routes.peers}"
 
-peer_ipv4s() {
-  "${tailscale_bin}" status --json 2>/dev/null |
-    "${jq_bin}" -r '(.Peer // {})[].TailscaleIPs[]? | select(test("^[0-9.]+$"))' 2>/dev/null || true
-}
+# launchd's PATH lacks Homebrew, and /usr/bin/jq only ships with newer macOS.
+jq_bin="${TAILNET_ROUTES_JQ_BIN:-}"
+if [[ -z "${jq_bin}" ]]; then
+  for candidate in /usr/bin/jq /opt/homebrew/bin/jq /usr/local/bin/jq; do
+    if [[ -x "${candidate}" ]]; then
+      jq_bin="${candidate}"
+      break
+    fi
+  done
+fi
+if [[ ! -x "${jq_bin}" ]]; then
+  echo "tailnet-routes: jq not found; cannot read tailnet peers." >&2
+  exit 1
+fi
 
 self_ip="$("${tailscale_bin}" ip -4 2>/dev/null | head -n 1 || true)"
 if [[ -z "${self_ip}" ]]; then
@@ -58,14 +68,32 @@ if [[ -z "${ts_if}" ]]; then
   exit 0
 fi
 
+# An unreadable status must not look like an empty tailnet, or every owned route is pruned.
+if ! peers="$("${tailscale_bin}" status --json 2>/dev/null |
+  "${jq_bin}" -r '(.Peer // {})[].TailscaleIPs[]? | select(test("^[0-9.]+$"))' 2>/dev/null)"; then
+  exit 0
+fi
+
 while IFS= read -r peer; do
+  [[ -n "${peer}" ]] || continue
   current="$("${route_bin}" -n get "${peer}" 2>/dev/null | awk '/interface:/ { print $2 }')"
   if [[ "${current}" != "${ts_if}" ]]; then
     "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
     "${route_bin}" -n add -host "${peer}" -interface "${ts_if}" >/dev/null
     echo "Routed ${peer} via ${ts_if} (was ${current:-none})."
   fi
-done < <(peer_ipv4s)
+done <<<"${peers}"
+
+if [[ -f "${state_file}" ]]; then
+  while IFS= read -r owned; do
+    [[ -n "${owned}" ]] || continue
+    if ! grep -qxF "${owned}" <<<"${peers}"; then
+      "${route_bin}" -n delete -host "${owned}" >/dev/null 2>&1 || true
+      echo "Removed route for departed peer ${owned}."
+    fi
+  done <"${state_file}"
+fi
+printf '%s\n' "${peers}" >"${state_file}"
 EOF
 
 cat > "${plist_tmp}" <<EOF

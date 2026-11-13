@@ -61,6 +61,7 @@ EOF
   export TAILNET_ROUTES_ROUTE_BIN="${MOCK_BIN_DIR}/route"
   export TAILNET_ROUTES_IFCONFIG_BIN="${MOCK_BIN_DIR}/ifconfig"
   export TAILNET_ROUTES_JQ_BIN="$(command -v jq)"
+  export TAILNET_ROUTES_STATE_FILE="${TEST_TMPDIR}/routed-peers"
   export MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6","fd7a:115c:a1e0::1"]},"b":{"TailscaleIPs":["100.100.147.58","fd7a:115c:a1e0::2"]}}}'
 
   render "work" '{"personal": false}'
@@ -80,14 +81,14 @@ teardown() {
 @test "GIVEN work machine EXPECT helper and daemon are installed and loaded" {
   run bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ -x "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ -x "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]] || false
   run plutil -lint "${CHEZMOI_TAILNET_ROUTES_PLIST}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qF "<string>${CHEZMOI_TAILNET_ROUTES_HELPER}</string>" "${CHEZMOI_TAILNET_ROUTES_PLIST}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qx "launchctl bootstrap system ${CHEZMOI_TAILNET_ROUTES_PLIST}" "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
 }
 
 @test "GIVEN peers routed via another tunnel EXPECT helper routes every peer IPv4 via the Tailscale interface" {
@@ -96,13 +97,13 @@ teardown() {
 
   run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qx 'route -n add -host 100.90.57.6 -interface utun7' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qx 'route -n add -host 100.100.147.58 -interface utun7' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qF 'fd7a:' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -ne 0 ]]
+  [[ "${status}" -ne 0 ]] || false
 }
 
 @test "GIVEN tailnet with no peers EXPECT helper changes nothing" {
@@ -111,8 +112,8 @@ teardown() {
 
   run env MOCK_TS_IP=100.107.196.46 MOCK_TS_STATUS='{"Peer":null}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN unreadable Tailscale status EXPECT helper exits cleanly without touching routes" {
@@ -121,8 +122,8 @@ teardown() {
 
   run env MOCK_TS_IP=100.107.196.46 MOCK_TS_STATUS='not json' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN peer already routed via Tailscale EXPECT helper changes nothing" {
@@ -131,9 +132,9 @@ teardown() {
 
   run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qE 'route -n (add|delete)' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -ne 0 ]]
+  [[ "${status}" -ne 0 ]] || false
 }
 
 @test "GIVEN Tailscale down EXPECT helper exits without touching routes" {
@@ -142,8 +143,8 @@ teardown() {
 
   run env MOCK_TS_IP= bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN Tailscale IP on no interface EXPECT helper exits without touching routes" {
@@ -152,8 +153,8 @@ teardown() {
 
   run env MOCK_TS_IP=100.1.2.3 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN personal machine with daemon installed EXPECT daemon is removed" {
@@ -162,16 +163,54 @@ teardown() {
 
   run bash "${TEST_TMPDIR}/personal.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -e "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]]
-  [[ ! -e "${CHEZMOI_TAILNET_ROUTES_PLIST}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -e "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]] || false
+  [[ ! -e "${CHEZMOI_TAILNET_ROUTES_PLIST}" ]] || false
   run grep -qx 'launchctl bootout system/local.tailnet-routes' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
 }
 
 @test "GIVEN personal machine without daemon EXPECT no changes" {
   run bash "${TEST_TMPDIR}/personal.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
+}
+
+@test "GIVEN a routed peer leaves the tailnet EXPECT its host route is removed" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+}
+
+@test "GIVEN unreadable Tailscale status after routing peers EXPECT routes are kept" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS='not json' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -q 'route -n delete' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+}
+
+@test "GIVEN jq missing EXPECT helper fails loudly without touching routes" {
+  bash "${TEST_TMPDIR}/work.sh"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 TAILNET_ROUTES_JQ_BIN="${TEST_TMPDIR}/missing-jq" bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -ne 0 ]] || false
+  [[ "${output}" == *"jq"* ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
