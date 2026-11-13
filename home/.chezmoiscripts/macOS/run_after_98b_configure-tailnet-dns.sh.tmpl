@@ -38,7 +38,7 @@ fi
 status_json="$("${tailscale_bin}" status --json 2>/dev/null || true)"
 backend_state="$(jq -r '.BackendState // empty' <<<"${status_json}" 2>/dev/null || true)"
 suffix="$(jq -r '.MagicDNSSuffix // empty' <<<"${status_json}" 2>/dev/null || true)"
-if [[ "${backend_state}" != "Running" || -z "${suffix}" ]]; then
+if [[ "${backend_state}" != "Running" ]]; then
   exit 0
 fi
 
@@ -50,10 +50,19 @@ if "${tailscale_bin}" debug prefs 2>/dev/null | jq -e '.CorpDNS == true' >/dev/n
   echo "Disabled Tailscale DNS takeover."
 fi
 
+if [[ -z "${suffix}" ]]; then
+  remove_managed_resolvers
+  exit 0
+fi
+
 # Keeps MagicDNS names resolving. No "Added by tailscaled" header, so tailscaled leaves it alone.
 resolver_file="${resolver_dir}/${suffix}"
 desired="$(printf '%s\nnameserver %s\n' "${marker}" "${quad100}")"
-if [[ "$(cat "${resolver_file}" 2>/dev/null || true)" != "${desired}" ]]; then
+current="$(cat "${resolver_file}" 2>/dev/null || true)"
+# tailscaled may not have removed its own file yet; anything else belongs to someone else.
+if [[ -n "${current}" ]] && ! grep -qxF -e "${marker}" -e "# Added by tailscaled" <<<"${current}"; then
+  echo "Leaving unmanaged ${resolver_file} in place; MagicDNS names may not resolve." >&2
+elif [[ "${current}" != "${desired}" ]]; then
   resolver_tmp="$(mktemp)"
   trap 'rm -f "${resolver_tmp}"' EXIT
   printf '%s\n' "${desired}" > "${resolver_tmp}"

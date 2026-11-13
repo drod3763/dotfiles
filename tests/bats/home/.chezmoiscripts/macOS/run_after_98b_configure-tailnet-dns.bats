@@ -66,11 +66,11 @@ write_managed_resolver() {
 @test "GIVEN work machine with Tailscale DNS on EXPECT DNS takeover disabled and suffix resolver written" {
   run bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qx 'tailscale set --accept-dns=false' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run cat "${RESOLVER_FILE}"
-  [[ "${output}" == "$(printf '%s\nnameserver 100.100.100.100' "${MARKER}")" ]]
+  [[ "${output}" == "$(printf '%s\nnameserver 100.100.100.100' "${MARKER}")" ]] || false
 }
 
 @test "GIVEN Tailscale DNS already off and resolver current EXPECT no changes" {
@@ -78,16 +78,16 @@ write_managed_resolver() {
 
   run env MOCK_TS_PREFS='{"CorpDNS":false}' bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN tailscale set needs root EXPECT retried with sudo" {
   run env MOCK_TS_SET_NEEDS_ROOT=1 bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qx "sudo ${CHEZMOI_TAILSCALE_BIN} set --accept-dns=false" "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
 }
 
 @test "GIVEN managed resolver for an old suffix EXPECT it is removed and unmanaged files kept" {
@@ -96,33 +96,33 @@ write_managed_resolver() {
 
   run bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -e "${CHEZMOI_RESOLVER_DIR}/old.ts.net" ]]
-  [[ -f "${CHEZMOI_RESOLVER_DIR}/corp.example" ]]
-  [[ -f "${RESOLVER_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -e "${CHEZMOI_RESOLVER_DIR}/old.ts.net" ]] || false
+  [[ -f "${CHEZMOI_RESOLVER_DIR}/corp.example" ]] || false
+  [[ -f "${RESOLVER_FILE}" ]] || false
 }
 
 @test "GIVEN Tailscale not running EXPECT no changes" {
   run env MOCK_TS_STATUS='{"BackendState":"Stopped","MagicDNSSuffix":"tail1234.ts.net"}' bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
-  [[ ! -e "${RESOLVER_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
+  [[ ! -e "${RESOLVER_FILE}" ]] || false
 }
 
 @test "GIVEN Tailscale status unreadable EXPECT no changes" {
   run env MOCK_TS_STATUS='not json' bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN tailscale missing EXPECT no changes" {
   run env CHEZMOI_TAILSCALE_BIN="${TEST_TMPDIR}/missing" bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
-  [[ ! -e "${RESOLVER_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
+  [[ ! -e "${RESOLVER_FILE}" ]] || false
 }
 
 @test "GIVEN personal machine with managed resolver EXPECT resolver removed and Tailscale DNS untouched" {
@@ -130,15 +130,47 @@ write_managed_resolver() {
 
   run bash "${TEST_TMPDIR}/personal.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -e "${RESOLVER_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -e "${RESOLVER_FILE}" ]] || false
   run grep -q 'tailscale set' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -ne 0 ]]
+  [[ "${status}" -ne 0 ]] || false
 }
 
 @test "GIVEN personal machine without managed resolver EXPECT no changes" {
   run bash "${TEST_TMPDIR}/personal.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
+}
+
+@test "GIVEN MagicDNS off with Tailscale DNS on EXPECT DNS takeover disabled and managed resolvers removed" {
+  write_managed_resolver "tail1234.ts.net"
+
+  run env MOCK_TS_STATUS='{"BackendState":"Running","MagicDNSSuffix":""}' bash "${TEST_TMPDIR}/work.sh"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'tailscale set --accept-dns=false' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -e "${RESOLVER_FILE}" ]] || false
+}
+
+@test "GIVEN unmanaged resolver for the suffix EXPECT it is left untouched" {
+  mkdir -p "${CHEZMOI_RESOLVER_DIR}"
+  printf 'nameserver 10.0.0.53\n' > "${RESOLVER_FILE}"
+
+  run bash "${TEST_TMPDIR}/work.sh"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ "$(cat "${RESOLVER_FILE}")" == "nameserver 10.0.0.53" ]] || false
+}
+
+@test "GIVEN tailscaled resolver for the suffix EXPECT it is replaced with the managed one" {
+  mkdir -p "${CHEZMOI_RESOLVER_DIR}"
+  printf '# Added by tailscaled\nnameserver 100.100.100.100\n' > "${RESOLVER_FILE}"
+
+  run bash "${TEST_TMPDIR}/work.sh"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qxF "${MARKER}" "${RESOLVER_FILE}"
+  [[ "${status}" -eq 0 ]] || false
 }
