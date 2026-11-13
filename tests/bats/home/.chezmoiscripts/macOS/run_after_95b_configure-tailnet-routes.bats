@@ -25,7 +25,10 @@ EOF
 
   cat > "${MOCK_BIN_DIR}/tailscale" <<'EOF'
 #!/usr/bin/env bash
-[[ -n "${MOCK_TS_IP:-}" ]] && printf '%s\n' "${MOCK_TS_IP}"
+case "$1" in
+  ip) [[ -n "${MOCK_TS_IP:-}" ]] && printf '%s\n' "${MOCK_TS_IP}" ;;
+  status) printf '%s\n' "${MOCK_TS_STATUS:-}" ;;
+esac
 EOF
 
   cat > "${MOCK_BIN_DIR}/ifconfig" <<'EOF'
@@ -57,8 +60,10 @@ EOF
   export TAILNET_ROUTES_TAILSCALE_BIN="${MOCK_BIN_DIR}/tailscale"
   export TAILNET_ROUTES_ROUTE_BIN="${MOCK_BIN_DIR}/route"
   export TAILNET_ROUTES_IFCONFIG_BIN="${MOCK_BIN_DIR}/ifconfig"
+  export TAILNET_ROUTES_JQ_BIN="$(command -v jq)"
+  export MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6","fd7a:115c:a1e0::1"]},"b":{"TailscaleIPs":["100.100.147.58","fd7a:115c:a1e0::2"]}}}'
 
-  render "work" '{"personal": false, "tailnetRoutes": {"work": [{"ip": "100.90.57.6"}]}}'
+  render "work" '{"personal": false}'
   render "personal" '{"personal": true}'
 }
 
@@ -77,8 +82,6 @@ teardown() {
 
   [[ "${status}" -eq 0 ]]
   [[ -x "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]]
-  run grep -qF '"100.90.57.6"' "${CHEZMOI_TAILNET_ROUTES_HELPER}"
-  [[ "${status}" -eq 0 ]]
   run plutil -lint "${CHEZMOI_TAILNET_ROUTES_PLIST}"
   [[ "${status}" -eq 0 ]]
   run grep -qF "<string>${CHEZMOI_TAILNET_ROUTES_HELPER}</string>" "${CHEZMOI_TAILNET_ROUTES_PLIST}"
@@ -87,7 +90,7 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
-@test "GIVEN peer routed via another tunnel EXPECT helper routes it via the Tailscale interface" {
+@test "GIVEN peers routed via another tunnel EXPECT helper routes every peer IPv4 via the Tailscale interface" {
   bash "${TEST_TMPDIR}/work.sh"
   : > "${MOCK_CALLS_FILE}"
 
@@ -96,6 +99,30 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   run grep -qx 'route -n add -host 100.90.57.6 -interface utun7' "${MOCK_CALLS_FILE}"
   [[ "${status}" -eq 0 ]]
+  run grep -qx 'route -n add -host 100.100.147.58 -interface utun7' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]]
+  run grep -qF 'fd7a:' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]]
+}
+
+@test "GIVEN tailnet with no peers EXPECT helper changes nothing" {
+  bash "${TEST_TMPDIR}/work.sh"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_TS_STATUS='{"Peer":null}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]]
+  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+}
+
+@test "GIVEN unreadable Tailscale status EXPECT helper exits cleanly without touching routes" {
+  bash "${TEST_TMPDIR}/work.sh"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_TS_STATUS='not json' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]]
+  [[ ! -s "${MOCK_CALLS_FILE}" ]]
 }
 
 @test "GIVEN peer already routed via Tailscale EXPECT helper changes nothing" {
