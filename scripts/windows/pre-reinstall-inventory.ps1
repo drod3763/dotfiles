@@ -223,8 +223,10 @@ Invoke-Step 'Measuring user profile folders' {
     if (Test-IsLink $folder) {
       # A link you made yourself is listed with its target so the real data isn't missed.
       if (Test-IsCompatJunction $folder) { continue }
-      $target = @($folder.Target) -join ', '
-      [pscustomobject]@{ Folder = $folder.Name; GB = 0; CloudOnlyGB = 0; Unreadable = 0; Note = "link to $target, not counted" }
+      # The table truncates long values, so the full target goes in home-links.txt.
+      try { $target = @($folder.Target) -join ', ' } catch { $target = '(target unreadable)' }
+      $links.Add("$($folder.FullName) -> $target")
+      [pscustomobject]@{ Folder = $folder.Name; GB = 0; CloudOnlyGB = 0; Unreadable = 0; Note = 'link, not counted, see home-links.txt' }
       continue
     }
     $size = Measure-Tree $folder.FullName $unreadable $links
