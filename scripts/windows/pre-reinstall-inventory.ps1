@@ -127,16 +127,19 @@ if ($outVolume -ieq $systemVolume) {
 # a good inventory from an earlier run.
 Write-Step 'Checking which account is being inventoried'
 $me = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+# Only this session's desktop counts: with fast user switching or RDP, another
+# account's explorer.exe in a different session says nothing about who launched this.
+$sessionId = [Diagnostics.Process]::GetCurrentProcess().SessionId
 try {
-  $owners = @(Get-CimInstance Win32_Process -Filter "Name = 'explorer.exe'" -ErrorAction Stop |
+  $owners = @(Get-CimInstance Win32_Process -Filter "Name = 'explorer.exe' AND SessionId = $sessionId" -ErrorAction Stop |
       ForEach-Object { $o = Invoke-CimMethod -InputObject $_ -MethodName GetOwner -ErrorAction Stop; if ($o.User) { "$($o.Domain)\$($o.User)" } } |
       Sort-Object -Unique)
 } catch {
   throw "Could not confirm which account is signed in: $($_.Exception.Message)"
 }
-if ($owners.Count -eq 0) { throw "No desktop session found; can't confirm '$me' is the signed-in user." }
+if ($owners.Count -eq 0) { throw "No desktop found in session $sessionId; can't confirm '$me' is the signed-in user." }
 if ($owners -notcontains $me) {
-  throw "Running as '$me' but the desktop belongs to '$($owners -join "', '")'. Profile, HKCU and winget reports would describe '$me'. Elevate with the same account (gsudo)."
+  throw "Running as '$me' but this session's desktop belongs to '$($owners -join "', '")'. Profile, HKCU and winget reports would describe '$me'. Elevate with the same account (gsudo)."
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
