@@ -53,6 +53,12 @@ $script:failures = @()
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
   [Security.Principal.WindowsBuiltInRole]::Administrator)
 
+# 32-bit PowerShell on 64-bit Windows sees a redirected registry and would
+# silently miss 64-bit apps, so refuse to run there.
+if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) {
+  throw 'This is 32-bit PowerShell on 64-bit Windows. Run it from 64-bit PowerShell (C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe).'
+}
+
 $outRoot = Split-Path -Qualifier $OutDir
 if ($outRoot -ieq $env:SystemDrive) {
   throw "OutDir '$OutDir' is on the system drive ($env:SystemDrive), which the reinstall wipes. Pick a folder on another disk."
