@@ -188,13 +188,14 @@ function Measure-Tree([string]$Path, [System.Collections.Generic.List[string]]$E
   while ($stack.Count) {
     $dir = $stack.Pop()
     $errs = $null
-    $items = Get-ChildItem -LiteralPath $dir -Force -ErrorAction SilentlyContinue -ErrorVariable errs
+    # @() so an empty folder gives an empty list, not one $null item.
+    $items = @(Get-ChildItem -LiteralPath $dir -Force -ErrorAction SilentlyContinue -ErrorVariable errs)
     foreach ($e in @($errs)) {
       if ($e) {
         $Errors.Add("$(Remove-LongPathPrefix "$($e.TargetObject)"): $($e.Exception.Message)"); $result.Errors++
       }
     }
-    foreach ($i in @($items)) {
+    foreach ($i in $items) {
       if (Test-IsLink $i) {
         if (-not (Test-IsCompatJunction $i)) {
           try { $target = @($i.Target) -join ', ' } catch { $target = '(target unreadable)' }
@@ -216,10 +217,10 @@ Invoke-Step 'Measuring user profile folders' {
   $unreadable = New-Object System.Collections.Generic.List[string]
   $links = New-Object System.Collections.Generic.List[string]
   $topErrors = $null
-  $folders = Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Force -ErrorAction SilentlyContinue -ErrorVariable topErrors
+  $folders = @(Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Force -ErrorAction SilentlyContinue -ErrorVariable topErrors)
   foreach ($err in @($topErrors)) { if ($err) { $unreadable.Add("$($err.TargetObject): $($err.Exception.Message)") } }
 
-  $rows = foreach ($folder in @($folders)) {
+  $rows = foreach ($folder in $folders) {
     if (Test-IsLink $folder) {
       # A link you made yourself is listed with its target so the real data isn't missed.
       if (Test-IsCompatJunction $folder) { continue }
