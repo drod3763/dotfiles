@@ -107,15 +107,35 @@ if ($outVolume -ieq $systemVolume) {
 Write-Step "Writing reports to $OutDir"
 
 Invoke-Step 'Measuring user profile folders' {
-  Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Force -ErrorAction SilentlyContinue |
-    ForEach-Object {
-      $bytes = [double](Get-ChildItem -LiteralPath $_.FullName -Recurse -File -Force -ErrorAction SilentlyContinue |
-        Measure-Object -Property Length -Sum).Sum
-      [pscustomobject]@{ Folder = $_.Name; GB = [math]::Round($bytes / 1GB, 2) }
-    } |
-    Sort-Object GB -Descending |
-    Format-Table -AutoSize |
+  # Unreadable folders are counted, not hidden: a size that skipped part of a
+  # folder is marked incomplete and every unreadable path is written out.
+  $unreadable = New-Object System.Collections.Generic.List[string]
+  $topErrors = $null
+  $folders = Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Force -ErrorAction SilentlyContinue -ErrorVariable topErrors
+  foreach ($err in @($topErrors)) { if ($err) { $unreadable.Add("$($err.TargetObject): $($err.Exception.Message)") } }
+
+  $rows = foreach ($folder in $folders) {
+    $scanErrors = $null
+    $bytes = [double](Get-ChildItem -LiteralPath $folder.FullName -Recurse -File -Force -ErrorAction SilentlyContinue -ErrorVariable scanErrors |
+      Measure-Object -Property Length -Sum).Sum
+    $scanErrors = @($scanErrors | Where-Object { $_ })
+    foreach ($err in $scanErrors) { $unreadable.Add("$($err.TargetObject): $($err.Exception.Message)") }
+    [pscustomobject]@{
+      Folder     = $folder.Name
+      GB         = [math]::Round($bytes / 1GB, 2)
+      Unreadable = $scanErrors.Count
+      Note       = if ($scanErrors.Count) { 'incomplete: size is a minimum' } else { '' }
+    }
+  }
+  $rows | Sort-Object GB -Descending | Format-Table -AutoSize |
     Out-File -FilePath (Join-Path $OutDir 'home-sizes.txt') -Width 200
+
+  $unreadablePath = Join-Path $OutDir 'home-unreadable.txt'
+  if ($unreadable.Count) {
+    $unreadable | Out-File -FilePath $unreadablePath -Width 400
+    throw "$($unreadable.Count) path(s) could not be read; sizes are minimums. See home-unreadable.txt"
+  }
+  Remove-Item -LiteralPath $unreadablePath -Force -ErrorAction SilentlyContinue
 }
 
 Invoke-Step 'Recording shell folder locations' {
