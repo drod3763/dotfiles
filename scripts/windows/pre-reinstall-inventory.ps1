@@ -170,7 +170,14 @@ Invoke-Step 'Listing installed apps' {
     'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*',
     'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
   )
-  Get-ItemProperty -Path $keys -ErrorAction SilentlyContinue |
+  $regErrors = $null
+  $entries = Get-ItemProperty -Path $keys -ErrorAction SilentlyContinue -ErrorVariable regErrors
+  # A missing Uninstall key (common for HKCU) is fine; anything else is a
+  # failed read that would silently drop apps from the list.
+  $readFailures = @($regErrors | Where-Object {
+      $_ -and -not ($_.Exception -is [System.Management.Automation.ItemNotFoundException]) })
+  $csvPath = Join-Path $OutDir 'installed-apps.csv'
+  $entries |
     Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName } |
     Select-Object DisplayName,
       @{ n = 'DisplayVersion'; e = { if ($_.PSObject.Properties['DisplayVersion']) { $_.DisplayVersion } } },
@@ -182,7 +189,15 @@ Invoke-Step 'Listing installed apps' {
     # Deduplicate on the whole identity so side-by-side versions and
     # per-user/machine installs of the same app each keep a row.
     Sort-Object DisplayName, DisplayVersion, InstallLocation, Scope -Unique |
-    Export-Csv -Path (Join-Path $OutDir 'installed-apps.csv') -NoTypeInformation
+    Export-Csv -Path $csvPath -NoTypeInformation
+
+  $failurePath = Join-Path $OutDir 'installed-apps-unreadable.txt'
+  if ($readFailures.Count) {
+    $readFailures | ForEach-Object { "$($_.TargetObject): $($_.Exception.Message)" } |
+      Out-File -FilePath $failurePath -Width 400
+    throw "$($readFailures.Count) registry key(s) could not be read; installed-apps.csv is incomplete. See installed-apps-unreadable.txt"
+  }
+  Remove-Item -LiteralPath $failurePath -Force -ErrorAction SilentlyContinue
 }
 
 Invoke-Step 'Recording activation status' {
