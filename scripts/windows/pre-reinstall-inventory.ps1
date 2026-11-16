@@ -341,8 +341,16 @@ Invoke-Step 'Exporting third-party drivers' {
   if (-not $isAdmin) { throw 'needs an elevated shell (run with gsudo)' }
   # Export into a fresh folder and swap it in on success, so drivers from an
   # earlier run never mix with this one and a failed run keeps the old export.
+  # The old export is set aside as drivers.old and only deleted once the new
+  # one is in place, so an interrupted swap never loses both.
   $driverDir = Join-Path $OutDir 'drivers'
   $tempDir = Join-Path $OutDir 'drivers.tmp'
+  $oldDir = Join-Path $OutDir 'drivers.old'
+  if (Test-Path -LiteralPath $oldDir) {
+    # Left by an interrupted swap: bring it back if drivers is missing, else it's stale.
+    if (Test-Path -LiteralPath $driverDir) { Remove-Item -LiteralPath $oldDir -Recurse -Force }
+    else { Rename-Item -LiteralPath $oldDir -NewName 'drivers' }
+  }
   if (Test-Path -LiteralPath $tempDir) { Remove-Item -LiteralPath $tempDir -Recurse -Force }
   New-Item -ItemType Directory -Path $tempDir | Out-Null
   try {
@@ -351,8 +359,15 @@ Invoke-Step 'Exporting third-party drivers' {
     Remove-Item -LiteralPath $tempDir -Recurse -Force -ErrorAction SilentlyContinue
     throw
   }
-  if (Test-Path -LiteralPath $driverDir) { Remove-Item -LiteralPath $driverDir -Recurse -Force }
-  Rename-Item -LiteralPath $tempDir -NewName 'drivers'
+  $hadOld = Test-Path -LiteralPath $driverDir
+  if ($hadOld) { Rename-Item -LiteralPath $driverDir -NewName 'drivers.old' }
+  try {
+    Rename-Item -LiteralPath $tempDir -NewName 'drivers'
+  } catch {
+    if ($hadOld) { Rename-Item -LiteralPath $oldDir -NewName 'drivers' -ErrorAction SilentlyContinue }
+    throw "couldn't swap in the new export, kept the previous one: $($_.Exception.Message)"
+  }
+  if ($hadOld) { Remove-Item -LiteralPath $oldDir -Recurse -Force }
 }
 
 Invoke-Step 'Listing WSL distros' {
