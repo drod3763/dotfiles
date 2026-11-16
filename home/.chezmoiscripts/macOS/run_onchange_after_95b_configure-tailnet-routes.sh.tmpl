@@ -77,9 +77,24 @@ fi
 previous="$(cat "${state_file}" 2>/dev/null || true)"
 owned=""
 failed=0
+finished=0
+
+save_state() {
+  printf '%s\n' "$@" | awk 'NF && !seen[$0]++' >"${state_file}.tmp"
+  mv -f "${state_file}.tmp" "${state_file}"
+}
+
+# On an unexpected exit, keep everything that may still be ours. Cleanup re-checks
+# ownership before deleting, so over-tracking is harmless; under-tracking orphans routes.
+on_exit() {
+  if [[ "${finished}" -eq 0 ]]; then
+    save_state "${previous}" "${owned}"
+  fi
+}
+trap on_exit EXIT
 
 route_iface() {
-  "${route_bin}" -n get "$1" 2>/dev/null | awk '/interface:/ { print $2 }'
+  "${route_bin}" -n get "$1" 2>/dev/null | awk '/interface:/ { print $2 }' || true
 }
 
 # Only this helper adds per-peer host routes on the Tailscale interface, so those are ours,
@@ -127,8 +142,8 @@ while IFS= read -r peer; do
   fi
 done <<<"${previous}"
 
-printf '%s' "${owned}" >"${state_file}.tmp"
-mv -f "${state_file}.tmp" "${state_file}"
+save_state "${owned}"
+finished=1
 exit "${failed}"
 EOF
 
