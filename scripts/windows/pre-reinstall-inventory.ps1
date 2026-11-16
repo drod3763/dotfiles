@@ -59,6 +59,12 @@ if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProces
   throw 'This is 32-bit PowerShell on 64-bit Windows. Run it from 64-bit PowerShell (C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe).'
 }
 
+# Network paths have no local volume to compare against, so refuse them up front.
+if ($OutDir -match '^(\\\\|//)') {
+  throw "OutDir '$OutDir' is a network path. Pick a folder on a local disk that survives the reinstall."
+}
+# Resolve relative paths (.\inventory) against the current directory before any checks.
+$OutDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutDir)
 $outRoot = Split-Path -Qualifier $OutDir
 if ($outRoot -ieq $env:SystemDrive) {
   throw "OutDir '$OutDir' is on the system drive ($env:SystemDrive), which the reinstall wipes. Pick a folder on another disk."
@@ -113,6 +119,46 @@ if ($outVolume -ieq $systemVolume) {
 }
 Write-Step "Writing reports to $OutDir"
 
+# The elevated process reads $env:USERPROFILE, HKCU and winget's user scope.
+# If UAC elevated as a different admin account, those belong to that account.
+Invoke-Step 'Checking which account is being inventoried' {
+  $me = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+  $owners = @(Get-CimInstance Win32_Process -Filter "Name = 'explorer.exe'" |
+      ForEach-Object { $o = Invoke-CimMethod -InputObject $_ -MethodName GetOwner; if ($o.User) { "$($o.Domain)\$($o.User)" } } |
+      Sort-Object -Unique)
+  if ($owners.Count -eq 0) { throw "no desktop session found; can't confirm '$me' is the signed-in user" }
+  if ($owners -notcontains $me) {
+    throw "running as '$me' but the desktop belongs to '$($owners -join "', '")'. Profile, HKCU and winget reports describe '$me'. Elevate with the same account (gsudo)."
+  }
+}
+
+# Walks a folder without entering junctions or symlinks. Windows PowerShell 5.1
+# follows them on -Recurse, which double-counts linked folders and hits the
+# deny-listed compatibility junctions (My Music, Application Data, ...).
+# Cloud-only files (OneDrive placeholders) report their full size but use no
+# disk, so they're totalled separately.
+function Measure-Tree([string]$Path, [System.Collections.Generic.List[string]]$Errors) {
+  $cloudOnly = 0x400000 -bor [int][IO.FileAttributes]::Offline  # FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | Offline
+  $result = [pscustomobject]@{ Bytes = 0.0; CloudBytes = 0.0; Errors = 0 }
+  $stack = New-Object System.Collections.Generic.Stack[string]
+  $stack.Push($Path)
+  while ($stack.Count) {
+    $dir = $stack.Pop()
+    $errs = $null
+    $items = Get-ChildItem -LiteralPath $dir -Force -ErrorAction SilentlyContinue -ErrorVariable errs
+    foreach ($e in @($errs)) {
+      if ($e) { $Errors.Add("$($e.TargetObject): $($e.Exception.Message)"); $result.Errors++ }
+    }
+    foreach ($i in @($items)) {
+      if ($i.Attributes -band [IO.FileAttributes]::ReparsePoint) { continue }
+      if ($i.PSIsContainer) { $stack.Push($i.FullName) }
+      elseif ([int]$i.Attributes -band $cloudOnly) { $result.CloudBytes += $i.Length }
+      else { $result.Bytes += $i.Length }
+    }
+  }
+  $result
+}
+
 Invoke-Step 'Measuring user profile folders' {
   # Unreadable folders are counted, not hidden: a size that skipped part of a
   # folder is marked incomplete and every unreadable path is written out.
@@ -121,17 +167,26 @@ Invoke-Step 'Measuring user profile folders' {
   $folders = Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Force -ErrorAction SilentlyContinue -ErrorVariable topErrors
   foreach ($err in @($topErrors)) { if ($err) { $unreadable.Add("$($err.TargetObject): $($err.Exception.Message)") } }
 
-  $rows = foreach ($folder in $folders) {
-    $scanErrors = $null
-    $bytes = [double](Get-ChildItem -LiteralPath $folder.FullName -Recurse -File -Force -ErrorAction SilentlyContinue -ErrorVariable scanErrors |
-      Measure-Object -Property Length -Sum).Sum
-    $scanErrors = @($scanErrors | Where-Object { $_ })
-    foreach ($err in $scanErrors) { $unreadable.Add("$($err.TargetObject): $($err.Exception.Message)") }
+  $rows = foreach ($folder in @($folders)) {
+    if ($folder.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+      # Compatibility junctions (hidden + system) are Windows plumbing; a link
+      # you made yourself is listed with its target so the real data isn't missed.
+      $isCompat = ($folder.Attributes -band [IO.FileAttributes]::Hidden) -and ($folder.Attributes -band [IO.FileAttributes]::System)
+      if ($isCompat) { continue }
+      $target = @($folder.Target) -join ', '
+      [pscustomobject]@{ Folder = $folder.Name; GB = 0; CloudOnlyGB = 0; Unreadable = 0; Note = "link to $target, not counted" }
+      continue
+    }
+    $size = Measure-Tree $folder.FullName $unreadable
+    $notes = @()
+    if ($size.Errors) { $notes += 'incomplete: size is a minimum' }
+    if ($size.CloudBytes) { $notes += 'has cloud-only files' }
     [pscustomobject]@{
-      Folder     = $folder.Name
-      GB         = [math]::Round($bytes / 1GB, 2)
-      Unreadable = $scanErrors.Count
-      Note       = if ($scanErrors.Count) { 'incomplete: size is a minimum' } else { '' }
+      Folder      = $folder.Name
+      GB          = [math]::Round($size.Bytes / 1GB, 2)
+      CloudOnlyGB = [math]::Round($size.CloudBytes / 1GB, 2)
+      Unreadable  = $size.Errors
+      Note        = $notes -join '; '
     }
   }
   $rows | Sort-Object GB -Descending | Format-Table -AutoSize |
@@ -217,8 +272,10 @@ Invoke-Step 'Listing Store and MSIX apps' {
     Get-AppxPackage -ErrorAction SilentlyContinue -ErrorVariable appxErrors
   }
   $packages |
-    Select-Object Name, Version, Publisher, PackageFamilyName, SignatureKind, IsFramework, InstallLocation |
-    Sort-Object Name, Version -Unique |
+    Select-Object Name, Version, Architecture, Publisher, PackageFamilyName, PackageFullName, SignatureKind, IsFramework, InstallLocation |
+    # PackageFullName includes the architecture, so x64/x86/arm64 copies of a
+    # framework each keep their row.
+    Sort-Object PackageFullName -Unique |
     Export-Csv -Path (Join-Path $OutDir 'store-apps.csv') -NoTypeInformation -Encoding UTF8
   $appxErrors = @($appxErrors | Where-Object { $_ })
   if ($appxErrors.Count) {
@@ -235,17 +292,31 @@ Invoke-Step 'Recording activation status' {
 
 Invoke-Step 'Exporting third-party drivers' {
   if (-not $isAdmin) { throw 'needs an elevated shell (run with gsudo)' }
+  # Export into a fresh folder and swap it in on success, so drivers from an
+  # earlier run never mix with this one and a failed run keeps the old export.
   $driverDir = Join-Path $OutDir 'drivers'
-  New-Item -ItemType Directory -Force -Path $driverDir | Out-Null
-  Export-WindowsDriver -Online -Destination $driverDir | Out-Null
+  $tempDir = Join-Path $OutDir 'drivers.tmp'
+  if (Test-Path -LiteralPath $tempDir) { Remove-Item -LiteralPath $tempDir -Recurse -Force }
+  New-Item -ItemType Directory -Path $tempDir | Out-Null
+  try {
+    Export-WindowsDriver -Online -Destination $tempDir | Out-Null
+  } catch {
+    Remove-Item -LiteralPath $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+    throw
+  }
+  if (Test-Path -LiteralPath $driverDir) { Remove-Item -LiteralPath $driverDir -Recurse -Force }
+  Rename-Item -LiteralPath $tempDir -NewName 'drivers'
 }
 
 Invoke-Step 'Listing WSL distros' {
   if (-not (Get-Command wsl -ErrorAction SilentlyContinue)) { throw 'WSL is not installed' }
-  # wsl.exe writes UTF-16; let PowerShell decode it.
+  # wsl.exe writes UTF-16 unless WSL_UTF8=1, so force UTF-8 and decode it as
+  # UTF-8. That works whatever the user's environment already sets.
   $previous = [Console]::OutputEncoding
+  $previousWslUtf8 = $env:WSL_UTF8
   try {
-    [Console]::OutputEncoding = [Text.Encoding]::Unicode
+    $env:WSL_UTF8 = '1'
+    [Console]::OutputEncoding = [Text.Encoding]::UTF8
     # No 2>&1: in 5.1 with ErrorActionPreference Stop, redirected stderr from a
     # native command becomes a terminating error. Exit code is checked instead.
     $output = wsl --list --verbose
@@ -254,6 +325,7 @@ Invoke-Step 'Listing WSL distros' {
     if ($exitCode -ne 0) { throw "wsl --list exited with code $exitCode (no distros installed, or WSL is broken)" }
   } finally {
     [Console]::OutputEncoding = $previous
+    $env:WSL_UTF8 = $previousWslUtf8
   }
 }
 
