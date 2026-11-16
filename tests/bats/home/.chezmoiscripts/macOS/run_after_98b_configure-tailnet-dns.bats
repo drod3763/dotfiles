@@ -38,7 +38,7 @@ EOF
   export PATH="${MOCK_BIN_DIR}:${PATH}"
   export CHEZMOI_TAILSCALE_BIN="${MOCK_BIN_DIR}/tailscale"
   export CHEZMOI_RESOLVER_DIR="${TEST_TMPDIR}/resolver"
-  export MOCK_TS_STATUS='{"BackendState":"Running","MagicDNSSuffix":"tail1234.ts.net"}'
+  export MOCK_TS_STATUS='{"BackendState":"Running","MagicDNSSuffix":"tail1234.ts.net","CurrentTailnet":{"MagicDNSEnabled":true}}'
   export MOCK_TS_PREFS='{"CorpDNS":true}'
 
   MARKER="# managed by chezmoi: tailnet-dns"
@@ -190,5 +190,16 @@ write_managed_resolver() {
   run env MOCK_TS_STATUS='{"BackendState":"Running","MagicDNSSuffix":""}' bash "${TEST_TMPDIR}/work.sh"
 
   [[ "${status}" -eq 0 ]] || false
+  [[ ! -e "${CHEZMOI_RESOLVER_DIR}/search.tailnet-dns" ]] || false
+}
+
+@test "GIVEN MagicDNS disabled but suffix still reported EXPECT managed files removed and none written" {
+  bash "${TEST_TMPDIR}/work.sh"
+
+  run env MOCK_TS_STATUS='{"BackendState":"Running","MagicDNSSuffix":"tail1234.ts.net","CurrentTailnet":{"MagicDNSEnabled":false}}' \
+    bash "${TEST_TMPDIR}/work.sh"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -e "${RESOLVER_FILE}" ]] || false
   [[ ! -e "${CHEZMOI_RESOLVER_DIR}/search.tailnet-dns" ]] || false
 }

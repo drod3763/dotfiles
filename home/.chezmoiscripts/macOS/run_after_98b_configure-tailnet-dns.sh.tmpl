@@ -43,7 +43,9 @@ fi
 
 status_json="$("${tailscale_bin}" status --json 2>/dev/null || true)"
 backend_state="$(jq -r '.BackendState // empty' <<<"${status_json}" 2>/dev/null || true)"
-suffix="$(jq -r '.MagicDNSSuffix // empty' <<<"${status_json}" 2>/dev/null || true)"
+# MagicDNSSuffix stays populated when MagicDNS is off; only the tailnet flag says it's in use.
+suffix="$(jq -r 'if .CurrentTailnet.MagicDNSEnabled == true then .MagicDNSSuffix // empty else empty end' \
+  <<<"${status_json}" 2>/dev/null || true)"
 if [[ "${backend_state}" != "Running" ]]; then
   exit 0
 fi
