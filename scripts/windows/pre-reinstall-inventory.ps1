@@ -42,6 +42,12 @@ function Invoke-Step([string]$Name, [scriptblock]$Action) {
   }
 }
 
+# Windows PowerShell 5.1 does not throw when a native command exits nonzero,
+# so every native call checks $LASTEXITCODE through this helper.
+function Assert-NativeSuccess([string]$Command) {
+  if ($LASTEXITCODE -ne 0) { throw "$Command exited with code $LASTEXITCODE" }
+}
+
 $script:failures = @()
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
   [Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -72,7 +78,19 @@ Invoke-Step 'Recording shell folder locations' {
 
 Invoke-Step 'Exporting winget app list' {
   if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { throw 'winget is not installed' }
-  winget export -o (Join-Path $OutDir 'winget.json') --include-versions --accept-source-agreements | Out-Null
+  # Write to a temp file and replace winget.json only on success, so a failed
+  # rerun can't leave an older export looking current.
+  $target = Join-Path $OutDir 'winget.json'
+  $temp = "$target.tmp"
+  Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
+  winget export -o $temp --include-versions --accept-source-agreements | Out-Null
+  $exitCode = $LASTEXITCODE
+  if ($exitCode -ne 0 -or -not (Test-Path -LiteralPath $temp)) {
+    Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $target -Force -ErrorAction SilentlyContinue
+    throw "winget export exited with code $exitCode"
+  }
+  Move-Item -LiteralPath $temp -Destination $target -Force
 }
 
 Invoke-Step 'Listing installed apps' {
@@ -91,8 +109,9 @@ Invoke-Step 'Listing installed apps' {
 }
 
 Invoke-Step 'Recording activation status' {
-  cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /dli |
-    Out-File -FilePath (Join-Path $OutDir 'activation.txt')
+  $output = cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /dli
+  $output | Out-File -FilePath (Join-Path $OutDir 'activation.txt')
+  Assert-NativeSuccess 'slmgr /dli'
 }
 
 Invoke-Step 'Exporting third-party drivers' {
@@ -108,7 +127,12 @@ Invoke-Step 'Listing WSL distros' {
   $previous = [Console]::OutputEncoding
   try {
     [Console]::OutputEncoding = [Text.Encoding]::Unicode
-    wsl --list --verbose 2>&1 | Out-File -FilePath (Join-Path $OutDir 'wsl.txt')
+    # No 2>&1: in 5.1 with ErrorActionPreference Stop, redirected stderr from a
+    # native command becomes a terminating error. Exit code is checked instead.
+    $output = wsl --list --verbose
+    $exitCode = $LASTEXITCODE
+    $output | Out-File -FilePath (Join-Path $OutDir 'wsl.txt')
+    if ($exitCode -ne 0) { throw "wsl --list exited with code $exitCode (no distros installed, or WSL is broken)" }
   } finally {
     [Console]::OutputEncoding = $previous
   }
