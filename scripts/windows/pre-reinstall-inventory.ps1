@@ -145,14 +145,22 @@ Invoke-Step 'Checking which account is being inventoried' {
 function Measure-Tree([string]$Path, [System.Collections.Generic.List[string]]$Errors) {
   $cloudOnly = 0x400000 -bor [int][IO.FileAttributes]::Offline  # FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | Offline
   $result = [pscustomobject]@{ Bytes = 0.0; CloudBytes = 0.0; Errors = 0 }
+  # Windows PowerShell 5.1 can't list folders past MAX_PATH (260) unless
+  # LongPathsEnabled is set; a \\?\ prefix bypasses that, and child FullNames keep it.
+  if ($Path -match '^\\\\\?\\') { $root = $Path }
+  elseif ($Path -match '^\\\\') { $root = '\\?\UNC\' + $Path.Substring(2) }
+  else { $root = '\\?\' + $Path }
   $stack = New-Object System.Collections.Generic.Stack[string]
-  $stack.Push($Path)
+  $stack.Push($root)
   while ($stack.Count) {
     $dir = $stack.Pop()
     $errs = $null
     $items = Get-ChildItem -LiteralPath $dir -Force -ErrorAction SilentlyContinue -ErrorVariable errs
     foreach ($e in @($errs)) {
-      if ($e) { $Errors.Add("$($e.TargetObject): $($e.Exception.Message)"); $result.Errors++ }
+      if ($e) {
+        $target = "$($e.TargetObject)" -replace '^\\\\\?\\UNC\\', '\\' -replace '^\\\\\?\\', ''
+        $Errors.Add("${target}: $($e.Exception.Message)"); $result.Errors++
+      }
     }
     foreach ($i in @($items)) {
       if ($i.Attributes -band [IO.FileAttributes]::ReparsePoint) { continue }
