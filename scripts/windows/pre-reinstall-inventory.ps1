@@ -11,7 +11,8 @@
     home-sizes.txt      Size of each folder in your user profile
     shell-folders.txt   Where Desktop/Documents/Downloads etc. point
     winget.json         Apps winget can reinstall (winget import -i winget.json)
-    installed-apps.csv  Every installed app, with its install location
+    installed-apps.csv  Every installed desktop app, with its install location
+    store-apps.csv      Store and MSIX packages (not in the Uninstall registry)
     activation.txt      How Windows is activated (digital license vs. product key)
     drivers\            Third-party drivers (admin only)
     wsl.txt             WSL distros
@@ -198,6 +199,26 @@ Invoke-Step 'Listing installed apps' {
     throw "$($readFailures.Count) registry key(s) could not be read; installed-apps.csv is incomplete. See installed-apps-unreadable.txt"
   }
   Remove-Item -LiteralPath $failurePath -Force -ErrorAction SilentlyContinue
+}
+
+Invoke-Step 'Listing Store and MSIX apps' {
+  # Store and sideloaded packages don't appear in the Uninstall registry keys,
+  # so they get their own report. -AllUsers needs an elevated shell.
+  $appxErrors = $null
+  $packages = if ($isAdmin) {
+    Get-AppxPackage -AllUsers -ErrorAction SilentlyContinue -ErrorVariable appxErrors
+  } else {
+    Get-AppxPackage -ErrorAction SilentlyContinue -ErrorVariable appxErrors
+  }
+  $packages |
+    Select-Object Name, Version, Publisher, PackageFamilyName, SignatureKind, IsFramework, InstallLocation |
+    Sort-Object Name, Version -Unique |
+    Export-Csv -Path (Join-Path $OutDir 'store-apps.csv') -NoTypeInformation -Encoding UTF8
+  $appxErrors = @($appxErrors | Where-Object { $_ })
+  if ($appxErrors.Count) {
+    throw "$($appxErrors.Count) package(s) could not be read; store-apps.csv is incomplete: $($appxErrors[0].Exception.Message)"
+  }
+  if (-not $isAdmin) { throw 'listed only your own packages; run elevated (gsudo) to include all users' }
 }
 
 Invoke-Step 'Recording activation status' {
