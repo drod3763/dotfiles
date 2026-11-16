@@ -87,8 +87,12 @@ Invoke-Step 'Exporting winget app list' {
   $exitCode = $LASTEXITCODE
   if ($exitCode -ne 0 -or -not (Test-Path -LiteralPath $temp)) {
     Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $target -Force -ErrorAction SilentlyContinue
-    throw "winget export exited with code $exitCode"
+    $message = "winget export exited with code $exitCode"
+    if (Test-Path -LiteralPath $target) {
+      $stamp = (Get-Item -LiteralPath $target).LastWriteTime.ToString('yyyy-MM-dd HH:mm')
+      $message += "; kept the previous winget.json from $stamp (stale)"
+    }
+    throw $message
   }
   Move-Item -LiteralPath $temp -Destination $target -Force
 }
