@@ -189,7 +189,7 @@ Invoke-Step 'Listing installed apps' {
     # Deduplicate on the whole identity so side-by-side versions and
     # per-user/machine installs of the same app each keep a row.
     Sort-Object DisplayName, DisplayVersion, InstallLocation, Scope -Unique |
-    Export-Csv -Path $csvPath -NoTypeInformation
+    Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
 
   $failurePath = Join-Path $OutDir 'installed-apps-unreadable.txt'
   if ($readFailures.Count) {
