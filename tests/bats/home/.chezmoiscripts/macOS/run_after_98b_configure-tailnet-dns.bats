@@ -75,6 +75,7 @@ write_managed_resolver() {
 
 @test "GIVEN Tailscale DNS already off and resolver current EXPECT no changes" {
   write_managed_resolver "tail1234.ts.net"
+  printf '%s\nsearch tail1234.ts.net\n' "${MARKER}" > "${CHEZMOI_RESOLVER_DIR}/search.tailnet-dns"
 
   run env MOCK_TS_PREFS='{"CorpDNS":false}' bash "${TEST_TMPDIR}/work.sh"
 
@@ -173,4 +174,21 @@ write_managed_resolver() {
   [[ "${status}" -eq 0 ]] || false
   run grep -qxF "${MARKER}" "${RESOLVER_FILE}"
   [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN work machine EXPECT tailnet suffix added as a search domain" {
+  run bash "${TEST_TMPDIR}/work.sh"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'search tail1234.ts.net' "${CHEZMOI_RESOLVER_DIR}/search.tailnet-dns"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN MagicDNS turned off after search domain written EXPECT search file removed" {
+  bash "${TEST_TMPDIR}/work.sh"
+
+  run env MOCK_TS_STATUS='{"BackendState":"Running","MagicDNSSuffix":""}' bash "${TEST_TMPDIR}/work.sh"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -e "${CHEZMOI_RESOLVER_DIR}/search.tailnet-dns" ]] || false
 }

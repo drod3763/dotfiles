@@ -6,6 +6,7 @@ tailscale_bin="${CHEZMOI_TAILSCALE_BIN:-tailscale}"
 resolver_dir="${CHEZMOI_RESOLVER_DIR:-/etc/resolver}"
 marker="# managed by chezmoi: tailnet-dns"
 quad100="100.100.100.100"
+search_file_name="search.tailnet-dns"
 
 run_as_root() {
   if [[ "${EUID}" -eq 0 ]]; then
@@ -16,10 +17,15 @@ run_as_root() {
 }
 
 remove_managed_resolvers() {
-  local keep="${1:-}" file
+  local file name keep skip
   for file in "${resolver_dir}"/*; do
     [[ -f "${file}" ]] || continue
-    [[ "$(basename "${file}")" == "${keep}" ]] && continue
+    name="$(basename "${file}")"
+    skip=false
+    for keep in "$@"; do
+      [[ "${name}" == "${keep}" ]] && skip=true
+    done
+    "${skip}" && continue
     if grep -qxF "${marker}" "${file}"; then
       run_as_root rm -f "${file}"
       echo "Removed stale tailnet resolver ${file}."
@@ -55,21 +61,27 @@ if [[ -z "${suffix}" ]]; then
   exit 0
 fi
 
-# Keeps MagicDNS names resolving. No "Added by tailscaled" header, so tailscaled leaves it alone.
-resolver_file="${resolver_dir}/${suffix}"
-desired="$(printf '%s\nnameserver %s\n' "${marker}" "${quad100}")"
-current="$(cat "${resolver_file}" 2>/dev/null || true)"
-# tailscaled may not have removed its own file yet; anything else belongs to someone else.
-if [[ -n "${current}" ]] && ! grep -qxF -e "${marker}" -e "# Added by tailscaled" <<<"${current}"; then
-  echo "Leaving unmanaged ${resolver_file} in place; MagicDNS names may not resolve." >&2
-elif [[ "${current}" != "${desired}" ]]; then
-  resolver_tmp="$(mktemp)"
-  trap 'rm -f "${resolver_tmp}"' EXIT
-  printf '%s\n' "${desired}" > "${resolver_tmp}"
-  run_as_root mkdir -p "${resolver_dir}"
-  run_as_root install -m 0644 "${resolver_tmp}" "${resolver_file}"
-  echo "Wrote ${resolver_file}."
-fi
+resolver_tmp="$(mktemp)"
+trap 'rm -f "${resolver_tmp}"' EXIT
 
-remove_managed_resolvers "${suffix}"
+write_managed_file() {
+  local file="${resolver_dir}/$1" desired="$2" current
+  current="$(cat "${file}" 2>/dev/null || true)"
+  # tailscaled may not have removed its own file yet; anything else belongs to someone else.
+  if [[ -n "${current}" ]] && ! grep -qxF -e "${marker}" -e "# Added by tailscaled" <<<"${current}"; then
+    echo "Leaving unmanaged ${file} in place; MagicDNS names may not resolve." >&2
+  elif [[ "${current}" != "${desired}" ]]; then
+    printf '%s\n' "${desired}" >"${resolver_tmp}"
+    run_as_root mkdir -p "${resolver_dir}"
+    run_as_root install -m 0644 "${resolver_tmp}" "${file}"
+    echo "Wrote ${file}."
+  fi
+}
+
+# No "Added by tailscaled" header, so tailscaled leaves these alone. The search file
+# keeps short names like `ssh peer` expanding to the tailnet, as tailscaled's own does.
+write_managed_file "${suffix}" "$(printf '%s\nnameserver %s' "${marker}" "${quad100}")"
+write_managed_file "${search_file_name}" "$(printf '%s\nsearch %s' "${marker}" "${suffix}")"
+
+remove_managed_resolvers "${suffix}" "${search_file_name}"
 {{- end }}
