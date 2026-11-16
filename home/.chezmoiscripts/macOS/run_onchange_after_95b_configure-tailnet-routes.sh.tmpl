@@ -99,12 +99,15 @@ route_iface() {
 
 # Only this helper adds per-peer host routes on the Tailscale interface, so those are ours,
 # including ones added before ownership was tracked.
+# Exit 0: ours. 1: not ours. 2: lookup failed, so ownership is unknown.
 owns_host_route() {
-  "${route_bin}" -n get "$1" 2>/dev/null | awk -v ts="${ts_if}" '
+  local out
+  out="$("${route_bin}" -n get "$1" 2>/dev/null)" || return 2
+  awk -v ts="${ts_if}" '
     /interface:/ { iface = $2 }
     /flags:/ { host = ($0 ~ /HOST/) }
     END { exit !(iface == ts && host) }
-  '
+  ' <<<"${out}"
 }
 
 while IFS= read -r peer; do
@@ -131,15 +134,22 @@ while IFS= read -r peer; do
   [[ -n "${peer}" ]] || continue
   grep -qxF "${peer}" <<<"${peers}" && continue
   # The work VPN may have claimed the address since; its route isn't ours to delete.
-  owns_host_route "${peer}" || continue
-  "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
-  if owns_host_route "${peer}"; then
-    owned+="${peer}"$'\n'
-    echo "Failed to remove route for departed peer ${peer}." >&2
-    failed=1
-  else
-    echo "Removed route for departed peer ${peer}."
+  ownership=0
+  owns_host_route "${peer}" || ownership=$?
+  if [[ "${ownership}" -eq 0 ]]; then
+    "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
+    ownership=0
+    owns_host_route "${peer}" || ownership=$?
+    if [[ "${ownership}" -eq 1 ]]; then
+      echo "Removed route for departed peer ${peer}."
+      continue
+    fi
+  elif [[ "${ownership}" -eq 1 ]]; then
+    continue
   fi
+  owned+="${peer}"$'\n'
+  echo "Could not remove route for departed peer ${peer}; will retry." >&2
+  failed=1
 done <<<"${previous}"
 
 save_state "${owned}"

@@ -46,6 +46,8 @@ EOF
 printf 'route %s\n' "$*" >> "${MOCK_CALLS_FILE:?}"
 deleted="${MOCK_CALLS_FILE}.deleted"
 touch "${deleted}"
+[[ "$2" == "delete" && "$4" == "${MOCK_ROUTE_FAIL_GET_AFTER_DELETE:-}" ]] && touch "${deleted}.getfail.$4"
+[[ "$2" == "get" && -e "${deleted}.getfail.$3" ]] && exit 1
 [[ "$2" == "add" && "$4" == "${MOCK_ROUTE_FAIL_ADD:-}" ]] && exit 1
 [[ "$2" == "delete" && "$4" == "${MOCK_ROUTE_FAIL_DELETE:-}" ]] && exit 1
 [[ "$2" == "get" && "$3" == "${MOCK_ROUTE_FAIL_GET:-}" ]] && exit 1
@@ -300,5 +302,37 @@ teardown() {
 
   [[ "${status}" -eq 0 ]] || false
   run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN lookup of a tracked departed peer fails EXPECT it stays tracked and cleanup retries" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  one_peer='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}'
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS="${one_peer}" \
+    MOCK_ROUTE_FAIL_GET=100.100.147.58 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  [[ "${status}" -ne 0 ]] || false
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS="${one_peer}" bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN delete and follow-up lookup both fail EXPECT failure reported and peer stays tracked" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' \
+    MOCK_ROUTE_FAIL_DELETE=100.100.147.58 MOCK_ROUTE_FAIL_GET_AFTER_DELETE=100.100.147.58 \
+    bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -ne 0 ]] || false
+  [[ "${output}" != *"Removed route for departed peer 100.100.147.58"* ]] || false
+  run grep -qxF '100.100.147.58' "${TAILNET_ROUTES_STATE_FILE}"
   [[ "${status}" -eq 0 ]] || false
 }
