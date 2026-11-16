@@ -121,21 +121,26 @@ try {
 if ($outVolume -ieq $systemVolume) {
   throw "OutDir '$OutDir' resolves to the system drive ($env:SystemDrive) through a mapped drive or junction. Pick a folder on another disk."
 }
-New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
-Write-Step "Writing reports to $OutDir"
-
 # The elevated process reads $env:USERPROFILE, HKCU and winget's user scope.
 # If UAC elevated as a different admin account, those belong to that account.
-Invoke-Step 'Checking which account is being inventoried' {
-  $me = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-  $owners = @(Get-CimInstance Win32_Process -Filter "Name = 'explorer.exe'" |
-      ForEach-Object { $o = Invoke-CimMethod -InputObject $_ -MethodName GetOwner; if ($o.User) { "$($o.Domain)\$($o.User)" } } |
+# This runs before anything is written, so a wrong-account run can't overwrite
+# a good inventory from an earlier run.
+Write-Step 'Checking which account is being inventoried'
+$me = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+try {
+  $owners = @(Get-CimInstance Win32_Process -Filter "Name = 'explorer.exe'" -ErrorAction Stop |
+      ForEach-Object { $o = Invoke-CimMethod -InputObject $_ -MethodName GetOwner -ErrorAction Stop; if ($o.User) { "$($o.Domain)\$($o.User)" } } |
       Sort-Object -Unique)
-  if ($owners.Count -eq 0) { throw "no desktop session found; can't confirm '$me' is the signed-in user" }
-  if ($owners -notcontains $me) {
-    throw "running as '$me' but the desktop belongs to '$($owners -join "', '")'. Profile, HKCU and winget reports describe '$me'. Elevate with the same account (gsudo)."
-  }
+} catch {
+  throw "Could not confirm which account is signed in: $($_.Exception.Message)"
 }
+if ($owners.Count -eq 0) { throw "No desktop session found; can't confirm '$me' is the signed-in user." }
+if ($owners -notcontains $me) {
+  throw "Running as '$me' but the desktop belongs to '$($owners -join "', '")'. Profile, HKCU and winget reports would describe '$me'. Elevate with the same account (gsudo)."
+}
+
+New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+Write-Step "Writing reports to $OutDir"
 
 # Walks a folder without entering junctions or symlinks. Windows PowerShell 5.1
 # follows them on -Recurse, which double-counts linked folders and hits the
