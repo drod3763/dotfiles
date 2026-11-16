@@ -216,3 +216,8 @@ if ($script:failures.Count -eq 0) {
   Write-Step "Done with $($script:failures.Count) skipped step(s): $($script:failures -join ', ')"
 }
 Write-Step 'Send home-sizes.txt, shell-folders.txt and activation.txt for review.'
+
+# Exit nonzero when any step failed so callers can't mistake a partial
+# inventory for a complete one.
+if ($script:failures.Count -gt 0) { exit 1 }
+exit 0
