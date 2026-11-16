@@ -142,6 +142,13 @@ Invoke-Step 'Checking which account is being inventoried' {
 # deny-listed compatibility junctions (My Music, Application Data, ...).
 # Cloud-only files (OneDrive placeholders) report their full size but use no
 # disk, so they're totalled separately.
+# Only junctions and symlinks count as links. OneDrive placeholders and other
+# reparse points (cloud files, dedup) carry the ReparsePoint attribute too but
+# hold real data, so they're walked and measured.
+function Test-IsLink($Item) {
+  ($Item.Attributes -band [IO.FileAttributes]::ReparsePoint) -and ($Item.LinkType -in 'Junction', 'SymbolicLink')
+}
+
 function Measure-Tree([string]$Path, [System.Collections.Generic.List[string]]$Errors) {
   $cloudOnly = 0x400000 -bor [int][IO.FileAttributes]::Offline  # FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | Offline
   $result = [pscustomobject]@{ Bytes = 0.0; CloudBytes = 0.0; Errors = 0 }
@@ -163,7 +170,7 @@ function Measure-Tree([string]$Path, [System.Collections.Generic.List[string]]$E
       }
     }
     foreach ($i in @($items)) {
-      if ($i.Attributes -band [IO.FileAttributes]::ReparsePoint) { continue }
+      if (Test-IsLink $i) { continue }
       if ($i.PSIsContainer) { $stack.Push($i.FullName) }
       elseif ([int]$i.Attributes -band $cloudOnly) { $result.CloudBytes += $i.Length }
       else { $result.Bytes += $i.Length }
@@ -181,7 +188,7 @@ Invoke-Step 'Measuring user profile folders' {
   foreach ($err in @($topErrors)) { if ($err) { $unreadable.Add("$($err.TargetObject): $($err.Exception.Message)") } }
 
   $rows = foreach ($folder in @($folders)) {
-    if ($folder.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+    if (Test-IsLink $folder) {
       # Compatibility junctions (hidden + system) are Windows plumbing; a link
       # you made yourself is listed with its target so the real data isn't missed.
       $isCompat = ($folder.Attributes -band [IO.FileAttributes]::Hidden) -and ($folder.Attributes -band [IO.FileAttributes]::System)
