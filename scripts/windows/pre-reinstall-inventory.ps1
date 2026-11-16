@@ -140,6 +140,15 @@ if ($owners -notcontains $me) {
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+# Hold an exclusive lock on OutDir for the whole run, so a second run can't
+# overwrite reports or swap driver folders underneath this one. Windows
+# releases it, and deletes the file, when this process exits.
+$lockPath = Join-Path $OutDir '.inventory.lock'
+try {
+  $script:outDirLock = New-Object IO.FileStream($lockPath, [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None, 1, [IO.FileOptions]::DeleteOnClose)
+} catch {
+  throw "Another inventory run is already writing to '$OutDir'. Wait for it to finish, or pick a different -OutDir."
+}
 Write-Step "Writing reports to $OutDir"
 
 # Walks a folder without entering junctions or symlinks. Windows PowerShell 5.1
