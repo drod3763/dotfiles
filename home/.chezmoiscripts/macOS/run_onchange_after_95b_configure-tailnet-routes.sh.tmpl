@@ -74,26 +74,60 @@ if ! peers="$("${tailscale_bin}" status --json 2>/dev/null |
   exit 0
 fi
 
+previous="$(cat "${state_file}" 2>/dev/null || true)"
+owned=""
+failed=0
+
+route_iface() {
+  "${route_bin}" -n get "$1" 2>/dev/null | awk '/interface:/ { print $2 }'
+}
+
+# Only this helper adds per-peer host routes on the Tailscale interface, so those are ours,
+# including ones added before ownership was tracked.
+owns_host_route() {
+  "${route_bin}" -n get "$1" 2>/dev/null | awk -v ts="${ts_if}" '
+    /interface:/ { iface = $2 }
+    /flags:/ { host = ($0 ~ /HOST/) }
+    END { exit !(iface == ts && host) }
+  '
+}
+
 while IFS= read -r peer; do
   [[ -n "${peer}" ]] || continue
-  current="$("${route_bin}" -n get "${peer}" 2>/dev/null | awk '/interface:/ { print $2 }')"
-  if [[ "${current}" != "${ts_if}" ]]; then
-    "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
-    "${route_bin}" -n add -host "${peer}" -interface "${ts_if}" >/dev/null
+  current="$(route_iface "${peer}")"
+  if [[ "${current}" == "${ts_if}" ]]; then
+    if owns_host_route "${peer}"; then
+      owned+="${peer}"$'\n'
+    fi
+    continue
+  fi
+  "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
+  if "${route_bin}" -n add -host "${peer}" -interface "${ts_if}" >/dev/null; then
+    owned+="${peer}"$'\n'
     echo "Routed ${peer} via ${ts_if} (was ${current:-none})."
+  else
+    echo "Failed to route ${peer} via ${ts_if}." >&2
+    failed=1
   fi
 done <<<"${peers}"
 
-if [[ -f "${state_file}" ]]; then
-  while IFS= read -r owned; do
-    [[ -n "${owned}" ]] || continue
-    if ! grep -qxF "${owned}" <<<"${peers}"; then
-      "${route_bin}" -n delete -host "${owned}" >/dev/null 2>&1 || true
-      echo "Removed route for departed peer ${owned}."
-    fi
-  done <"${state_file}"
-fi
-printf '%s\n' "${peers}" >"${state_file}"
+# Keep a departed peer owned until its route is really gone, so the next run retries.
+while IFS= read -r peer; do
+  [[ -n "${peer}" ]] || continue
+  grep -qxF "${peer}" <<<"${peers}" && continue
+  "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
+  if owns_host_route "${peer}"; then
+    owned+="${peer}"$'\n'
+    echo "Failed to remove route for departed peer ${peer}." >&2
+    failed=1
+  else
+    echo "Removed route for departed peer ${peer}."
+  fi
+done <<<"${previous}"
+
+printf '%s' "${owned}" >"${state_file}.tmp"
+mv -f "${state_file}.tmp" "${state_file}"
+exit "${failed}"
 EOF
 
 cat > "${plist_tmp}" <<EOF

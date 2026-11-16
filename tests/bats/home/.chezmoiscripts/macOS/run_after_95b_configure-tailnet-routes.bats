@@ -44,9 +44,22 @@ EOF
   cat > "${MOCK_BIN_DIR}/route" <<'EOF'
 #!/usr/bin/env bash
 printf 'route %s\n' "$*" >> "${MOCK_CALLS_FILE:?}"
-if [[ "$2" == "get" ]]; then
-  printf '   route to: %s\n  interface: %s\n' "$3" "${MOCK_ROUTE_IF:-utun123}"
-fi
+deleted="${MOCK_CALLS_FILE}.deleted"
+touch "${deleted}"
+[[ "$2" == "add" && "$4" == "${MOCK_ROUTE_FAIL_ADD:-}" ]] && exit 1
+[[ "$2" == "delete" && "$4" == "${MOCK_ROUTE_FAIL_DELETE:-}" ]] && exit 1
+case "$2" in
+  # A deleted host route falls back to the other tunnel's /10 until re-added.
+  delete) printf '%s\n' "$4" >> "${deleted}" ;;
+  add) grep -vxF "$4" "${deleted}" > "${deleted}.new" || true; mv "${deleted}.new" "${deleted}" ;;
+  get)
+    iface="${MOCK_ROUTE_IF:-utun123}"
+    grep -qxF "$3" "${deleted}" && iface=utun123
+    flags='<UP,DONE,STATIC,PRCLONING>'
+    [[ "${iface}" != utun123 ]] && flags='<UP,HOST,DONE,STATIC>'
+    printf '   route to: %s\n  interface: %s\n      flags: %s\n' "$3" "${iface}" "${flags}"
+    ;;
+esac
 EOF
 
   chmod +x "${MOCK_BIN_DIR}"/*
@@ -213,4 +226,48 @@ teardown() {
   [[ "${status}" -ne 0 ]] || false
   [[ "${output}" == *"jq"* ]] || false
   [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
+}
+
+@test "GIVEN deleting a departed peer route fails EXPECT deletion is retried on the next run" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  one_peer='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}'
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS="${one_peer}" \
+    MOCK_ROUTE_FAIL_DELETE=100.100.147.58 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  [[ "${status}" -ne 0 ]] || false
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS="${one_peer}" bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN one route add fails EXPECT routes added before it are still tracked" {
+  bash "${TEST_TMPDIR}/work.sh"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 MOCK_ROUTE_FAIL_ADD=100.100.147.58 \
+    bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  [[ "${status}" -ne 0 ]] || false
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS='{"Peer":{}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN host routes added before ownership was tracked EXPECT they are claimed and later pruned" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS='{"Peer":{}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
 }
