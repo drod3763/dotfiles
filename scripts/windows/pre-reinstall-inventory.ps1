@@ -220,10 +220,22 @@ Invoke-Step 'Measuring user profile folders' {
   $unreadable = New-Object System.Collections.Generic.List[string]
   $links = New-Object System.Collections.Generic.List[string]
   $topErrors = $null
-  $folders = @(Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Force -ErrorAction SilentlyContinue -ErrorVariable topErrors)
+  # Files too, not just folders: dotfiles like .gitconfig and .wslconfig live in the profile root.
+  $entries = @(Get-ChildItem -LiteralPath $env:USERPROFILE -Force -ErrorAction SilentlyContinue -ErrorVariable topErrors)
   foreach ($err in @($topErrors)) { if ($err) { $unreadable.Add("$($err.TargetObject): $($err.Exception.Message)") } }
+  $cloudOnly = 0x400000 -bor [int][IO.FileAttributes]::Offline
+  $rootFiles = New-Object System.Collections.Generic.List[object]
 
-  $rows = foreach ($folder in $folders) {
+  $rows = foreach ($folder in $entries) {
+    if (-not $folder.PSIsContainer) {
+      if (Test-IsLink $folder) {
+        try { $target = @($folder.Target) -join ', ' } catch { $target = '(target unreadable)' }
+        $links.Add("$($folder.FullName) -> $target")
+      } else {
+        $rootFiles.Add($folder)
+      }
+      continue
+    }
     if (Test-IsLink $folder) {
       # A link you made yourself is listed with its target so the real data isn't missed.
       if (Test-IsCompatJunction $folder) { continue }
@@ -246,6 +258,27 @@ Invoke-Step 'Measuring user profile folders' {
       Note        = $notes -join '; '
     }
   }
+
+  $rootFilesPath = Join-Path $OutDir 'home-root-files.txt'
+  if ($rootFiles.Count) {
+    $local = @($rootFiles | Where-Object { -not ([int]$_.Attributes -band $cloudOnly) })
+    $cloud = @($rootFiles | Where-Object { [int]$_.Attributes -band $cloudOnly })
+    $localBytes = ($local | Measure-Object Length -Sum).Sum
+    $cloudBytes = ($cloud | Measure-Object Length -Sum).Sum
+    $rows = @($rows) + [pscustomobject]@{
+      Folder      = '(files in profile root)'
+      GB          = [math]::Round([double]$localBytes / 1GB, 2)
+      CloudOnlyGB = [math]::Round([double]$cloudBytes / 1GB, 2)
+      Unreadable  = 0
+      Note        = "$($rootFiles.Count) file(s), see home-root-files.txt"
+    }
+    $rootFiles | Sort-Object Length -Descending |
+      Select-Object Name, @{ n = 'MB'; e = { [math]::Round($_.Length / 1MB, 2) } }, LastWriteTime, Attributes |
+      Format-Table -AutoSize | Out-File -Encoding UTF8 -FilePath $rootFilesPath -Width 300
+  } else {
+    Remove-Item -LiteralPath $rootFilesPath -Force -ErrorAction SilentlyContinue
+  }
+
   $rows | Sort-Object GB -Descending | Format-Table -AutoSize |
     Out-File -Encoding UTF8 -FilePath (Join-Path $OutDir 'home-sizes.txt') -Width 200
 
