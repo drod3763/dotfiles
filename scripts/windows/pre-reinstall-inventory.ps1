@@ -154,9 +154,21 @@ function Test-IsLink($Item) {
   ($Item.Attributes -band [IO.FileAttributes]::ReparsePoint) -and ($Item.LinkType -in 'Junction', 'SymbolicLink')
 }
 
-function Measure-Tree([string]$Path, [System.Collections.Generic.List[string]]$Errors) {
+# Compatibility junctions (hidden + system, e.g. Application Data) are Windows
+# plumbing that point back inside the profile.
+function Test-IsCompatJunction($Item) {
+  ($Item.Attributes -band [IO.FileAttributes]::Hidden) -and ($Item.Attributes -band [IO.FileAttributes]::System)
+}
+
+function Remove-LongPathPrefix([string]$Path) {
+  $Path -replace '^\\\\\?\\UNC\\', '\\' -replace '^\\\\\?\\', ''
+}
+
+# Links aren't followed, but links you made are written to $Links with their
+# target so data they point at (e.g. Documents\Projects -> D:\Projects) isn't missed.
+function Measure-Tree([string]$Path, [System.Collections.Generic.List[string]]$Errors, [System.Collections.Generic.List[string]]$Links) {
   $cloudOnly = 0x400000 -bor [int][IO.FileAttributes]::Offline  # FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | Offline
-  $result = [pscustomobject]@{ Bytes = 0.0; CloudBytes = 0.0; Errors = 0 }
+  $result = [pscustomobject]@{ Bytes = 0.0; CloudBytes = 0.0; Errors = 0; Links = 0 }
   # Windows PowerShell 5.1 can't list folders past MAX_PATH (260) unless
   # LongPathsEnabled is set; a \\?\ prefix bypasses that, and child FullNames keep it.
   if ($Path -match '^\\\\\?\\') { $root = $Path }
@@ -170,12 +182,17 @@ function Measure-Tree([string]$Path, [System.Collections.Generic.List[string]]$E
     $items = Get-ChildItem -LiteralPath $dir -Force -ErrorAction SilentlyContinue -ErrorVariable errs
     foreach ($e in @($errs)) {
       if ($e) {
-        $target = "$($e.TargetObject)" -replace '^\\\\\?\\UNC\\', '\\' -replace '^\\\\\?\\', ''
-        $Errors.Add("${target}: $($e.Exception.Message)"); $result.Errors++
+        $Errors.Add("$(Remove-LongPathPrefix "$($e.TargetObject)"): $($e.Exception.Message)"); $result.Errors++
       }
     }
     foreach ($i in @($items)) {
-      if (Test-IsLink $i) { continue }
+      if (Test-IsLink $i) {
+        if (-not (Test-IsCompatJunction $i)) {
+          try { $target = @($i.Target) -join ', ' } catch { $target = '(target unreadable)' }
+          $Links.Add("$(Remove-LongPathPrefix $i.FullName) -> $target"); $result.Links++
+        }
+        continue
+      }
       if ($i.PSIsContainer) { $stack.Push($i.FullName) }
       elseif ([int]$i.Attributes -band $cloudOnly) { $result.CloudBytes += $i.Length }
       else { $result.Bytes += $i.Length }
@@ -188,23 +205,23 @@ Invoke-Step 'Measuring user profile folders' {
   # Unreadable folders are counted, not hidden: a size that skipped part of a
   # folder is marked incomplete and every unreadable path is written out.
   $unreadable = New-Object System.Collections.Generic.List[string]
+  $links = New-Object System.Collections.Generic.List[string]
   $topErrors = $null
   $folders = Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Force -ErrorAction SilentlyContinue -ErrorVariable topErrors
   foreach ($err in @($topErrors)) { if ($err) { $unreadable.Add("$($err.TargetObject): $($err.Exception.Message)") } }
 
   $rows = foreach ($folder in @($folders)) {
     if (Test-IsLink $folder) {
-      # Compatibility junctions (hidden + system) are Windows plumbing; a link
-      # you made yourself is listed with its target so the real data isn't missed.
-      $isCompat = ($folder.Attributes -band [IO.FileAttributes]::Hidden) -and ($folder.Attributes -band [IO.FileAttributes]::System)
-      if ($isCompat) { continue }
+      # A link you made yourself is listed with its target so the real data isn't missed.
+      if (Test-IsCompatJunction $folder) { continue }
       $target = @($folder.Target) -join ', '
       [pscustomobject]@{ Folder = $folder.Name; GB = 0; CloudOnlyGB = 0; Unreadable = 0; Note = "link to $target, not counted" }
       continue
     }
-    $size = Measure-Tree $folder.FullName $unreadable
+    $size = Measure-Tree $folder.FullName $unreadable $links
     $notes = @()
     if ($size.Errors) { $notes += 'incomplete: size is a minimum' }
+    if ($size.Links) { $notes += "$($size.Links) link(s) not counted, see home-links.txt" }
     if ($size.CloudBytes) { $notes += 'has cloud-only files' }
     [pscustomobject]@{
       Folder      = $folder.Name
@@ -216,6 +233,10 @@ Invoke-Step 'Measuring user profile folders' {
   }
   $rows | Sort-Object GB -Descending | Format-Table -AutoSize |
     Out-File -Encoding UTF8 -FilePath (Join-Path $OutDir 'home-sizes.txt') -Width 200
+
+  $linksPath = Join-Path $OutDir 'home-links.txt'
+  if ($links.Count) { $links | Out-File -Encoding UTF8 -FilePath $linksPath -Width 400 }
+  else { Remove-Item -LiteralPath $linksPath -Force -ErrorAction SilentlyContinue }
 
   $unreadablePath = Join-Path $OutDir 'home-unreadable.txt'
   if ($unreadable.Count) {
