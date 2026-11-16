@@ -115,6 +115,8 @@ done <<<"${peers}"
 while IFS= read -r peer; do
   [[ -n "${peer}" ]] || continue
   grep -qxF "${peer}" <<<"${peers}" && continue
+  # The work VPN may have claimed the address since; its route isn't ours to delete.
+  owns_host_route "${peer}" || continue
   "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
   if owns_host_route "${peer}"; then
     owned+="${peer}"$'\n'

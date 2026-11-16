@@ -271,3 +271,19 @@ teardown() {
   run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
   [[ "${status}" -eq 0 ]] || false
 }
+
+@test "GIVEN a tracked departed peer now routed by the work VPN EXPECT its route is left alone and untracked" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+  : > "${MOCK_CALLS_FILE}.deleted"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+  run grep -qxF '100.100.147.58' "${TAILNET_ROUTES_STATE_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+}
