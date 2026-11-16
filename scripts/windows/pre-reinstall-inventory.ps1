@@ -69,7 +69,6 @@ $outRoot = Split-Path -Qualifier $OutDir
 if ($outRoot -ieq $env:SystemDrive) {
   throw "OutDir '$OutDir' is on the system drive ($env:SystemDrive), which the reinstall wipes. Pick a folder on another disk."
 }
-New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 # The drive letter alone can lie: a subst drive or a junction on E: can point
 # back at C:. Resolve both paths to their backing volume GUID and compare those.
@@ -108,8 +107,13 @@ function Get-VolumeGuid([string]$Path) {
   $Matches[0]
 }
 
+# Check the deepest folder that already exists, so a junction or subst drive
+# pointing at C: is refused before anything is created there.
+$existing = $OutDir
+while ($existing -and -not (Test-Path -LiteralPath $existing)) { $existing = Split-Path -Parent $existing }
 try {
-  $outVolume = Get-VolumeGuid (Resolve-Path -LiteralPath $OutDir).ProviderPath
+  if (-not $existing) { throw "no part of the path exists (is drive $outRoot attached?)" }
+  $outVolume = Get-VolumeGuid (Resolve-Path -LiteralPath $existing).ProviderPath
   $systemVolume = Get-VolumeGuid "$env:SystemDrive\"
 } catch {
   throw "Could not confirm that '$OutDir' is off the system drive: $($_.Exception.Message)"
@@ -117,6 +121,7 @@ try {
 if ($outVolume -ieq $systemVolume) {
   throw "OutDir '$OutDir' resolves to the system drive ($env:SystemDrive) through a mapped drive or junction. Pick a folder on another disk."
 }
+New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 Write-Step "Writing reports to $OutDir"
 
 # The elevated process reads $env:USERPROFILE, HKCU and winget's user scope.
@@ -190,11 +195,11 @@ Invoke-Step 'Measuring user profile folders' {
     }
   }
   $rows | Sort-Object GB -Descending | Format-Table -AutoSize |
-    Out-File -FilePath (Join-Path $OutDir 'home-sizes.txt') -Width 200
+    Out-File -Encoding UTF8 -FilePath (Join-Path $OutDir 'home-sizes.txt') -Width 200
 
   $unreadablePath = Join-Path $OutDir 'home-unreadable.txt'
   if ($unreadable.Count) {
-    $unreadable | Out-File -FilePath $unreadablePath -Width 400
+    $unreadable | Out-File -Encoding UTF8 -FilePath $unreadablePath -Width 400
     throw "$($unreadable.Count) path(s) could not be read; sizes are minimums. See home-unreadable.txt"
   }
   Remove-Item -LiteralPath $unreadablePath -Force -ErrorAction SilentlyContinue
@@ -202,26 +207,27 @@ Invoke-Step 'Measuring user profile folders' {
 
 Invoke-Step 'Recording shell folder locations' {
   Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders' |
-    Out-File -FilePath (Join-Path $OutDir 'shell-folders.txt') -Width 300
+    Out-File -Encoding UTF8 -FilePath (Join-Path $OutDir 'shell-folders.txt') -Width 300
 }
 
 Invoke-Step 'Exporting winget app list' {
-  if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { throw 'winget is not installed' }
   # Write to a temp file and replace winget.json only on success, so a failed
   # rerun can't leave an older export looking current.
   $target = Join-Path $OutDir 'winget.json'
   $temp = "$target.tmp"
+  $staleNote = {
+    if (Test-Path -LiteralPath $target) {
+      $stamp = (Get-Item -LiteralPath $target).LastWriteTime.ToString('yyyy-MM-dd HH:mm')
+      "; kept the previous winget.json from $stamp (stale)"
+    }
+  }
+  if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { throw "winget is not installed$(& $staleNote)" }
   Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
   winget export -o $temp --include-versions --accept-source-agreements | Out-Null
   $exitCode = $LASTEXITCODE
   if ($exitCode -ne 0 -or -not (Test-Path -LiteralPath $temp)) {
     Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
-    $message = "winget export exited with code $exitCode"
-    if (Test-Path -LiteralPath $target) {
-      $stamp = (Get-Item -LiteralPath $target).LastWriteTime.ToString('yyyy-MM-dd HH:mm')
-      $message += "; kept the previous winget.json from $stamp (stale)"
-    }
-    throw $message
+    throw "winget export exited with code $exitCode$(& $staleNote)"
   }
   Move-Item -LiteralPath $temp -Destination $target -Force
 }
@@ -256,7 +262,7 @@ Invoke-Step 'Listing installed apps' {
   $failurePath = Join-Path $OutDir 'installed-apps-unreadable.txt'
   if ($readFailures.Count) {
     $readFailures | ForEach-Object { "$($_.TargetObject): $($_.Exception.Message)" } |
-      Out-File -FilePath $failurePath -Width 400
+      Out-File -Encoding UTF8 -FilePath $failurePath -Width 400
     throw "$($readFailures.Count) registry key(s) could not be read; installed-apps.csv is incomplete. See installed-apps-unreadable.txt"
   }
   Remove-Item -LiteralPath $failurePath -Force -ErrorAction SilentlyContinue
@@ -286,7 +292,7 @@ Invoke-Step 'Listing Store and MSIX apps' {
 
 Invoke-Step 'Recording activation status' {
   $output = cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /dli
-  $output | Out-File -FilePath (Join-Path $OutDir 'activation.txt')
+  $output | Out-File -Encoding UTF8 -FilePath (Join-Path $OutDir 'activation.txt')
   Assert-NativeSuccess 'slmgr /dli'
 }
 
@@ -321,7 +327,7 @@ Invoke-Step 'Listing WSL distros' {
     # native command becomes a terminating error. Exit code is checked instead.
     $output = wsl --list --verbose
     $exitCode = $LASTEXITCODE
-    $output | Out-File -FilePath (Join-Path $OutDir 'wsl.txt')
+    $output | Out-File -Encoding UTF8 -FilePath (Join-Path $OutDir 'wsl.txt')
     if ($exitCode -ne 0) { throw "wsl --list exited with code $exitCode (no distros installed, or WSL is broken)" }
   } finally {
     [Console]::OutputEncoding = $previous
