@@ -174,8 +174,14 @@ Invoke-Step 'Listing installed apps' {
     Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName } |
     Select-Object DisplayName,
       @{ n = 'DisplayVersion'; e = { if ($_.PSObject.Properties['DisplayVersion']) { $_.DisplayVersion } } },
-      @{ n = 'InstallLocation'; e = { if ($_.PSObject.Properties['InstallLocation']) { $_.InstallLocation } } } |
-    Sort-Object DisplayName -Unique |
+      @{ n = 'InstallLocation'; e = { if ($_.PSObject.Properties['InstallLocation']) { $_.InstallLocation } } },
+      @{ n = 'Scope'; e = {
+          if ($_.PSPath -match 'HKEY_CURRENT_USER') { 'user' }
+          elseif ($_.PSPath -match 'WOW6432Node') { 'machine-32bit' }
+          else { 'machine' } } } |
+    # Deduplicate on the whole identity so side-by-side versions and
+    # per-user/machine installs of the same app each keep a row.
+    Sort-Object DisplayName, DisplayVersion, InstallLocation, Scope -Unique |
     Export-Csv -Path (Join-Path $OutDir 'installed-apps.csv') -NoTypeInformation
 }
 
