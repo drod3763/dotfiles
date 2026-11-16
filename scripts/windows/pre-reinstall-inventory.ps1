@@ -57,6 +57,53 @@ if ($outRoot -ieq $env:SystemDrive) {
   throw "OutDir '$OutDir' is on the system drive ($env:SystemDrive), which the reinstall wipes. Pick a folder on another disk."
 }
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+
+# The drive letter alone can lie: a subst drive or a junction on E: can point
+# back at C:. Resolve both paths to their backing volume GUID and compare those.
+# Any failure to resolve stops the script rather than guessing.
+Add-Type -TypeDefinition @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
+
+public static class InventoryVolume {
+  [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+  static extern SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr security, uint disposition, uint flags, IntPtr template);
+
+  [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+  static extern uint GetFinalPathNameByHandleW(SafeFileHandle handle, StringBuilder buffer, uint length, uint flags);
+
+  // Returns the \\?\Volume{GUID}\... path, after following subst drives and reparse points.
+  public static string FinalVolumePath(string path) {
+    const uint ShareAll = 7, OpenExisting = 3, BackupSemantics = 0x02000000, VolumeNameGuid = 1;
+    using (SafeFileHandle handle = CreateFileW(path, 0, ShareAll, IntPtr.Zero, OpenExisting, BackupSemantics, IntPtr.Zero)) {
+      if (handle.IsInvalid) throw new Win32Exception();
+      StringBuilder buffer = new StringBuilder(4096);
+      uint length = GetFinalPathNameByHandleW(handle, buffer, (uint)buffer.Capacity, VolumeNameGuid);
+      if (length == 0 || length >= buffer.Capacity) throw new Win32Exception();
+      return buffer.ToString();
+    }
+  }
+}
+'@
+
+function Get-VolumeGuid([string]$Path) {
+  $final = [InventoryVolume]::FinalVolumePath($Path)
+  if ($final -notmatch '^\\\\\?\\Volume\{[0-9a-fA-F-]+\}') { throw "could not resolve the volume for '$Path' (got '$final')" }
+  $Matches[0]
+}
+
+try {
+  $outVolume = Get-VolumeGuid (Resolve-Path -LiteralPath $OutDir).ProviderPath
+  $systemVolume = Get-VolumeGuid "$env:SystemDrive\"
+} catch {
+  throw "Could not confirm that '$OutDir' is off the system drive: $($_.Exception.Message)"
+}
+if ($outVolume -ieq $systemVolume) {
+  throw "OutDir '$OutDir' resolves to the system drive ($env:SystemDrive) through a mapped drive or junction. Pick a folder on another disk."
+}
 Write-Step "Writing reports to $OutDir"
 
 Invoke-Step 'Measuring user profile folders' {
