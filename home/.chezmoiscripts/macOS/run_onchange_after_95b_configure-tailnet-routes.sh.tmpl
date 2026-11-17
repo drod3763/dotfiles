@@ -2,15 +2,6 @@
 
 set -euo pipefail
 
-{{- $routes := list }}
-{{- if not .personal }}
-{{-   if hasKey . "tailnetRoutes" }}
-{{-     $routes = dig "work" list .tailnetRoutes }}
-{{-   else }}
-{{-     $routes = dig "work" list (include ".tailnet_routes.toml.age" | decrypt | fromToml) }}
-{{-   end }}
-{{- end }}
-
 label="local.tailnet-routes"
 helper="${CHEZMOI_TAILNET_ROUTES_HELPER:-/usr/local/libexec/tailnet-routes}"
 plist="${CHEZMOI_TAILNET_ROUTES_PLIST:-/Library/LaunchDaemons/${label}.plist}"
@@ -24,7 +15,7 @@ run_as_root() {
   fi
 }
 
-{{ if not $routes -}}
+{{ if .personal -}}
 if [[ -f "${plist}" || -f "${helper}" ]]; then
   run_as_root "${launchctl_bin}" bootout "system/${label}" >/dev/null 2>&1 || true
   run_as_root rm -f "${plist}" "${helper}"
@@ -37,7 +28,7 @@ plist_tmp="$(mktemp)"
 trap 'rm -f "${helper_tmp}" "${plist_tmp}"' EXIT
 
 # Another VPN on this Mac can claim all of 100.64.0.0/10, which swallows tailnet traffic.
-# Host routes for specific peers are more specific, so they win.
+# A host route per peer is more specific, so it wins.
 cat > "${helper_tmp}" <<'EOF'
 #!/bin/bash
 set -euo pipefail
@@ -45,11 +36,23 @@ set -euo pipefail
 tailscale_bin="${TAILNET_ROUTES_TAILSCALE_BIN:-{{ lookPath "tailscale" | default "/opt/homebrew/bin/tailscale" }}}"
 route_bin="${TAILNET_ROUTES_ROUTE_BIN:-/sbin/route}"
 ifconfig_bin="${TAILNET_ROUTES_IFCONFIG_BIN:-/sbin/ifconfig}"
-peers=(
-{{- range $routes }}
-  {{ .ip | quote }}
-{{- end }}
-)
+# Cleared at boot, like the routes it tracks.
+state_file="${TAILNET_ROUTES_STATE_FILE:-/var/run/local.tailnet-routes.peers}"
+
+# launchd's PATH lacks Homebrew, and /usr/bin/jq only ships with newer macOS.
+jq_bin="${TAILNET_ROUTES_JQ_BIN:-}"
+if [[ -z "${jq_bin}" ]]; then
+  for candidate in /usr/bin/jq /opt/homebrew/bin/jq /usr/local/bin/jq; do
+    if [[ -x "${candidate}" ]]; then
+      jq_bin="${candidate}"
+      break
+    fi
+  done
+fi
+if [[ ! -x "${jq_bin}" ]]; then
+  echo "tailnet-routes: jq not found; cannot read tailnet peers." >&2
+  exit 1
+fi
 
 self_ip="$("${tailscale_bin}" ip -4 2>/dev/null | head -n 1 || true)"
 if [[ -z "${self_ip}" ]]; then
@@ -65,14 +68,99 @@ if [[ -z "${ts_if}" ]]; then
   exit 0
 fi
 
-for peer in "${peers[@]}"; do
-  current="$("${route_bin}" -n get "${peer}" 2>/dev/null | awk '/interface:/ { print $2 }')"
-  if [[ "${current}" != "${ts_if}" ]]; then
-    "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
-    "${route_bin}" -n add -host "${peer}" -interface "${ts_if}" >/dev/null
-    echo "Routed ${peer} via ${ts_if} (was ${current:-none})."
+# An unreadable status must not look like an empty tailnet, or every owned route is pruned.
+if ! peers="$("${tailscale_bin}" status --json 2>/dev/null |
+  "${jq_bin}" -r '(.Peer // {})[].TailscaleIPs[]? | select(test("^[0-9.]+$"))' 2>/dev/null)"; then
+  exit 0
+fi
+
+previous="$(cat "${state_file}" 2>/dev/null || true)"
+owned=""
+failed=0
+finished=0
+
+save_state() {
+  printf '%s\n' "$@" | awk 'NF && !seen[$0]++' >"${state_file}.tmp"
+  mv -f "${state_file}.tmp" "${state_file}"
+}
+
+# On an unexpected exit, keep everything that may still be ours. Cleanup re-checks
+# ownership before deleting, so over-tracking is harmless; under-tracking orphans routes.
+on_exit() {
+  if [[ "${finished}" -eq 0 ]]; then
+    save_state "${previous}" "${owned}"
   fi
-done
+}
+trap on_exit EXIT
+
+# Only this helper adds per-peer host routes on the Tailscale interface, so those are ours,
+# including ones added before ownership was tracked.
+# Exit 0: ours. 1: not ours. 2: lookup failed, so ownership is unknown.
+owns_host_route_in() {
+  awk -v ts="${ts_if}" '
+    /interface:/ { iface = $2 }
+    /flags:/ { host = ($0 ~ /HOST/) }
+    END { exit !(iface == ts && host) }
+  ' <<<"$1"
+}
+
+owns_host_route() {
+  local out
+  out="$("${route_bin}" -n get "$1" 2>/dev/null)" || return 2
+  owns_host_route_in "${out}"
+}
+
+while IFS= read -r peer; do
+  [[ -n "${peer}" ]] || continue
+  # One lookup, so the interface and ownership answers can't disagree.
+  current=""
+  ownership=0
+  if out="$("${route_bin}" -n get "${peer}" 2>/dev/null)"; then
+    current="$(awk '/interface:/ { print $2 }' <<<"${out}")"
+    owns_host_route_in "${out}" || ownership=$?
+  fi
+  if [[ "${current}" == "${ts_if}" ]]; then
+    [[ "${ownership}" -eq 0 ]] && owned+="${peer}"$'\n'
+    continue
+  fi
+  "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
+  if "${route_bin}" -n add -host "${peer}" -interface "${ts_if}" >/dev/null; then
+    owned+="${peer}"$'\n'
+    echo "Routed ${peer} via ${ts_if} (was ${current:-none})."
+  else
+    echo "Failed to route ${peer} via ${ts_if}." >&2
+    # Our old route may have survived the failed delete; cleanup re-checks before deleting.
+    grep -qxF "${peer}" <<<"${previous}" && owned+="${peer}"$'\n'
+    failed=1
+  fi
+done <<<"${peers}"
+
+# Keep a departed peer owned until its route is really gone, so the next run retries.
+while IFS= read -r peer; do
+  [[ -n "${peer}" ]] || continue
+  grep -qxF "${peer}" <<<"${peers}" && continue
+  # The work VPN may have claimed the address since; its route isn't ours to delete.
+  ownership=0
+  owns_host_route "${peer}" || ownership=$?
+  if [[ "${ownership}" -eq 0 ]]; then
+    "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
+    ownership=0
+    owns_host_route "${peer}" || ownership=$?
+    if [[ "${ownership}" -eq 1 ]]; then
+      echo "Removed route for departed peer ${peer}."
+      continue
+    fi
+  elif [[ "${ownership}" -eq 1 ]]; then
+    continue
+  fi
+  owned+="${peer}"$'\n'
+  echo "Could not remove route for departed peer ${peer}; will retry." >&2
+  failed=1
+done <<<"${previous}"
+
+save_state "${owned}"
+finished=1
+exit "${failed}"
 EOF
 
 cat > "${plist_tmp}" <<EOF
