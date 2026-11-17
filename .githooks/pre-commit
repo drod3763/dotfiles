@@ -17,3 +17,4 @@ fi
 
 "$(git rev-parse --show-toplevel)/scripts/check_secrets.sh"
 "$(git rev-parse --show-toplevel)/scripts/check_rendered_shell_templates.sh"
+"$(git rev-parse --show-toplevel)/scripts/check_rendered_powershell_scripts.sh"

@@ -1,0 +1,6 @@
+# Shell scripts keep LF on every checkout. Git for Windows defaults to
+# core.autocrlf=true, and bash/shellcheck reject the resulting CRLF.
+*.sh text eol=lf
+*.sh.tmpl text eol=lf
+*.bats text eol=lf
+.githooks/* text eol=lf

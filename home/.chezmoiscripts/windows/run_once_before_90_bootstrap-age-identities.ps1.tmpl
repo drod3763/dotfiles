@@ -3,7 +3,7 @@
 # so chezmoi can decrypt encrypted_ files. Keys are never written to the console.
 $ErrorActionPreference = 'Stop'
 
-function Write-Log([string]$Message) {
+function Write-BootstrapLog([string]$Message) {
   [Console]::Error.WriteLine("[age-bootstrap] $Message")
 }
 
@@ -19,7 +19,7 @@ function Invoke-Native([scriptblock]$Command) {
 $chezmoi = if ($env:CHEZMOI_EXECUTABLE) { $env:CHEZMOI_EXECUTABLE } else { 'chezmoi' }
 
 if (-not (Get-Command op -ErrorAction SilentlyContinue)) {
-  Write-Log 'Skipping: 1Password CLI (op) is not installed.'
+  Write-BootstrapLog 'Skipping: 1Password CLI (op) is not installed.'
   exit 0
 }
 
@@ -30,10 +30,10 @@ $sources = @(
 )
 
 if ($sources.Count -eq 0) {
-  Write-Log 'No age identity sources found; nothing to bootstrap.'
+  Write-BootstrapLog 'No age identity sources found; nothing to bootstrap.'
   exit 0
 }
-Write-Log "Found $($sources.Count) identity source(s)."
+Write-BootstrapLog "Found $($sources.Count) identity source(s)."
 
 $ageDir = Join-Path $HOME '.config\chezmoi\age-identities'
 New-Item -ItemType Directory -Force -Path $ageDir | Out-Null
@@ -50,7 +50,7 @@ foreach ($source in $sources) {
   # credential" and keep going, like the macOS script.
   $identity = Invoke-Native { op item get $source.Item --vault $source.Vault --fields credential --reveal }
   if ($LASTEXITCODE -ne 0 -or -not $identity) {
-    Write-Log "No credential returned for $($source.Item):$($source.Vault); continuing."
+    Write-BootstrapLog "No credential returned for $($source.Item):$($source.Vault); continuing."
     continue
   }
   $identities.Add($identity)
@@ -66,7 +66,7 @@ foreach ($source in $sources) {
 }
 
 if ($identities.Count -eq 0) {
-  Write-Log "No identities written from $($sources.Count) source(s); stopping to avoid downstream decryption failures."
+  Write-BootstrapLog "No identities written from $($sources.Count) source(s); stopping to avoid downstream decryption failures."
   exit 1
 }
 
@@ -77,4 +77,4 @@ $recipientsFile = Join-Path $ageDir 'recipients.txt'
 [IO.File]::WriteAllText($identitiesFile, (($identities | Select-Object -Unique) -join "`n") + "`n", $utf8)
 [IO.File]::WriteAllText($recipientsFile, (($recipients | Select-Object -Unique) -join "`n") + "`n", $utf8)
 
-Write-Log "Wrote identities to $identitiesFile and recipients to $recipientsFile."
+Write-BootstrapLog "Wrote identities to $identitiesFile and recipients to $recipientsFile."
