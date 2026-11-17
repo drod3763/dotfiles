@@ -9,7 +9,7 @@ if ! command -v chezmoi >/dev/null 2>&1; then
 fi
 
 if ! command -v shellcheck >/dev/null 2>&1; then
-  echo "shellcheck is required to lint rendered script templates." >&2
+  echo "shellcheck is required to lint rendered script templates. Run 'mise install' in the repo root." >&2
   exit 1
 fi
 

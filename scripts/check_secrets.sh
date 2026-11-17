@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if ! command -v gitleaks >/dev/null 2>&1; then
-  echo "gitleaks is not installed. Install it first (for example: brew install gitleaks)." >&2
+  echo "gitleaks is not installed. Run 'mise install' in the repo root." >&2
   exit 1
 fi
 

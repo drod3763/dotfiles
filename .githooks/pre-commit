@@ -15,6 +15,20 @@ if [[ -n "${global_hooks_path}" ]]; then
   fi
 fi
 
+# Put the repo's mise tools (gitleaks, shellcheck) first on PATH, so hooks work
+# without `mise activate` (IDE/GUI commits). `mise env` emits Windows-style PATH
+# on Windows, so build it from bin-paths and convert with cygpath when present.
+if command -v mise >/dev/null 2>&1; then
+  while IFS= read -r bin_path; do
+    [[ -n ${bin_path} ]] || continue
+    if command -v cygpath >/dev/null 2>&1; then
+      bin_path="$(cygpath -u "${bin_path}")"
+    fi
+    PATH="${bin_path}:${PATH}"
+  done < <(mise bin-paths 2>/dev/null || true)
+  export PATH
+fi
+
 "$(git rev-parse --show-toplevel)/scripts/check_secrets.sh"
 "$(git rev-parse --show-toplevel)/scripts/check_rendered_shell_templates.sh"
 "$(git rev-parse --show-toplevel)/scripts/check_rendered_powershell_scripts.sh"

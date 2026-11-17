@@ -1,9 +1,13 @@
 [tools]
+"aqua:gitleaks/gitleaks" = "latest"
 "aqua:koalaman/shellcheck" = "latest"
-"aqua:numtide/treefmt" = "latest"
 "aqua:tamasfe/taplo" = "latest"
-bun = "latest"
-go = "latest"
-rust = "latest"
-"cargo:nixpkgs-fmt" = "latest"
-"go:mvdan.cc/sh/v3/cmd/shfmt" = "latest"
+# Toolchains and formatters only used on macOS/Linux; skipped on Windows so
+# `mise install` there stays limited to the hook linters (treefmt has no
+# Windows release).
+"aqua:numtide/treefmt" = { version = "latest", os = ["macos", "linux"] }
+bun = { version = "latest", os = ["macos", "linux"] }
+go = { version = "latest", os = ["macos", "linux"] }
+rust = { version = "latest", os = ["macos", "linux"] }
+"cargo:nixpkgs-fmt" = { version = "latest", os = ["macos", "linux"] }
+"go:mvdan.cc/sh/v3/cmd/shfmt" = { version = "latest", os = ["macos", "linux"] }
