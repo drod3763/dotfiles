@@ -51,6 +51,10 @@ touch "${deleted}"
 [[ "$2" == "add" && "$4" == "${MOCK_ROUTE_FAIL_ADD:-}" ]] && exit 1
 [[ "$2" == "delete" && "$4" == "${MOCK_ROUTE_FAIL_DELETE:-}" ]] && exit 1
 [[ "$2" == "get" && "$3" == "${MOCK_ROUTE_FAIL_GET:-}" ]] && exit 1
+if [[ "$2" == "get" && "$3" == "${MOCK_ROUTE_FAIL_SECOND_GET:-}" ]]; then
+  echo x >> "${deleted}.getcount.$3"
+  [[ "$(wc -l < "${deleted}.getcount.$3")" -eq 2 ]] && exit 1
+fi
 case "$2" in
   # A deleted host route falls back to the other tunnel's /10 until re-added.
   delete) printf '%s\n' "$4" >> "${deleted}" ;;
@@ -334,5 +338,20 @@ teardown() {
   [[ "${status}" -ne 0 ]] || false
   [[ "${output}" != *"Removed route for departed peer 100.100.147.58"* ]] || false
   run grep -qxF '100.100.147.58' "${TAILNET_ROUTES_STATE_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN a tracked peer whose second route lookup fails EXPECT it stays tracked and is pruned after departing" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_ROUTE_FAIL_SECOND_GET=100.100.147.58 \
+    bash "${CHEZMOI_TAILNET_ROUTES_HELPER}" || true
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
   [[ "${status}" -eq 0 ]] || false
 }

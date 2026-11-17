@@ -93,30 +93,34 @@ on_exit() {
 }
 trap on_exit EXIT
 
-route_iface() {
-  "${route_bin}" -n get "$1" 2>/dev/null | awk '/interface:/ { print $2 }' || true
-}
-
 # Only this helper adds per-peer host routes on the Tailscale interface, so those are ours,
 # including ones added before ownership was tracked.
 # Exit 0: ours. 1: not ours. 2: lookup failed, so ownership is unknown.
-owns_host_route() {
-  local out
-  out="$("${route_bin}" -n get "$1" 2>/dev/null)" || return 2
+owns_host_route_in() {
   awk -v ts="${ts_if}" '
     /interface:/ { iface = $2 }
     /flags:/ { host = ($0 ~ /HOST/) }
     END { exit !(iface == ts && host) }
-  ' <<<"${out}"
+  ' <<<"$1"
+}
+
+owns_host_route() {
+  local out
+  out="$("${route_bin}" -n get "$1" 2>/dev/null)" || return 2
+  owns_host_route_in "${out}"
 }
 
 while IFS= read -r peer; do
   [[ -n "${peer}" ]] || continue
-  current="$(route_iface "${peer}")"
+  # One lookup, so the interface and ownership answers can't disagree.
+  current=""
+  ownership=0
+  if out="$("${route_bin}" -n get "${peer}" 2>/dev/null)"; then
+    current="$(awk '/interface:/ { print $2 }' <<<"${out}")"
+    owns_host_route_in "${out}" || ownership=$?
+  fi
   if [[ "${current}" == "${ts_if}" ]]; then
-    if owns_host_route "${peer}"; then
-      owned+="${peer}"$'\n'
-    fi
+    [[ "${ownership}" -eq 0 ]] && owned+="${peer}"$'\n'
     continue
   fi
   "${route_bin}" -n delete -host "${peer}" >/dev/null 2>&1 || true
