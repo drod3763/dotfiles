@@ -129,6 +129,8 @@ while IFS= read -r peer; do
     echo "Routed ${peer} via ${ts_if} (was ${current:-none})."
   else
     echo "Failed to route ${peer} via ${ts_if}." >&2
+    # Our old route may have survived the failed delete; cleanup re-checks before deleting.
+    grep -qxF "${peer}" <<<"${previous}" && owned+="${peer}"$'\n'
     failed=1
   fi
 done <<<"${peers}"

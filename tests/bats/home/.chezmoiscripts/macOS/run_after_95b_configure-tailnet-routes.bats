@@ -355,3 +355,19 @@ teardown() {
   run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
   [[ "${status}" -eq 0 ]] || false
 }
+
+@test "GIVEN lookup, delete and add all fail for a tracked peer EXPECT it stays tracked and is pruned after departing" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_ROUTE_FAIL_GET=100.100.147.58 \
+    MOCK_ROUTE_FAIL_DELETE=100.100.147.58 MOCK_ROUTE_FAIL_ADD=100.100.147.58 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  [[ "${status}" -ne 0 ]] || false
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
