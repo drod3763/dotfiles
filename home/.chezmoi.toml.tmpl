@@ -67,6 +67,8 @@
 account mode + token makes chezmoi's onepassword function error out. */ -}}
 {{- if and (eq .chezmoi.os "darwin") (stat "/Applications/1Password.app") (not (env "OP_SERVICE_ACCOUNT_TOKEN")) -}}
 {{-     $onepasswordMode = "account" -}}
+{{- else if and (eq .chezmoi.os "windows") (lookPath "op") (not (env "OP_SERVICE_ACCOUNT_TOKEN")) -}}
+{{-     $onepasswordMode = "account" -}}
 {{- end -}}
 
 encryption = "age"
@@ -78,7 +80,7 @@ remove = true
 [age]
     identities = ["~/.config/chezmoi/age-identities/identities.txt"]
     recipientsFile = "~/.config/chezmoi/age-identities/recipients.txt"
-{{- if eq .chezmoi.os "windows" -}}
+{{- if eq .chezmoi.os "windows" }}
 [cd]
     command = 'powershell'
     args = ['-nologo']
@@ -108,6 +110,8 @@ command = "zed"
 args = ["--wait"]
 [git]
 autoAdd = true
+{{- /* The pre hook and plutil textconv are bash/macOS tools that Windows lacks. */}}
+{{- if ne .chezmoi.os "windows" }}
 [hooks.read-source-state.pre]
     command = "bash"
     args = ["{{ .chezmoi.homeDir }}/.local/share/chezmoi/scripts/hooks/read-source-state-pre.sh", "{{ $onepasswordMode }}"]
@@ -115,3 +119,4 @@ autoAdd = true
 pattern = "**/*.plist"
 command = "plutil"
 args = ["-convert", "xml1", "-o", "-", "-"]
+{{- end }}

@@ -32,15 +32,26 @@ non_zsh_shell = [".p10k.zsh", ".zshenv", ".zshrc"]
 
 non_bash_shell = [".bashrc", ".bash_profile"]
 
-not_windows = [".chezmoiscripts/windows/**", "Documents"]
+not_windows = [".chezmoiscripts/windows/**", "AppData", "Documents"]
 
+# Windows is opt-in: everything is ignored unless re-included with "!" below,
+# so macOS/Linux files never leak onto a Windows machine.
 windows = [
-  ".gitignore",
-  ".inputrc",
-  ".ssh/authorized_keys",
-  ".ssh/id_rsa",
-  ".ssh/id_rsa.pub",
-  ".tmux.conf",
-  ".vim",
-  ".vimrc",
+  "**",
+  "!.chezmoiscripts/windows/**",
+  "!AppData",
+  "!AppData/Local",
+  "!AppData/Local/1Password",
+  "!AppData/Local/1Password/config",
+  "!AppData/Local/1Password/config/ssh",
+  "!AppData/Local/1Password/config/ssh/agent.toml",
+  "!.ssh",
+  "!.ssh/config",
+  "!.config",
+  "!.config/git",
+  "!.config/git/config",
+  "!.config/git/ignore",
+  "!Documents",
+  "!Documents/PowerShell/**",
+  "!Documents/WindowsPowerShell/**",
 ]

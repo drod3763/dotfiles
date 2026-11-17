@@ -9,10 +9,14 @@
 {{- $editor = "/Applications/Komet.app/Contents/MacOS/Komet" -}}
 {{- else if and (eq .chezmoi.os "linux") (stat "/var/lib/flatpak/app/re.sonny.Commit") }}
 {{- $editor = "flatpak run --file-forwarding re.sonny.Commit @@" -}}
+{{- else if and (eq .chezmoi.os "windows") (lookPath "zed") }}
+{{- $editor = "zed --wait" -}}
 {{- else if lookPath "micro"}}
 {{- $editor = "micro" -}}
 {{- else if lookPath "nano"}}
 {{- $editor = "nano" -}}
+{{- else if eq .chezmoi.os "windows" }}
+{{- $editor = "notepad" -}}
 {{- end -}}
 
 {{- if lookPath "hunk"}}
@@ -79,14 +83,20 @@ dell = branch -d
 [core]
 editor = {{ $editor }}
 pager = {{ $pager }}
+{{- if eq .chezmoi.os "windows" }}
+{{/* Git for Windows bundles its own ssh, which can't reach the 1Password agent pipe. */ -}}
+sshCommand = C:/Windows/System32/OpenSSH/ssh.exe
+{{- end }}
 
 [checkout]
 workers = -1
 {{- if lookPath "gh" }}
+{{- $ghHelper := "!/opt/homebrew/bin/gh auth git-credential" }}
+{{- if eq .chezmoi.os "windows" }}{{ $ghHelper = "!gh auth git-credential" }}{{ end }}
 [credential "https://github.com"]
-helper = !/opt/homebrew/bin/gh auth git-credential
+helper = {{ $ghHelper }}
 [credential "https://gist.github.com"]
-helper = !/opt/homebrew/bin/gh auth git-credential
+helper = {{ $ghHelper }}
 {{- end }}
 [diff]
 algorithm = histogram

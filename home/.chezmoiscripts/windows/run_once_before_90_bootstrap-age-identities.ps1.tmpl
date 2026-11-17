@@ -1,0 +1,80 @@
+# Windows counterpart of macOS/run_once_before_90_bootstrap-age-identities.sh.tmpl.
+# Fetches the age identities listed in onepassword.age_identities from 1Password
+# so chezmoi can decrypt encrypted_ files. Keys are never written to the console.
+$ErrorActionPreference = 'Stop'
+
+function Write-Log([string]$Message) {
+  [Console]::Error.WriteLine("[age-bootstrap] $Message")
+}
+
+# Windows PowerShell 5.1 turns redirected native stderr into a terminating error
+# under 'Stop', so native calls run under 'Continue' and are checked by exit code.
+function Invoke-Native([scriptblock]$Command) {
+  $previous = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try { (& $Command 2>$null | Out-String).Trim() } finally { $ErrorActionPreference = $previous }
+}
+
+# chezmoi exports its own path to scripts; fall back to PATH when run by hand.
+$chezmoi = if ($env:CHEZMOI_EXECUTABLE) { $env:CHEZMOI_EXECUTABLE } else { 'chezmoi' }
+
+if (-not (Get-Command op -ErrorAction SilentlyContinue)) {
+  Write-Log 'Skipping: 1Password CLI (op) is not installed.'
+  exit 0
+}
+
+$sources = @(
+{{- range .onepassword.age_identities }}
+  @{ Item = '{{ .item }}'; Vault = '{{ index $.onepassword.vaults .vault }}' }
+{{- end }}
+)
+
+if ($sources.Count -eq 0) {
+  Write-Log 'No age identity sources found; nothing to bootstrap.'
+  exit 0
+}
+Write-Log "Found $($sources.Count) identity source(s)."
+
+$ageDir = Join-Path $HOME '.config\chezmoi\age-identities'
+New-Item -ItemType Directory -Force -Path $ageDir | Out-Null
+# Equivalent of chmod 700, done before any key is written: drop inherited access
+# so only this user can read the folder and the files created in it.
+& icacls $ageDir /inheritance:r /grant:r "${env:USERNAME}:(OI)(CI)F" | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "icacls failed to restrict $ageDir (exit $LASTEXITCODE)" }
+
+$identities = New-Object System.Collections.Generic.List[string]
+$recipients = New-Object System.Collections.Generic.List[string]
+
+foreach ($source in $sources) {
+  # op exits nonzero for a missing item or a denied prompt; treat that as "no
+  # credential" and keep going, like the macOS script.
+  $identity = Invoke-Native { op item get $source.Item --vault $source.Vault --fields credential --reveal }
+  if ($LASTEXITCODE -ne 0 -or -not $identity) {
+    Write-Log "No credential returned for $($source.Item):$($source.Vault); continuing."
+    continue
+  }
+  $identities.Add($identity)
+
+  $tmp = [IO.Path]::GetTempFileName()
+  try {
+    [IO.File]::WriteAllText($tmp, "$identity`n")
+    $recipient = Invoke-Native { & $chezmoi age-keygen -y $tmp }
+    if ($LASTEXITCODE -eq 0 -and $recipient) { $recipients.Add($recipient) }
+  } finally {
+    Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+  }
+}
+
+if ($identities.Count -eq 0) {
+  Write-Log "No identities written from $($sources.Count) source(s); stopping to avoid downstream decryption failures."
+  exit 1
+}
+
+# UTF-8 without BOM and LF endings, matching what age and the macOS files expect.
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+$identitiesFile = Join-Path $ageDir 'identities.txt'
+$recipientsFile = Join-Path $ageDir 'recipients.txt'
+[IO.File]::WriteAllText($identitiesFile, (($identities | Select-Object -Unique) -join "`n") + "`n", $utf8)
+[IO.File]::WriteAllText($recipientsFile, (($recipients | Select-Object -Unique) -join "`n") + "`n", $utf8)
+
+Write-Log "Wrote identities to $identitiesFile and recipients to $recipientsFile."
