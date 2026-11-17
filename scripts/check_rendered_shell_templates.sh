@@ -43,7 +43,7 @@ while IFS= read -r path; do
   home/.chezmoitemplates/*.tmpl)
     check_all=1
     ;;
-  home/.chezmoiscripts/*/*.tmpl)
+  home/.chezmoiscripts/*/*.sh.tmpl)
     add_candidate "${path}"
     ;;
   *) ;;
@@ -58,7 +58,7 @@ if [[ ${check_all} -eq 1 ]]; then
 
   while IFS= read -r rel_path; do
     case "${rel_path}" in
-    home/.chezmoiscripts/*/*.tmpl)
+    home/.chezmoiscripts/*/*.sh.tmpl)
       add_candidate "${rel_path}"
       ;;
     *) ;;
