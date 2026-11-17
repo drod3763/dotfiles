@@ -4,3 +4,5 @@
 *.sh.tmpl text eol=lf
 *.bats text eol=lf
 .githooks/* text eol=lf
+# Shared partials are spliced into shell scripts, so they must stay LF too.
+home/.chezmoitemplates/**/*.tmpl text eol=lf

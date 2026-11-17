@@ -1,0 +1,31 @@
+{{/* chezmoi:modify-template */}}
+{{- /*
+  Windows only. Registers the dotfiles' marketplaces, which .chezmoiexternal
+  clones into ~/.claude/plugins/marketplaces, so Claude Code installs the
+  enabledPlugins from them without `claude plugin marketplace add`. Entries
+  Claude added itself (e.g. claude-plugins-official) are kept.
+*/ -}}
+{{- $current := dict -}}
+{{- $stdin := get .chezmoi "stdin" -}}
+{{- if $stdin -}}
+  {{- $current = $stdin | fromJson -}}
+{{- end -}}
+{{- $modified := deepCopy $current -}}
+{{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
+{{- $root := joinPath .chezmoi.homeDir ".claude" "plugins" "marketplaces" -}}
+{{- $now := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
+{{- range $name, $marketplace := $marketplaces -}}
+  {{- $entry := deepCopy (get $current $name | default (dict)) -}}
+  {{- $_ := set $entry "source" $marketplace.source -}}
+  {{- $_ := set $entry "installLocation" (joinPath $root $name) -}}
+  {{- if not (hasKey $entry "lastUpdated") -}}
+    {{- $_ := set $entry "lastUpdated" $now -}}
+  {{- end -}}
+  {{- $_ := set $modified $name $entry -}}
+{{- end -}}
+{{- /* Re-emit the file untouched when nothing changed, so Claude's key order does not cause a permanent diff. */ -}}
+{{- if deepEqual $current $modified -}}
+{{ $stdin }}
+{{- else -}}
+{{ $modified | toPrettyJson }}
+{{- end -}}

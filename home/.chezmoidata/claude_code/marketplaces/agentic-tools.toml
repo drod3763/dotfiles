@@ -3,3 +3,5 @@ type = "common"
 owned = true
 source = "github"
 repo = "drod3763/agentic-tools"
+# Private repo: clone over SSH (1Password agent) instead of HTTPS.
+ssh = true

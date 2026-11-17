@@ -1,0 +1,32 @@
+{{/* chezmoi:modify-template */}}
+{{- /*
+  Windows only (macOS/Linux use CLAUDE_CONFIG_DIR=~/.config/claude via
+  private_dot_config/claude/settings.json.tmpl). The desktop app reads
+  ~/.claude, so set the dotfiles' marketplaces and plugins there and keep every
+  other key the app or CLI has written.
+*/ -}}
+{{- $current := dict -}}
+{{- $stdin := get .chezmoi "stdin" -}}
+{{- if $stdin -}}
+  {{- $current = $stdin | fromJson -}}
+{{- end -}}
+{{- $modified := deepCopy $current -}}
+{{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
+{{- $pluginManifest := includeTemplate "claude_code_plugin_renderer.tmpl" . | mustFromJson -}}
+{{- $known := dict -}}
+{{- range $name, $marketplace := $marketplaces -}}
+  {{- $_ := set $known $name (dict "source" $marketplace.source) -}}
+{{- end -}}
+{{- $_ := set $modified "extraKnownMarketplaces" $known -}}
+{{- $_ := set $modified "enabledPlugins" (get $pluginManifest "enabledPlugins") -}}
+{{- /* Claude's own marketplace updates run git with Git for Windows' bundled ssh,
+  which cannot reach the 1Password agent pipe; point it at Windows OpenSSH. */ -}}
+{{- $env := deepCopy (get $current "env" | default (dict)) -}}
+{{- $_ := set $env "GIT_SSH_COMMAND" "C:/Windows/System32/OpenSSH/ssh.exe" -}}
+{{- $_ := set $modified "env" $env -}}
+{{- /* Re-emit the file untouched when nothing changed, so Claude's key order does not cause a permanent diff. */ -}}
+{{- if deepEqual $current $modified -}}
+{{ $stdin }}
+{{- else -}}
+{{ $modified | toPrettyJson }}
+{{- end -}}

@@ -82,6 +82,12 @@ for template in "${candidates[@]}"; do
     continue
   fi
 
+  # An OS-gated script renders empty off its platform; chezmoi skips those too.
+  if ! grep -q '[^[:space:]]' "${tmp}"; then
+    rm -f "${tmp}"
+    continue
+  fi
+
   if ! shellcheck "${tmp}"; then
     echo "ShellCheck failed for rendered template: ${template}" >&2
     status=1

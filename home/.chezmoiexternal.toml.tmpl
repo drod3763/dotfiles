@@ -10,7 +10,7 @@ url = "https://raw.githubusercontent.com/catppuccin/micro/main/themes/catppuccin
 [".config/zsh/catppuccin_macchiato-zsh-syntax-highlighting.zsh"]
 type = "file"
 url = "https://raw.githubusercontent.com/catppuccin/zsh-syntax-highlighting/main/themes/catppuccin_macchiato-zsh-syntax-highlighting.zsh"
-{{ if lookPath "op" -}}
+{{ if and (lookPath "op") (ne .chezmoi.os "windows") -}}
 {{ $dropbox := .onepassword.items.dropbox -}}
 ["Library/Fonts/"]
 type = "archive"
@@ -25,4 +25,16 @@ include = ['**/*.otf', '**/*.ttf']
 format = "tar"
 filter.command = "sh"
 filter.args = ["-c", 't=$(mktemp); trap "rm -f $t" EXIT; cat >"$t"; bsdtar -cf - --format=ustar @"$t"']
+{{ end -}}
+{{ if eq .chezmoi.os "windows" -}}
+{{- /* Windows: clone Claude Code marketplaces with system git (SSH via the
+  1Password agent for private ones). modify_known_marketplaces.json registers
+  them; Claude Code then installs the enabledPlugins from settings.json. */ -}}
+{{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
+{{- range $name := keys $marketplaces | sortAlpha }}
+[".claude/plugins/marketplaces/{{ $name }}"]
+type = "git-repo"
+url = {{ get (get $marketplaces $name) "clone_url" | quote }}
+refreshPeriod = "168h"
+{{ end -}}
 {{ end -}}

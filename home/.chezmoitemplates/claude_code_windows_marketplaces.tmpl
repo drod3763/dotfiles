@@ -1,0 +1,23 @@
+{{- /*
+  Windows marketplace list shared by .chezmoiexternal.toml.tmpl,
+  dot_claude/modify_settings.json and dot_claude/plugins/modify_known_marketplaces.json.
+  Emits {name: {source, clone_url}}. Marketplaces with ssh = true use a git
+  SSH source, matching what `claude plugin marketplace add git@...` records,
+  so private repos go through the 1Password SSH agent instead of HTTPS.
+*/ -}}
+{{- $manifest := includeTemplate "claude_code_marketplace_renderer.tmpl" . | mustFromJson -}}
+{{- $out := dict -}}
+{{- range $name := $manifest.active_marketplaces -}}
+  {{- $marketplace := get $.claude_code.marketplaces $name -}}
+  {{- $source := get (get $manifest.extraKnownMarketplaces $name) "source" -}}
+  {{- $cloneUrl := get $source "url" | default "" -}}
+  {{- if eq (get $source "source") "github" -}}
+    {{- $cloneUrl = printf "https://github.com/%s.git" (get $source "repo") -}}
+    {{- if get $marketplace "ssh" -}}
+      {{- $cloneUrl = printf "git@github.com:%s.git" (get $source "repo") -}}
+      {{- $source = dict "source" "git" "url" $cloneUrl -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $_ := set $out $name (dict "source" $source "clone_url" $cloneUrl) -}}
+{{- end -}}
+{{ $out | toJson }}

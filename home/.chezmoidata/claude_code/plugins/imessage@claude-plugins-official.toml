@@ -1,5 +1,7 @@
 [claude_code.plugins."imessage@claude-plugins-official"]
 type = "common"
+# iMessage needs macOS; keep it off Windows (chezmoi os names).
+not_os = ["windows"]
 enabled = true
 depends_on = ["builtin_marketplace:claude-plugins-official"]
 scope = "user"

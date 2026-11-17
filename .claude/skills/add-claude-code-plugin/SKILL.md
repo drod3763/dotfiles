@@ -21,6 +21,7 @@ description: Add Claude Code plugin TOML under home/.chezmoidata/claude_code/plu
 6. Use `depends_on = ["marketplace:<marketplace>"]` for managed marketplaces.
 7. Use `depends_on = ["builtin_marketplace:claude-plugins-official"]` only for Claude Code built-in/default marketplace plugins.
 8. Use `scope = "user"` unless there is a concrete reason to do otherwise.
+   - Optional: `not_os = ["windows"]` (chezmoi OS names) skips a plugin on those systems, e.g. macOS-only plugins. Windows renders plugins into `~/.claude/settings.json` via `home/dot_claude/modify_settings.json`.
 9. Render `settings.json.tmpl` and dry-run or diff `installed_plugins.json` to validate behavior.
 
 ## Template
