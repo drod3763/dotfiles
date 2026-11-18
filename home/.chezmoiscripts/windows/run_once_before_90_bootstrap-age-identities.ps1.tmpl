@@ -43,6 +43,9 @@ New-Item -ItemType Directory -Force -Path $ageDir | Out-Null
 # so only this user can read the folder and the files created in it.
 & icacls $ageDir /inheritance:r /grant:r "${env:USERNAME}:(OI)(CI)F" | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "icacls failed to restrict $ageDir (exit $LASTEXITCODE)" }
+# Plaintext scratch files live only inside the restricted folder; clear any an
+# interrupted run left behind.
+Get-ChildItem -LiteralPath $ageDir -Filter '*.partial' -File | Remove-Item -Force
 
 $identities = New-Object System.Collections.Generic.List[string]
 $recipients = New-Object System.Collections.Generic.List[string]
@@ -60,7 +63,8 @@ foreach ($source in $sources) {
   }
 
   # Only keep identities age can parse; the derived recipient doubles as the check.
-  $tmp = [IO.Path]::GetTempFileName()
+  # The scratch copy stays in the restricted folder, never the shared temp dir.
+  $tmp = Join-Path $ageDir "validate-$([guid]::NewGuid().ToString('N')).partial"
   try {
     [IO.File]::WriteAllText($tmp, "$identity`n")
     $recipient = Invoke-Native { & $chezmoi age-keygen -y $tmp }
