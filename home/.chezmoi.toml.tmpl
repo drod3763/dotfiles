@@ -67,7 +67,10 @@
 account mode + token makes chezmoi's onepassword function error out. */ -}}
 {{- if and (eq .chezmoi.os "darwin") (stat "/Applications/1Password.app") (not (env "OP_SERVICE_ACCOUNT_TOKEN")) -}}
 {{-     $onepasswordMode = "account" -}}
-{{- else if and (eq .chezmoi.os "windows") (lookPath "op") (not (env "OP_SERVICE_ACCOUNT_TOKEN")) -}}
+{{- /* Windows: no op check, since op is often installed after `chezmoi init`
+  and the mode is only re-rendered by another init. Without op the onepassword
+  lookups fail in either mode anyway. */ -}}
+{{- else if and (eq .chezmoi.os "windows") (not (env "OP_SERVICE_ACCOUNT_TOKEN")) -}}
 {{-     $onepasswordMode = "account" -}}
 {{- end -}}
 
