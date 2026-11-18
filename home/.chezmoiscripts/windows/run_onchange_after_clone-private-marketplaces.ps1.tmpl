@@ -1,0 +1,40 @@
+{{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
+{{- $private := list -}}
+{{- range $name := keys $marketplaces | sortAlpha -}}
+  {{- $cloneUrl := get (get $marketplaces $name) "clone_url" -}}
+  {{- if hasPrefix "git@" $cloneUrl -}}
+    {{- $private = append $private (dict "name" $name "url" $cloneUrl) -}}
+  {{- end -}}
+{{- end -}}
+{{- if $private -}}
+# Clones private (SSH) Claude Code marketplaces after every file is applied, so
+# the 1Password agent.toml that exposes the SSH key is already in place (public
+# ones are chezmoi externals). Re-runs when the list changes; a failed clone
+# exits non-zero so the next chezmoi apply tries again. The next apply then
+# registers each new checkout in known_marketplaces.json.
+$ErrorActionPreference = 'Stop'
+
+$root = Join-Path $HOME '.claude\plugins\marketplaces'
+# Windows OpenSSH reaches the 1Password agent; Git's bundled ssh cannot.
+$sshCommand = 'core.sshCommand=C:/Windows/System32/OpenSSH/ssh.exe'
+$marketplaces = @(
+{{- range $private }}
+  @{ Name = '{{ .name }}'; Url = '{{ .url }}' }
+{{- end }}
+)
+
+$failed = 0
+foreach ($marketplace in $marketplaces) {
+  $target = Join-Path $root $marketplace.Name
+  if (Test-Path -LiteralPath (Join-Path $target '.git')) {
+    continue
+  }
+  New-Item -ItemType Directory -Force -Path $root | Out-Null
+  & git clone --quiet --config $sshCommand $marketplace.Url $target
+  if ($LASTEXITCODE -ne 0) {
+    [Console]::Error.WriteLine("[marketplaces] Could not clone $($marketplace.Name); check the 1Password SSH agent, then re-run chezmoi apply.")
+    $failed++
+  }
+}
+if ($failed -gt 0) { exit 1 }
+{{ end -}}

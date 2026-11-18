@@ -15,6 +15,12 @@
 {{- $root := joinPath .chezmoi.homeDir ".claude" "plugins" "marketplaces" -}}
 {{- $now := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
 {{- range $name, $marketplace := $marketplaces -}}
+  {{- /* Private (SSH) marketplaces are cloned after apply by
+    run_onchange_after_clone-private-marketplaces; register them only once
+    the checkout exists, so Claude never points at a missing folder. */ -}}
+  {{- if and (hasPrefix "git@" $marketplace.clone_url) (not (stat (joinPath $root $name ".git"))) -}}
+    {{- continue -}}
+  {{- end -}}
   {{- $entry := deepCopy (get $current $name | default (dict)) -}}
   {{- $_ := set $entry "source" $marketplace.source -}}
   {{- $_ := set $entry "installLocation" (joinPath $root $name) -}}

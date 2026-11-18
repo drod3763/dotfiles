@@ -27,21 +27,20 @@ filter.command = "sh"
 filter.args = ["-c", 't=$(mktemp); trap "rm -f $t" EXIT; cat >"$t"; bsdtar -cf - --format=ustar @"$t"']
 {{ end -}}
 {{ if eq .chezmoi.os "windows" -}}
-{{- /* Windows: clone Claude Code marketplaces with system git (SSH via the
-  1Password agent for private ones). modify_known_marketplaces.json registers
-  them; Claude Code then installs the enabledPlugins from settings.json. */ -}}
+{{- /* Windows: clone public Claude Code marketplaces with system git.
+  modify_known_marketplaces.json registers them; Claude Code then installs the
+  enabledPlugins from settings.json. Private (SSH) marketplaces are cloned by
+  run_onchange_after_clone-private-marketplaces instead: .claude applies before
+  the 1Password agent.toml that exposes the SSH key, so an external would fail
+  on a fresh machine. */ -}}
 {{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
 {{- range $name := keys $marketplaces | sortAlpha }}
 {{- $cloneUrl := get (get $marketplaces $name) "clone_url" }}
+{{- if not (hasPrefix "git@" $cloneUrl) }}
 [".claude/plugins/marketplaces/{{ $name }}"]
 type = "git-repo"
 url = {{ $cloneUrl | quote }}
 refreshPeriod = "168h"
-{{- if hasPrefix "git@" $cloneUrl }}
-{{- /* .claude applies before .config/git/config, so on a fresh machine the
-  global sshCommand is not there yet; pin Windows OpenSSH (which reaches the
-  1Password agent) in the clone's own config so clone and later pulls use it. */}}
-clone.args = ["--config", "core.sshCommand=C:/Windows/System32/OpenSSH/ssh.exe"]
-{{- end }}
+{{ end -}}
 {{ end -}}
 {{ end -}}
