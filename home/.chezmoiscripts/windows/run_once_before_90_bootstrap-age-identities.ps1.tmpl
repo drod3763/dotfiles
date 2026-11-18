@@ -39,10 +39,38 @@ Write-BootstrapLog "Found $($sources.Count) identity source(s)."
 
 $ageDir = Join-Path $HOME '.config\chezmoi\age-identities'
 New-Item -ItemType Directory -Force -Path $ageDir | Out-Null
-# Equivalent of chmod 700, done before any key is written: drop inherited access
-# so only this user can read the folder and the files created in it.
-& icacls $ageDir /inheritance:r /grant:r "${env:USERNAME}:(OI)(CI)F" | Out-Null
-if ($LASTEXITCODE -ne 0) { throw "icacls failed to restrict $ageDir (exit $LASTEXITCODE)" }
+# Equivalent of chmod 700, done before any key is written: replace the folder's
+# ACL with a protected one granting only the current user (by SID), so inherited
+# and explicit grants to anyone else are dropped. Existing files get the same
+# treatment, since a parent ACL change does not touch their explicit entries.
+$userSid = [Security.Principal.WindowsIdentity]::GetCurrent().User
+function Protect-OwnerOnly([string]$Path, [switch]$Container) {
+  if ($Container) {
+    $item = New-Object System.IO.DirectoryInfo($Path)
+    $acl = New-Object System.Security.AccessControl.DirectorySecurity
+    $inherit = [Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit'
+  } else {
+    $item = New-Object System.IO.FileInfo($Path)
+    $acl = New-Object System.Security.AccessControl.FileSecurity
+    $inherit = [Security.AccessControl.InheritanceFlags]::None
+  }
+  $acl.SetAccessRuleProtection($true, $false)
+  $rule = New-Object System.Security.AccessControl.FileSystemAccessRule($userSid, 'FullControl', $inherit, 'None', 'Allow')
+  $acl.AddAccessRule($rule)
+  # Writes only the DACL (Set-Acl on Windows PowerShell also touches the SACL,
+  # which needs SeSecurityPrivilege). .NET Core moved the method to an extension.
+  if ($item.PSObject.Methods['SetAccessControl']) {
+    $item.SetAccessControl($acl)
+  } else {
+    [System.IO.FileSystemAclExtensions]::SetAccessControl($item, $acl)
+  }
+  $others = (Get-Acl -LiteralPath $Path).Access | Where-Object {
+    $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]) -ne $userSid
+  }
+  if ($others) { throw "Could not restrict $Path to the current user." }
+}
+Protect-OwnerOnly $ageDir -Container
+Get-ChildItem -LiteralPath $ageDir -File | ForEach-Object { Protect-OwnerOnly $_.FullName }
 # Plaintext scratch files live only inside the restricted folder; clear any an
 # interrupted run left behind.
 Get-ChildItem -LiteralPath $ageDir -Filter '*.partial' -File | Remove-Item -Force
