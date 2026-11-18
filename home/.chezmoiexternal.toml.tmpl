@@ -30,7 +30,7 @@ filter.args = ["-c", 't=$(mktemp); trap "rm -f $t" EXIT; cat >"$t"; bsdtar -cf -
 {{- /* Windows: clone public Claude Code marketplaces with system git.
   modify_known_marketplaces.json registers them; Claude Code then installs the
   enabledPlugins from settings.json. Private (SSH) marketplaces are cloned by
-  run_onchange_after_clone-private-marketplaces instead: .claude applies before
+  run_after_clone-private-marketplaces instead: .claude applies before
   the 1Password agent.toml that exposes the SSH key, so an external would fail
   on a fresh machine. */ -}}
 {{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}

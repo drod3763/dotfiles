@@ -16,7 +16,7 @@
 {{- $now := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
 {{- range $name, $marketplace := $marketplaces -}}
   {{- /* Private (SSH) marketplaces are cloned after apply by
-    run_onchange_after_clone-private-marketplaces; register them only while a
+    run_after_clone-private-marketplaces; register them only while a
     checkout of the manifest's repo exists, and drop any earlier registration
     otherwise, so Claude never points at a missing folder or another repo. */ -}}
   {{- if hasPrefix "git@" $marketplace.clone_url -}}

@@ -20,7 +20,7 @@ description: Add Claude Code marketplace TOML under home/.chezmoidata/claude_cod
 5. Require explicit `owned = true` or `owned = false`.
 6. Use `source = "github"` with `repo = "owner/name"`, or `source = "git"` with `url = "..."`.
 7. Do not hand-edit `known_marketplaces.json`. On macOS/Linux it is not managed; on Windows `home/dot_claude/plugins/modify_known_marketplaces.json` registers each marketplace and `.chezmoiexternal.toml.tmpl` clones it (via `claude_code_windows_marketplaces.tmpl`).
-   - Optional: `ssh = true` on a private GitHub marketplace makes Windows clone it over SSH (1Password agent) instead of HTTPS. SSH marketplaces are not externals: `home/.chezmoiscripts/windows/run_onchange_after_clone-private-marketplaces.ps1.tmpl` clones them after apply (once the 1Password `agent.toml` exists), and they are registered on the next apply once the checkout exists.
+   - Optional: `ssh = true` on a private GitHub marketplace makes Windows clone it over SSH (1Password agent) instead of HTTPS. SSH marketplaces are not externals: `home/.chezmoiscripts/windows/run_after_clone-private-marketplaces.ps1.tmpl` clones them after apply (once the 1Password `agent.toml` exists), and they are registered on the next apply once the checkout exists.
 8. Render `home/private_dot_config/claude/settings.json.tmpl` and validate JSON.
 
 ## Template
