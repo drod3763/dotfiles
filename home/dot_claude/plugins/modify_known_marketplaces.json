@@ -24,17 +24,20 @@
     {{- $valid := false -}}
     {{- $gitConfig := joinPath $checkout ".git" "config" -}}
     {{- if stat $gitConfig -}}
-      {{- /* Read origin's url from the file instead of running git, which exits
-        non-zero on a malformed config and would abort the whole apply; an
-        unreadable checkout then just counts as unverified. Exactly one origin
-        url must be present, matching the clone hook's `git config --get-all`
-        check; several urls are ambiguous and count as unverified too. */ -}}
-      {{- $originSection := regexFind `(?m)^\[remote "origin"\][^\[]*` (include $gitConfig) -}}
-      {{- $urls := regexFindAll `(?m)^\s*url\s*=\s*\S+` $originSection -1 -}}
-      {{- if eq (len $urls) 1 -}}
-        {{- $origin := regexReplaceAll `^\s*url\s*=\s*` (index $urls 0) "" | trim -}}
-        {{- $valid = eq $origin $marketplace.clone_url -}}
+      {{- /* Ask git, the same `config --get-all` the clone hook uses, so both
+        apply git's own parsing (repeated sections, quoting, key case). It runs
+        through PowerShell with exit 0 because chezmoi's output aborts the whole
+        apply on a non-zero exit, as git gives for a malformed config; that
+        checkout then yields no url and counts as unverified. Exactly one
+        matching origin url is required; several are ambiguous. */ -}}
+      {{- $command := printf "git -C '%s' config --get-all remote.origin.url 2>$null; exit 0" (replace "'" "''" $checkout) -}}
+      {{- $urls := list -}}
+      {{- range splitList "\n" (output "powershell.exe" "-NoProfile" "-NonInteractive" "-Command" $command) -}}
+        {{- if trim . -}}
+          {{- $urls = append $urls (trim .) -}}
+        {{- end -}}
       {{- end -}}
+      {{- $valid = and (eq (len $urls) 1) (eq (index ($urls | default (list "")) 0) $marketplace.clone_url) -}}
     {{- end -}}
     {{- if not $valid -}}
       {{- $_ := unset $modified $name -}}
