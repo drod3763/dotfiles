@@ -18,10 +18,12 @@ function Invoke-Native([scriptblock]$Command) {
 # chezmoi exports its own path to scripts; fall back to PATH when run by hand.
 $chezmoi = if ($env:CHEZMOI_EXECUTABLE) { $env:CHEZMOI_EXECUTABLE } else { 'chezmoi' }
 
-if (-not (Get-Command op -ErrorAction SilentlyContinue)) {
-  Write-BootstrapLog 'Skipping: 1Password CLI (op) is not installed.'
-  exit 0
-}
+{{ if not (lookPath "op") -}}
+# Rendered without op on PATH. run_once keys on the rendered content, and this
+# block disappears once op is installed, so the next chezmoi apply runs it again.
+Write-BootstrapLog 'Skipping: 1Password CLI (op) is not installed; chezmoi apply will retry once it is.'
+exit 0
+{{ end -}}
 
 $sources = @(
 {{- range .onepassword.age_identities }}
