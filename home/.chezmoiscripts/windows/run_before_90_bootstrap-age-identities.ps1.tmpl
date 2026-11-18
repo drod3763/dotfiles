@@ -2,8 +2,9 @@
 # Fetches the age identities listed in onepassword.age_identities from 1Password
 # so chezmoi can decrypt encrypted_ files. Keys are never written to the console.
 # Runs before every apply (not run_once) so a deleted keyring or a key rotated in
-# 1Password is repaired; when the live keys already decrypt the Windows-managed
-# files it exits at once without calling op.
+# 1Password is repaired. Each run first restricts the folder to the current user;
+# when the live keys already decrypt the Windows-managed files and recipients.txt
+# matches them, it exits without calling op.
 $ErrorActionPreference = 'Stop'
 
 function Write-BootstrapLog([string]$Message) {
@@ -51,34 +52,6 @@ function Test-AgeKeyring([string]$IdentityFile) {
   }
 }
 
-if ((Test-Path -LiteralPath $identitiesFile) -and (Test-Path -LiteralPath $recipientsFile) -and (Test-AgeKeyring $identitiesFile)) {
-  exit 0
-}
-
-{{ if not (lookPath "op") -}}
-# Rendered without op on PATH, and the live keys did not pass the check above.
-# With existing keys there is nothing to block on; without any, encrypted files
-# cannot be decrypted, so stop here with instructions instead of failing later.
-if (Test-Path -LiteralPath (Join-Path $HOME '.config\chezmoi\age-identities\identities.txt')) {
-  Write-BootstrapLog 'Skipping: 1Password CLI (op) is not on PATH; keeping the existing identities.'
-  exit 0
-}
-Write-BootstrapLog 'Cannot bootstrap age identities: 1Password CLI (op) is not on PATH. 10_install-packages installs it (winget AgileBits.1Password.CLI); open a new terminal so PATH picks it up, turn on the 1Password app''s CLI integration, then re-run chezmoi apply.'
-exit 1
-{{ end -}}
-
-$sources = @(
-{{- range .onepassword.age_identities }}
-  @{ Item = '{{ .item }}'; Vault = '{{ index $.onepassword.vaults .vault }}' }
-{{- end }}
-)
-
-if ($sources.Count -eq 0) {
-  Write-BootstrapLog 'No age identity sources found; nothing to bootstrap.'
-  exit 0
-}
-Write-BootstrapLog "Found $($sources.Count) identity source(s)."
-
 New-Item -ItemType Directory -Force -Path $ageDir | Out-Null
 # chezmoi's state lock already serializes applies; this per-user mutex also
 # covers a hand-run copy, so two runs never share the staging files below.
@@ -89,10 +62,11 @@ try {
 } catch [System.Threading.AbandonedMutexException] {
   Write-BootstrapLog 'A previous bootstrap ended without releasing its lock; continuing.'
 }
-# Equivalent of chmod 700, done before any key is written: replace the folder's
-# ACL with a protected one granting only the current user (by SID), so inherited
-# and explicit grants to anyone else are dropped. Existing files get the same
-# treatment, since a parent ACL change does not touch their explicit entries.
+# Equivalent of chmod 700, done on every run before anything is read or written:
+# replace the folder's ACL with a protected one granting only the current user
+# (by SID), so inherited and explicit grants to anyone else are dropped. Existing
+# files get the same treatment, since a parent ACL change does not touch their
+# explicit entries; this also repairs keys restored by hand with wider access.
 $userSid = [Security.Principal.WindowsIdentity]::GetCurrent().User
 function Protect-OwnerOnly([string]$Path, [switch]$Container) {
   if ($Container) {
@@ -125,6 +99,69 @@ Get-ChildItem -LiteralPath $ageDir -File | ForEach-Object { Protect-OwnerOnly $_
 # interrupted run left behind.
 Get-ChildItem -LiteralPath $ageDir -Filter '*.partial' -File | Remove-Item -Force
 
+# Returns the age recipient for one identity, or $null if age cannot parse it.
+# The scratch copy stays in the restricted folder, never the shared temp dir.
+function Get-AgeRecipient([string]$Identity) {
+  $tmp = Join-Path $ageDir "validate-$([guid]::NewGuid().ToString('N')).partial"
+  try {
+    [IO.File]::WriteAllText($tmp, "$Identity`n")
+    $recipient = Invoke-Native { & $chezmoi age-keygen -y $tmp }
+    if ($LASTEXITCODE -eq 0 -and $recipient) { return $recipient }
+    return $null
+  } finally {
+    Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+  }
+}
+
+# Key lines of an identities or recipients file, sorted and de-duplicated.
+function Get-KeyLine([string]$Path) {
+  @(Get-Content -LiteralPath $Path | ForEach-Object { $_.Trim() } |
+      Where-Object { $_ -and -not $_.StartsWith('#') } | Sort-Object -Unique)
+}
+
+# True when recipients.txt lists exactly the recipients of the live identities.
+# An interrupted swap can leave new identities beside old recipients, and chezmoi
+# would then encrypt to keys this machine no longer holds.
+function Test-RecipientsMatch {
+  $derived = foreach ($identity in (Get-KeyLine $identitiesFile)) {
+    $recipient = Get-AgeRecipient $identity
+    if (-not $recipient) { return $false }
+    $recipient
+  }
+  $derived = @($derived | Sort-Object -Unique)
+  $listed = Get-KeyLine $recipientsFile
+  return ($derived.Count -gt 0) -and (($derived -join "`n") -ceq ($listed -join "`n"))
+}
+
+if ((Test-Path -LiteralPath $identitiesFile) -and (Test-Path -LiteralPath $recipientsFile) -and (Test-AgeKeyring $identitiesFile)) {
+  if (Test-RecipientsMatch) { exit 0 }
+  Write-BootstrapLog 'recipients.txt does not match identities.txt; refreshing both from 1Password.'
+}
+
+{{ if not (lookPath "op") -}}
+# Rendered without op on PATH, and the live keys did not pass the check above.
+# With existing keys there is nothing to block on; without any, encrypted files
+# cannot be decrypted, so stop here with instructions instead of failing later.
+if (Test-Path -LiteralPath (Join-Path $HOME '.config\chezmoi\age-identities\identities.txt')) {
+  Write-BootstrapLog 'Skipping: 1Password CLI (op) is not on PATH; keeping the existing identities.'
+  exit 0
+}
+Write-BootstrapLog 'Cannot bootstrap age identities: 1Password CLI (op) is not on PATH. 10_install-packages installs it (winget AgileBits.1Password.CLI); open a new terminal so PATH picks it up, turn on the 1Password app''s CLI integration, then re-run chezmoi apply.'
+exit 1
+{{ end -}}
+
+$sources = @(
+{{- range .onepassword.age_identities }}
+  @{ Item = '{{ .item }}'; Vault = '{{ index $.onepassword.vaults .vault }}' }
+{{- end }}
+)
+
+if ($sources.Count -eq 0) {
+  Write-BootstrapLog 'No age identity sources found; nothing to bootstrap.'
+  exit 0
+}
+Write-BootstrapLog "Found $($sources.Count) identity source(s)."
+
 $identities = New-Object System.Collections.Generic.List[string]
 $recipients = New-Object System.Collections.Generic.List[string]
 
@@ -141,16 +178,8 @@ foreach ($source in $sources) {
   }
 
   # Only keep identities age can parse; the derived recipient doubles as the check.
-  # The scratch copy stays in the restricted folder, never the shared temp dir.
-  $tmp = Join-Path $ageDir "validate-$([guid]::NewGuid().ToString('N')).partial"
-  try {
-    [IO.File]::WriteAllText($tmp, "$identity`n")
-    $recipient = Invoke-Native { & $chezmoi age-keygen -y $tmp }
-    $parsed = ($LASTEXITCODE -eq 0 -and $recipient)
-  } finally {
-    Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
-  }
-  if (-not $parsed) {
+  $recipient = Get-AgeRecipient $identity
+  if (-not $recipient) {
     Write-BootstrapLog "Credential for $label is not a valid age identity."
     $failed.Add($label)
     continue
@@ -160,8 +189,8 @@ foreach ($source in $sources) {
 }
 
 # Write nothing unless every identity was fetched and valid, so a partial lookup
-# (locked vault, denied prompt) never replaces a working keyring. Failing keeps
-# this run_once script unrecorded, so the next chezmoi apply retries it.
+# (locked vault, denied prompt) never replaces a working keyring. The next
+# chezmoi apply runs this script again and retries.
 if ($failed.Count -gt 0) {
   Write-BootstrapLog "Leaving existing identities untouched: $($failed.Count) of $($sources.Count) source(s) failed ($($failed -join ', ')). Unlock 1Password and re-run chezmoi apply."
   exit 1
