@@ -13,12 +13,19 @@
 {{- $modified := deepCopy $current -}}
 {{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
 {{- $pluginManifest := includeTemplate "claude_code_plugin_renderer.tmpl" . | mustFromJson -}}
-{{- $known := dict -}}
+{{- /* Merge into the existing maps: entries the dotfiles define win, and
+  marketplaces or plugins added locally are kept. Disable a managed plugin
+  with enabled = false in its TOML rather than deleting it. */ -}}
+{{- $known := deepCopy (get $current "extraKnownMarketplaces" | default (dict)) -}}
 {{- range $name, $marketplace := $marketplaces -}}
   {{- $_ := set $known $name (dict "source" $marketplace.source) -}}
 {{- end -}}
 {{- $_ := set $modified "extraKnownMarketplaces" $known -}}
-{{- $_ := set $modified "enabledPlugins" (get $pluginManifest "enabledPlugins") -}}
+{{- $enabled := deepCopy (get $current "enabledPlugins" | default (dict)) -}}
+{{- range $key, $value := (get $pluginManifest "enabledPlugins") -}}
+  {{- $_ := set $enabled $key $value -}}
+{{- end -}}
+{{- $_ := set $modified "enabledPlugins" $enabled -}}
 {{- /* Claude's own marketplace updates run git with Git for Windows' bundled ssh,
   which cannot reach the 1Password agent pipe; point it at Windows OpenSSH. */ -}}
 {{- $env := deepCopy (get $current "env" | default (dict)) -}}
