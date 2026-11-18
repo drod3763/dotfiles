@@ -25,7 +25,10 @@ EOF
 
   cat > "${MOCK_BIN_DIR}/tailscale" <<'EOF'
 #!/usr/bin/env bash
-[[ -n "${MOCK_TS_IP:-}" ]] && printf '%s\n' "${MOCK_TS_IP}"
+case "$1" in
+  ip) [[ -n "${MOCK_TS_IP:-}" ]] && printf '%s\n' "${MOCK_TS_IP}" ;;
+  status) printf '%s\n' "${MOCK_TS_STATUS:-}" ;;
+esac
 EOF
 
   cat > "${MOCK_BIN_DIR}/ifconfig" <<'EOF'
@@ -41,9 +44,29 @@ EOF
   cat > "${MOCK_BIN_DIR}/route" <<'EOF'
 #!/usr/bin/env bash
 printf 'route %s\n' "$*" >> "${MOCK_CALLS_FILE:?}"
-if [[ "$2" == "get" ]]; then
-  printf '   route to: %s\n  interface: %s\n' "$3" "${MOCK_ROUTE_IF:-utun123}"
+deleted="${MOCK_CALLS_FILE}.deleted"
+touch "${deleted}"
+[[ "$2" == "delete" && "$4" == "${MOCK_ROUTE_FAIL_GET_AFTER_DELETE:-}" ]] && touch "${deleted}.getfail.$4"
+[[ "$2" == "get" && -e "${deleted}.getfail.$3" ]] && exit 1
+[[ "$2" == "add" && "$4" == "${MOCK_ROUTE_FAIL_ADD:-}" ]] && exit 1
+[[ "$2" == "delete" && "$4" == "${MOCK_ROUTE_FAIL_DELETE:-}" ]] && exit 1
+[[ "$2" == "get" && "$3" == "${MOCK_ROUTE_FAIL_GET:-}" ]] && exit 1
+if [[ "$2" == "get" && "$3" == "${MOCK_ROUTE_FAIL_SECOND_GET:-}" ]]; then
+  echo x >> "${deleted}.getcount.$3"
+  [[ "$(wc -l < "${deleted}.getcount.$3")" -eq 2 ]] && exit 1
 fi
+case "$2" in
+  # A deleted host route falls back to the other tunnel's /10 until re-added.
+  delete) printf '%s\n' "$4" >> "${deleted}" ;;
+  add) grep -vxF "$4" "${deleted}" > "${deleted}.new" || true; mv "${deleted}.new" "${deleted}" ;;
+  get)
+    iface="${MOCK_ROUTE_IF:-utun123}"
+    grep -qxF "$3" "${deleted}" && iface=utun123
+    flags='<UP,DONE,STATIC,PRCLONING>'
+    [[ "${iface}" != utun123 ]] && flags='<UP,HOST,DONE,STATIC>'
+    printf '   route to: %s\n  interface: %s\n      flags: %s\n' "$3" "${iface}" "${flags}"
+    ;;
+esac
 EOF
 
   chmod +x "${MOCK_BIN_DIR}"/*
@@ -57,8 +80,11 @@ EOF
   export TAILNET_ROUTES_TAILSCALE_BIN="${MOCK_BIN_DIR}/tailscale"
   export TAILNET_ROUTES_ROUTE_BIN="${MOCK_BIN_DIR}/route"
   export TAILNET_ROUTES_IFCONFIG_BIN="${MOCK_BIN_DIR}/ifconfig"
+  export TAILNET_ROUTES_JQ_BIN="$(command -v jq)"
+  export TAILNET_ROUTES_STATE_FILE="${TEST_TMPDIR}/routed-peers"
+  export MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6","fd7a:115c:a1e0::1"]},"b":{"TailscaleIPs":["100.100.147.58","fd7a:115c:a1e0::2"]}}}'
 
-  render "work" '{"personal": false, "tailnetRoutes": {"work": [{"ip": "100.90.57.6"}]}}'
+  render "work" '{"personal": false}'
   render "personal" '{"personal": true}'
 }
 
@@ -75,27 +101,49 @@ teardown() {
 @test "GIVEN work machine EXPECT helper and daemon are installed and loaded" {
   run bash "${TEST_TMPDIR}/work.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ -x "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]]
-  run grep -qF '"100.90.57.6"' "${CHEZMOI_TAILNET_ROUTES_HELPER}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ -x "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]] || false
   run plutil -lint "${CHEZMOI_TAILNET_ROUTES_PLIST}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qF "<string>${CHEZMOI_TAILNET_ROUTES_HELPER}</string>" "${CHEZMOI_TAILNET_ROUTES_PLIST}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qx "launchctl bootstrap system ${CHEZMOI_TAILNET_ROUTES_PLIST}" "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
 }
 
-@test "GIVEN peer routed via another tunnel EXPECT helper routes it via the Tailscale interface" {
+@test "GIVEN peers routed via another tunnel EXPECT helper routes every peer IPv4 via the Tailscale interface" {
   bash "${TEST_TMPDIR}/work.sh"
   : > "${MOCK_CALLS_FILE}"
 
   run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qx 'route -n add -host 100.90.57.6 -interface utun7' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n add -host 100.100.147.58 -interface utun7' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qF 'fd7a:' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+}
+
+@test "GIVEN tailnet with no peers EXPECT helper changes nothing" {
+  bash "${TEST_TMPDIR}/work.sh"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_TS_STATUS='{"Peer":null}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
+}
+
+@test "GIVEN unreadable Tailscale status EXPECT helper exits cleanly without touching routes" {
+  bash "${TEST_TMPDIR}/work.sh"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_TS_STATUS='not json' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN peer already routed via Tailscale EXPECT helper changes nothing" {
@@ -104,9 +152,9 @@ teardown() {
 
   run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
   run grep -qE 'route -n (add|delete)' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -ne 0 ]]
+  [[ "${status}" -ne 0 ]] || false
 }
 
 @test "GIVEN Tailscale down EXPECT helper exits without touching routes" {
@@ -115,8 +163,8 @@ teardown() {
 
   run env MOCK_TS_IP= bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN Tailscale IP on no interface EXPECT helper exits without touching routes" {
@@ -125,8 +173,8 @@ teardown() {
 
   run env MOCK_TS_IP=100.1.2.3 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
 }
 
 @test "GIVEN personal machine with daemon installed EXPECT daemon is removed" {
@@ -135,16 +183,191 @@ teardown() {
 
   run bash "${TEST_TMPDIR}/personal.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -e "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]]
-  [[ ! -e "${CHEZMOI_TAILNET_ROUTES_PLIST}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -e "${CHEZMOI_TAILNET_ROUTES_HELPER}" ]] || false
+  [[ ! -e "${CHEZMOI_TAILNET_ROUTES_PLIST}" ]] || false
   run grep -qx 'launchctl bootout system/local.tailnet-routes' "${MOCK_CALLS_FILE}"
-  [[ "${status}" -eq 0 ]]
+  [[ "${status}" -eq 0 ]] || false
 }
 
 @test "GIVEN personal machine without daemon EXPECT no changes" {
   run bash "${TEST_TMPDIR}/personal.sh"
 
-  [[ "${status}" -eq 0 ]]
-  [[ ! -s "${MOCK_CALLS_FILE}" ]]
+  [[ "${status}" -eq 0 ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
+}
+
+@test "GIVEN a routed peer leaves the tailnet EXPECT its host route is removed" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+}
+
+@test "GIVEN unreadable Tailscale status after routing peers EXPECT routes are kept" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS='not json' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -q 'route -n delete' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+}
+
+@test "GIVEN jq missing EXPECT helper fails loudly without touching routes" {
+  bash "${TEST_TMPDIR}/work.sh"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 TAILNET_ROUTES_JQ_BIN="${TEST_TMPDIR}/missing-jq" bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -ne 0 ]] || false
+  [[ "${output}" == *"jq"* ]] || false
+  [[ ! -s "${MOCK_CALLS_FILE}" ]] || false
+}
+
+@test "GIVEN deleting a departed peer route fails EXPECT deletion is retried on the next run" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  one_peer='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}'
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS="${one_peer}" \
+    MOCK_ROUTE_FAIL_DELETE=100.100.147.58 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  [[ "${status}" -ne 0 ]] || false
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS="${one_peer}" bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN one route add fails EXPECT routes added before it are still tracked" {
+  bash "${TEST_TMPDIR}/work.sh"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 MOCK_ROUTE_FAIL_ADD=100.100.147.58 \
+    bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  [[ "${status}" -ne 0 ]] || false
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS='{"Peer":{}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN host routes added before ownership was tracked EXPECT they are claimed and later pruned" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS='{"Peer":{}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN a tracked departed peer now routed by the work VPN EXPECT its route is left alone and untracked" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+  : > "${MOCK_CALLS_FILE}.deleted"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+  run grep -qxF '100.100.147.58' "${TAILNET_ROUTES_STATE_FILE}"
+  [[ "${status}" -ne 0 ]] || false
+}
+
+@test "GIVEN a route lookup fails after an earlier route was added EXPECT the earlier route is still tracked" {
+  bash "${TEST_TMPDIR}/work.sh"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 MOCK_ROUTE_FAIL_GET=100.100.147.58 \
+    bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS='{"Peer":{}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.90.57.6' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN lookup of a tracked departed peer fails EXPECT it stays tracked and cleanup retries" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  one_peer='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}'
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS="${one_peer}" \
+    MOCK_ROUTE_FAIL_GET=100.100.147.58 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  [[ "${status}" -ne 0 ]] || false
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_TS_STATUS="${one_peer}" bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN delete and follow-up lookup both fail EXPECT failure reported and peer stays tracked" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' \
+    MOCK_ROUTE_FAIL_DELETE=100.100.147.58 MOCK_ROUTE_FAIL_GET_AFTER_DELETE=100.100.147.58 \
+    bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -ne 0 ]] || false
+  [[ "${output}" != *"Removed route for departed peer 100.100.147.58"* ]] || false
+  run grep -qxF '100.100.147.58' "${TAILNET_ROUTES_STATE_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN a tracked peer whose second route lookup fails EXPECT it stays tracked and is pruned after departing" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_ROUTE_FAIL_SECOND_GET=100.100.147.58 \
+    bash "${CHEZMOI_TAILNET_ROUTES_HELPER}" || true
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
+}
+
+@test "GIVEN lookup, delete and add all fail for a tracked peer EXPECT it stays tracked and is pruned after departing" {
+  bash "${TEST_TMPDIR}/work.sh"
+  MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun123 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 MOCK_ROUTE_FAIL_GET=100.100.147.58 \
+    MOCK_ROUTE_FAIL_DELETE=100.100.147.58 MOCK_ROUTE_FAIL_ADD=100.100.147.58 bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+  [[ "${status}" -ne 0 ]] || false
+  : > "${MOCK_CALLS_FILE}"
+
+  run env MOCK_TS_IP=100.107.196.46 MOCK_ROUTE_IF=utun7 \
+    MOCK_TS_STATUS='{"Peer":{"a":{"TailscaleIPs":["100.90.57.6"]}}}' bash "${CHEZMOI_TAILNET_ROUTES_HELPER}"
+
+  [[ "${status}" -eq 0 ]] || false
+  run grep -qx 'route -n delete -host 100.100.147.58' "${MOCK_CALLS_FILE}"
+  [[ "${status}" -eq 0 ]] || false
 }
