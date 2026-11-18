@@ -27,6 +27,13 @@ $failed = 0
 foreach ($marketplace in $marketplaces) {
   $target = Join-Path $root $marketplace.Name
   if (Test-Path -LiteralPath (Join-Path $target '.git')) {
+    # An existing checkout only counts if it tracks the manifest's repo; a
+    # mismatch (renamed repo, hand-made fork) is left alone and reported.
+    $origin = (& git -C $target config --default '' --get remote.origin.url | Out-String).Trim()
+    if ($origin -ne $marketplace.Url) {
+      [Console]::Error.WriteLine("[marketplaces] $target tracks '$origin', not '$($marketplace.Url)'. Point it at the new URL (git -C `"$target`" remote set-url origin $($marketplace.Url)) or move it aside, then re-run chezmoi apply.")
+      $failed++
+    }
     continue
   }
   New-Item -ItemType Directory -Force -Path $root | Out-Null
