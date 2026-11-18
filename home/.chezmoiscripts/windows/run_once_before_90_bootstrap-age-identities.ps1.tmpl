@@ -93,7 +93,27 @@ if ($failed.Count -gt 0) {
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 $identitiesFile = Join-Path $ageDir 'identities.txt'
 $recipientsFile = Join-Path $ageDir 'recipients.txt'
-[IO.File]::WriteAllText($identitiesFile, (($identities | Select-Object -Unique) -join "`n") + "`n", $utf8)
-[IO.File]::WriteAllText($recipientsFile, (($recipients | Select-Object -Unique) -join "`n") + "`n", $utf8)
+# Stage both files first, then swap each into place; ReplaceFile is atomic on
+# NTFS, so the live files are never truncated. The previous pair stays as .bak
+# until both swaps finish, so an interrupted update can be recovered by hand.
+$files = @(
+  @{ Live = $identitiesFile; Lines = $identities },
+  @{ Live = $recipientsFile; Lines = $recipients }
+)
+foreach ($file in $files) {
+  $file.Staged = "$($file.Live).partial"
+  $file.Backup = "$($file.Live).bak"
+  [IO.File]::WriteAllText($file.Staged, (($file.Lines | Select-Object -Unique) -join "`n") + "`n", $utf8)
+}
+foreach ($file in $files) {
+  if (Test-Path -LiteralPath $file.Live) {
+    [IO.File]::Replace($file.Staged, $file.Live, $file.Backup)
+  } else {
+    [IO.File]::Move($file.Staged, $file.Live)
+  }
+}
+foreach ($file in $files) {
+  Remove-Item -LiteralPath $file.Backup -Force -ErrorAction SilentlyContinue
+}
 
 Write-BootstrapLog "Wrote identities to $identitiesFile and recipients to $recipientsFile."
