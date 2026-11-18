@@ -1,6 +1,9 @@
 # Windows counterpart of macOS/run_once_before_90_bootstrap-age-identities.sh.tmpl.
 # Fetches the age identities listed in onepassword.age_identities from 1Password
 # so chezmoi can decrypt encrypted_ files. Keys are never written to the console.
+# Runs before every apply (not run_once) so a deleted keyring or a key rotated in
+# 1Password is repaired; when the live keys already decrypt the Windows-managed
+# files it exits at once without calling op.
 $ErrorActionPreference = 'Stop'
 
 function Write-BootstrapLog([string]$Message) {
@@ -18,9 +21,42 @@ function Invoke-Native([scriptblock]$Command) {
 # chezmoi exports its own path to scripts; fall back to PATH when run by hand.
 $chezmoi = if ($env:CHEZMOI_EXECUTABLE) { $env:CHEZMOI_EXECUTABLE } else { 'chezmoi' }
 
+$ageDir = Join-Path $HOME '.config\chezmoi\age-identities'
+$identitiesFile = Join-Path $ageDir 'identities.txt'
+$recipientsFile = Join-Path $ageDir 'recipients.txt'
+# Encrypted sources Windows applies; a keyring is only good if it decrypts them.
+$encryptedSources = @(
+{{- range (list "private_dot_ssh/encrypted_config.tmpl.age" "private_dot_config/private_1Password/private_ssh/encrypted_private_agent.toml.age") }}
+  '{{ joinPath $.chezmoi.sourceDir . }}'
+{{- end }}
+)
+
+# True when $IdentityFile decrypts every encrypted source. Uses a throwaway
+# config and state file so it never contends with the running apply's state lock.
+function Test-AgeKeyring([string]$IdentityFile) {
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  $verifyConfig = Join-Path $ageDir "verify-$([guid]::NewGuid().ToString('N')).partial"
+  $verifyState = "$verifyConfig-state"
+  $identity = $IdentityFile.Replace('\', '/')
+  [IO.File]::WriteAllText($verifyConfig, "encryption = `"age`"`n[age]`n    identity = `"$identity`"`n", $utf8NoBom)
+  try {
+    foreach ($encrypted in $encryptedSources) {
+      if (-not (Test-Path -LiteralPath $encrypted)) { continue }
+      $null = Invoke-Native { & $chezmoi --config $verifyConfig --config-format toml --persistent-state $verifyState decrypt $encrypted }
+      if ($LASTEXITCODE -ne 0) { return $false }
+    }
+    return $true
+  } finally {
+    Remove-Item -LiteralPath $verifyConfig, $verifyState -Force -ErrorAction SilentlyContinue
+  }
+}
+
+if ((Test-Path -LiteralPath $identitiesFile) -and (Test-Path -LiteralPath $recipientsFile) -and (Test-AgeKeyring $identitiesFile)) {
+  exit 0
+}
+
 {{ if not (lookPath "op") -}}
-# Rendered without op on PATH. run_once keys on the rendered content, and this
-# block disappears once op is installed, so the next chezmoi apply runs it again.
+# Rendered without op on PATH, and the live keys did not pass the check above.
 # With existing keys there is nothing to block on; without any, encrypted files
 # cannot be decrypted, so stop here with instructions instead of failing later.
 if (Test-Path -LiteralPath (Join-Path $HOME '.config\chezmoi\age-identities\identities.txt')) {
@@ -43,7 +79,6 @@ if ($sources.Count -eq 0) {
 }
 Write-BootstrapLog "Found $($sources.Count) identity source(s)."
 
-$ageDir = Join-Path $HOME '.config\chezmoi\age-identities'
 New-Item -ItemType Directory -Force -Path $ageDir | Out-Null
 # chezmoi's state lock already serializes applies; this per-user mutex also
 # covers a hand-run copy, so two runs never share the staging files below.
@@ -134,8 +169,6 @@ if ($failed.Count -gt 0) {
 
 # UTF-8 without BOM and LF endings, matching what age and the macOS files expect.
 $utf8 = New-Object System.Text.UTF8Encoding($false)
-$identitiesFile = Join-Path $ageDir 'identities.txt'
-$recipientsFile = Join-Path $ageDir 'recipients.txt'
 # Stage both files first, then swap each into place; ReplaceFile is atomic on
 # NTFS, so the live files are never truncated. The previous pair stays as .bak
 # until both swaps finish, so an interrupted update can be recovered by hand.
@@ -151,30 +184,14 @@ foreach ($file in $files) {
   [IO.File]::WriteAllText($file.Staged, (($file.Lines | Select-Object -Unique) -join "`n") + "`n", $utf8)
 }
 
-# Prove the staged keyring decrypts the encrypted sources Windows applies before
-# touching the live pair: a valid but wrong or prematurely rotated key in
-# 1Password would otherwise replace working keys. On failure the live files stay
-# as they are and the script exits non-zero, so the next apply retries it.
-$encryptedSources = @(
-{{- range (list "private_dot_ssh/encrypted_config.tmpl.age" "private_dot_config/private_1Password/private_ssh/encrypted_private_agent.toml.age") }}
-  '{{ joinPath $.chezmoi.sourceDir . }}'
-{{- end }}
-)
-$verifyConfig = Join-Path $ageDir 'verify.toml.partial'
-$stagedIdentities = $files[0].Staged -replace '\\', '/'
-[IO.File]::WriteAllText($verifyConfig, "encryption = `"age`"`n[age]`n    identity = `"$stagedIdentities`"`n", $utf8)
-try {
-  foreach ($encrypted in $encryptedSources) {
-    if (-not (Test-Path -LiteralPath $encrypted)) { continue }
-    $null = Invoke-Native { & $chezmoi --config $verifyConfig --config-format toml decrypt $encrypted }
-    if ($LASTEXITCODE -ne 0) {
-      foreach ($file in $files) { Remove-Item -LiteralPath $file.Staged -Force -ErrorAction SilentlyContinue }
-      Write-BootstrapLog "The identities from 1Password cannot decrypt $encrypted; leaving the existing identities untouched. Check the age key items in 1Password, then re-run chezmoi apply."
-      exit 1
-    }
-  }
-} finally {
-  Remove-Item -LiteralPath $verifyConfig -Force -ErrorAction SilentlyContinue
+# Prove the staged keyring decrypts the encrypted sources before touching the
+# live pair: a valid but wrong or prematurely rotated key in 1Password would
+# otherwise replace working keys. On failure the live files stay as they are and
+# the script exits non-zero.
+if (-not (Test-AgeKeyring $files[0].Staged)) {
+  foreach ($file in $files) { Remove-Item -LiteralPath $file.Staged -Force -ErrorAction SilentlyContinue }
+  Write-BootstrapLog 'The identities from 1Password cannot decrypt the managed files; leaving the existing identities untouched. Check the age key items in 1Password, then re-run chezmoi apply.'
+  exit 1
 }
 
 foreach ($file in $files) {
