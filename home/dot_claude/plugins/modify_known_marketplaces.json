@@ -22,8 +22,14 @@
   {{- if hasPrefix "git@" $marketplace.clone_url -}}
     {{- $checkout := joinPath $root $name -}}
     {{- $valid := false -}}
-    {{- if stat (joinPath $checkout ".git") -}}
-      {{- $valid = eq (output "git" "-C" $checkout "config" "--default" "" "--get" "remote.origin.url" | trim) $marketplace.clone_url -}}
+    {{- $gitConfig := joinPath $checkout ".git" "config" -}}
+    {{- if stat $gitConfig -}}
+      {{- /* Read origin's url from the file instead of running git, which exits
+        non-zero on a malformed config and would abort the whole apply; an
+        unreadable checkout then just counts as unverified. */ -}}
+      {{- $originSection := regexFind `(?m)^\[remote "origin"\][^\[]*` (include $gitConfig) -}}
+      {{- $origin := regexReplaceAll `^\s*url\s*=\s*` (regexFind `(?m)^\s*url\s*=\s*\S+` $originSection) "" | trim -}}
+      {{- $valid = eq $origin $marketplace.clone_url -}}
     {{- end -}}
     {{- if not $valid -}}
       {{- $_ := unset $modified $name -}}
