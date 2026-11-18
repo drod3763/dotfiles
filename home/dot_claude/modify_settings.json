@@ -35,9 +35,11 @@
 {{- $_ := set $modified "enabledPlugins" $enabled -}}
 {{- /* Claude's own marketplace updates run git with Git for Windows' bundled ssh,
   which cannot reach the 1Password agent pipe; point it at Windows OpenSSH. */ -}}
-{{- $env := deepCopy (get $current "env" | default (dict)) -}}
-{{- $_ := set $env "GIT_SSH_COMMAND" "C:/Windows/System32/OpenSSH/ssh.exe" -}}
-{{- $_ := set $modified "env" $env -}}
+{{- if stat "C:/Windows/System32/OpenSSH/ssh.exe" -}}
+  {{- $env := deepCopy (get $current "env" | default (dict)) -}}
+  {{- $_ := set $env "GIT_SSH_COMMAND" "C:/Windows/System32/OpenSSH/ssh.exe" -}}
+  {{- $_ := set $modified "env" $env -}}
+{{- end -}}
 {{- /* Re-emit the file untouched when nothing changed, so Claude's key order does not cause a permanent diff. */ -}}
 {{- if deepEqual $current $modified -}}
 {{ $stdin }}

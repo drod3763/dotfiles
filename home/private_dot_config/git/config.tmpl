@@ -83,8 +83,9 @@ dell = branch -d
 [core]
 editor = {{ $editor }}
 pager = {{ $pager }}
-{{- if eq .chezmoi.os "windows" }}
-{{/* Git for Windows bundles its own ssh, which can't reach the 1Password agent pipe. */ -}}
+{{- if and (eq .chezmoi.os "windows") (stat "C:/Windows/System32/OpenSSH/ssh.exe") }}
+{{/* Git for Windows bundles its own ssh, which can't reach the 1Password agent pipe.
+  Only when the Windows OpenSSH client is installed, so git keeps working without it. */ -}}
 sshCommand = C:/Windows/System32/OpenSSH/ssh.exe
 {{- end }}
 

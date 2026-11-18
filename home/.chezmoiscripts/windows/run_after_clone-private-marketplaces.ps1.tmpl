@@ -17,7 +17,8 @@ $ErrorActionPreference = 'Stop'
 
 $root = Join-Path $HOME '.claude\plugins\marketplaces'
 # Windows OpenSSH reaches the 1Password agent; Git's bundled ssh cannot.
-$sshCommand = 'core.sshCommand=C:/Windows/System32/OpenSSH/ssh.exe'
+$sshExe = 'C:/Windows/System32/OpenSSH/ssh.exe'
+$sshCommand = "core.sshCommand=$sshExe"
 $marketplaces = @(
 {{- range $private }}
   @{ Name = '{{ .name }}'; Url = '{{ .url }}' }
@@ -43,6 +44,11 @@ foreach ($marketplace in $marketplaces) {
       [Console]::Error.WriteLine("[marketplaces] $target has no .claude-plugin\marketplace.json (incomplete checkout?). Move that folder aside, then re-run chezmoi apply to clone it again.")
       $failed++
     }
+    continue
+  }
+  if (-not (Test-Path -LiteralPath $sshExe)) {
+    [Console]::Error.WriteLine("[marketplaces] Cannot clone $($marketplace.Name): the Windows OpenSSH client ($sshExe) is not installed. Add the 'OpenSSH Client' optional feature, then re-run chezmoi apply.")
+    $failed++
     continue
   }
   New-Item -ItemType Directory -Force -Path $root | Out-Null
