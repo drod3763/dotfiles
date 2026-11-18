@@ -1,4 +1,5 @@
-# Windows packages. A failed install exits non-zero so chezmoi does not record
+# Windows packages. Named 10_ so it runs before 90_bootstrap-age-identities,
+# which needs op. A failed install exits non-zero so chezmoi does not record
 # this run_onchange script as done and the next apply retries it.
 $ErrorActionPreference = 'Stop'
 
@@ -15,6 +16,8 @@ function Install-WingetPackage([string]$Id) {
 }
 
 Install-WingetPackage 'gerardog.gsudo'
+# 1Password CLI (op): age identity bootstrap and the onepassword template lookups.
+Install-WingetPackage 'AgileBits.1Password.CLI'
 # mise provides the repo's hook linters (gitleaks, shellcheck) via mise.toml.
 Install-WingetPackage 'jdx.mise'
 

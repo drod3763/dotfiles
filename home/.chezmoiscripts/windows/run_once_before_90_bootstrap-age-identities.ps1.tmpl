@@ -21,8 +21,14 @@ $chezmoi = if ($env:CHEZMOI_EXECUTABLE) { $env:CHEZMOI_EXECUTABLE } else { 'chez
 {{ if not (lookPath "op") -}}
 # Rendered without op on PATH. run_once keys on the rendered content, and this
 # block disappears once op is installed, so the next chezmoi apply runs it again.
-Write-BootstrapLog 'Skipping: 1Password CLI (op) is not installed; chezmoi apply will retry once it is.'
-exit 0
+# With existing keys there is nothing to block on; without any, encrypted files
+# cannot be decrypted, so stop here with instructions instead of failing later.
+if (Test-Path -LiteralPath (Join-Path $HOME '.config\chezmoi\age-identities\identities.txt')) {
+  Write-BootstrapLog 'Skipping: 1Password CLI (op) is not on PATH; keeping the existing identities.'
+  exit 0
+}
+Write-BootstrapLog 'Cannot bootstrap age identities: 1Password CLI (op) is not on PATH. 10_install-packages installs it (winget AgileBits.1Password.CLI); open a new terminal so PATH picks it up, turn on the 1Password app''s CLI integration, then re-run chezmoi apply.'
+exit 1
 {{ end -}}
 
 $sources = @(
