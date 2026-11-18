@@ -16,15 +16,17 @@
 {{- $now := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
 {{- range $name, $marketplace := $marketplaces -}}
   {{- /* Private (SSH) marketplaces are cloned after apply by
-    run_onchange_after_clone-private-marketplaces; register them only once a
-    checkout of the manifest's repo exists, so Claude never points at a
-    missing folder or a checkout of some other repo. */ -}}
+    run_onchange_after_clone-private-marketplaces; register them only while a
+    checkout of the manifest's repo exists, and drop any earlier registration
+    otherwise, so Claude never points at a missing folder or another repo. */ -}}
   {{- if hasPrefix "git@" $marketplace.clone_url -}}
     {{- $checkout := joinPath $root $name -}}
-    {{- if not (stat (joinPath $checkout ".git")) -}}
-      {{- continue -}}
+    {{- $valid := false -}}
+    {{- if stat (joinPath $checkout ".git") -}}
+      {{- $valid = eq (output "git" "-C" $checkout "config" "--default" "" "--get" "remote.origin.url" | trim) $marketplace.clone_url -}}
     {{- end -}}
-    {{- if ne (output "git" "-C" $checkout "config" "--default" "" "--get" "remote.origin.url" | trim) $marketplace.clone_url -}}
+    {{- if not $valid -}}
+      {{- $_ := unset $modified $name -}}
       {{- continue -}}
     {{- end -}}
   {{- end -}}
