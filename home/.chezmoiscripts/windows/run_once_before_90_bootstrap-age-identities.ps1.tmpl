@@ -124,6 +124,8 @@ $recipientsFile = Join-Path $ageDir 'recipients.txt'
 # Stage both files first, then swap each into place; ReplaceFile is atomic on
 # NTFS, so the live files are never truncated. The previous pair stays as .bak
 # until both swaps finish, so an interrupted update can be recovered by hand.
+# A .bak left by an interrupted run already holds the original file, so a retry
+# keeps it instead of backing up the half-updated live file over it.
 $files = @(
   @{ Live = $identitiesFile; Lines = $identities },
   @{ Live = $recipientsFile; Lines = $recipients }
@@ -135,7 +137,9 @@ foreach ($file in $files) {
 }
 foreach ($file in $files) {
   if (Test-Path -LiteralPath $file.Live) {
-    [IO.File]::Replace($file.Staged, $file.Live, $file.Backup)
+    # [NullString]: PowerShell would pass $null to a .NET string parameter as "".
+    $backup = if (Test-Path -LiteralPath $file.Backup) { [NullString]::Value } else { $file.Backup }
+    [IO.File]::Replace($file.Staged, $file.Live, $backup)
   } else {
     [IO.File]::Move($file.Staged, $file.Live)
   }
