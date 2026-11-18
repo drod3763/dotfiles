@@ -141,6 +141,33 @@ foreach ($file in $files) {
   $file.Backup = "$($file.Live).bak"
   [IO.File]::WriteAllText($file.Staged, (($file.Lines | Select-Object -Unique) -join "`n") + "`n", $utf8)
 }
+
+# Prove the staged keyring decrypts the encrypted sources Windows applies before
+# touching the live pair: a valid but wrong or prematurely rotated key in
+# 1Password would otherwise replace working keys. On failure the live files stay
+# as they are and the script exits non-zero, so the next apply retries it.
+$encryptedSources = @(
+{{- range (list "private_dot_ssh/encrypted_config.tmpl.age" "private_dot_config/private_1Password/private_ssh/encrypted_private_agent.toml.age") }}
+  '{{ joinPath $.chezmoi.sourceDir . }}'
+{{- end }}
+)
+$verifyConfig = Join-Path $ageDir 'verify.toml.partial'
+$stagedIdentities = $files[0].Staged -replace '\\', '/'
+[IO.File]::WriteAllText($verifyConfig, "encryption = `"age`"`n[age]`n    identity = `"$stagedIdentities`"`n", $utf8)
+try {
+  foreach ($encrypted in $encryptedSources) {
+    if (-not (Test-Path -LiteralPath $encrypted)) { continue }
+    $null = Invoke-Native { & $chezmoi --config $verifyConfig --config-format toml decrypt $encrypted }
+    if ($LASTEXITCODE -ne 0) {
+      foreach ($file in $files) { Remove-Item -LiteralPath $file.Staged -Force -ErrorAction SilentlyContinue }
+      Write-BootstrapLog "The identities from 1Password cannot decrypt $encrypted; leaving the existing identities untouched. Check the age key items in 1Password, then re-run chezmoi apply."
+      exit 1
+    }
+  }
+} finally {
+  Remove-Item -LiteralPath $verifyConfig -Force -ErrorAction SilentlyContinue
+}
+
 foreach ($file in $files) {
   if (Test-Path -LiteralPath $file.Live) {
     # [NullString]: PowerShell would pass $null to a .NET string parameter as "".
