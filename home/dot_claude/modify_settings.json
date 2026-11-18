@@ -14,14 +14,21 @@
 {{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
 {{- $pluginManifest := includeTemplate "claude_code_plugin_renderer.tmpl" . | mustFromJson -}}
 {{- /* Merge into the existing maps: entries the dotfiles define win, and
-  marketplaces or plugins added locally are kept. Disable a managed plugin
-  with enabled = false in its TOML rather than deleting it. */ -}}
+  marketplaces or plugins added locally are kept. Every user-scope plugin in
+  the manifest is owned here: the renderer emits only active, enabled ones,
+  so any of the rest already present are set to false (disabled, ineligible
+  for this machine type, or excluded on this OS). */ -}}
 {{- $known := deepCopy (get $current "extraKnownMarketplaces" | default (dict)) -}}
 {{- range $name, $marketplace := $marketplaces -}}
   {{- $_ := set $known $name (dict "source" $marketplace.source) -}}
 {{- end -}}
 {{- $_ := set $modified "extraKnownMarketplaces" $known -}}
 {{- $enabled := deepCopy (get $current "enabledPlugins" | default (dict)) -}}
+{{- range $key, $plugin := (.claude_code.plugins | default (dict)) -}}
+  {{- if and (eq (get $plugin "scope" | default "") "user") (hasKey $enabled $key) -}}
+    {{- $_ := set $enabled $key false -}}
+  {{- end -}}
+{{- end -}}
 {{- range $key, $value := (get $pluginManifest "enabledPlugins") -}}
   {{- $_ := set $enabled $key $value -}}
 {{- end -}}
