@@ -32,9 +32,16 @@ filter.args = ["-c", 't=$(mktemp); trap "rm -f $t" EXIT; cat >"$t"; bsdtar -cf -
   them; Claude Code then installs the enabledPlugins from settings.json. */ -}}
 {{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
 {{- range $name := keys $marketplaces | sortAlpha }}
+{{- $cloneUrl := get (get $marketplaces $name) "clone_url" }}
 [".claude/plugins/marketplaces/{{ $name }}"]
 type = "git-repo"
-url = {{ get (get $marketplaces $name) "clone_url" | quote }}
+url = {{ $cloneUrl | quote }}
 refreshPeriod = "168h"
+{{- if hasPrefix "git@" $cloneUrl }}
+{{- /* .claude applies before .config/git/config, so on a fresh machine the
+  global sshCommand is not there yet; pin Windows OpenSSH (which reaches the
+  1Password agent) in the clone's own config so clone and later pulls use it. */}}
+clone.args = ["--config", "core.sshCommand=C:/Windows/System32/OpenSSH/ssh.exe"]
+{{- end }}
 {{ end -}}
 {{ end -}}
