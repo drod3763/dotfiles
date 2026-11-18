@@ -45,6 +45,15 @@ Write-BootstrapLog "Found $($sources.Count) identity source(s)."
 
 $ageDir = Join-Path $HOME '.config\chezmoi\age-identities'
 New-Item -ItemType Directory -Force -Path $ageDir | Out-Null
+# chezmoi's state lock already serializes applies; this per-user mutex also
+# covers a hand-run copy, so two runs never share the staging files below.
+# Held until the process exits (Windows releases it then, even on `exit 1`).
+$bootstrapLock = New-Object System.Threading.Mutex($false, 'Local\chezmoi-age-bootstrap')
+try {
+  [void]$bootstrapLock.WaitOne()
+} catch [System.Threading.AbandonedMutexException] {
+  Write-BootstrapLog 'A previous bootstrap ended without releasing its lock; continuing.'
+}
 # Equivalent of chmod 700, done before any key is written: replace the folder's
 # ACL with a protected one granting only the current user (by SID), so inherited
 # and explicit grants to anyone else are dropped. Existing files get the same
