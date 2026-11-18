@@ -34,7 +34,9 @@ foreach ($marketplace in $marketplaces) {
     $urls = @(& git -C $target config --get-all remote.origin.url | Where-Object { $_ })
     $origin = $urls -join ', '
     if ($urls.Count -ne 1 -or $urls[0] -ne $marketplace.Url) {
-      [Console]::Error.WriteLine("[marketplaces] $target tracks '$origin', not '$($marketplace.Url)'. Point it at the new URL (git -C `"$target`" remote set-url origin $($marketplace.Url)) or move it aside, then re-run chezmoi apply.")
+      # Only a fresh clone guarantees the files come from the manifest's repo;
+      # changing the remote URL would relabel whatever is checked out.
+      [Console]::Error.WriteLine("[marketplaces] $target tracks '$origin', not '$($marketplace.Url)'. Move that folder aside (keeping any local changes), then re-run chezmoi apply to clone the expected repo.")
       $failed++
     }
     continue
