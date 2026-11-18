@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Lints Windows chezmoi scripts with PSScriptAnalyzer after rendering templates.
+# Lints Windows chezmoi scripts and PowerShell profiles with PSScriptAnalyzer
+# after rendering templates.
 # Skips (exit 0) when PowerShell or the module is missing, so machines without
 # them are not blocked.
 
@@ -37,7 +38,7 @@ while IFS= read -r path; do
   home/.chezmoitemplates/*)
     check_all=1
     ;;
-  home/.chezmoiscripts/windows/*.ps1 | home/.chezmoiscripts/windows/*.ps1.tmpl)
+  home/.chezmoiscripts/windows/*.ps1 | home/.chezmoiscripts/windows/*.ps1.tmpl | home/Documents/*/*.ps1.tmpl)
     add_candidate "${path}"
     ;;
   *) ;;
@@ -52,7 +53,7 @@ if [[ ${check_all} -eq 1 ]]; then
 
   while IFS= read -r rel_path; do
     case "${rel_path}" in
-    home/.chezmoiscripts/windows/*.ps1 | home/.chezmoiscripts/windows/*.ps1.tmpl)
+    home/.chezmoiscripts/windows/*.ps1 | home/.chezmoiscripts/windows/*.ps1.tmpl | home/Documents/*/*.ps1.tmpl)
       add_candidate "${rel_path}"
       ;;
     *) ;;
@@ -91,7 +92,9 @@ trap 'rm -rf "${out_dir}"' EXIT
 status=0
 for script in "${candidates[@]}"; do
   src="${repo_root}/${script}"
-  name="$(basename "${script}" .tmpl)"
+  # Both PowerShell profiles share a basename, so name renders by source path.
+  name="${script%.tmpl}"
+  name="${name//\//__}"
 
   if [[ ${script} == *.tmpl ]]; then
     if ! chezmoi execute-template <"${src}" >"${out_dir}/${name}"; then
