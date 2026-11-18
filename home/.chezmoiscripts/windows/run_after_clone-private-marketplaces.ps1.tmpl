@@ -38,6 +38,10 @@ foreach ($marketplace in $marketplaces) {
       # changing the remote URL would relabel whatever is checked out.
       [Console]::Error.WriteLine("[marketplaces] $target tracks '$origin', not '$($marketplace.Url)'. Move that folder aside (keeping any local changes), then re-run chezmoi apply to clone the expected repo.")
       $failed++
+    } elseif (-not (Test-Path -LiteralPath (Join-Path $target '.claude-plugin\marketplace.json'))) {
+      # An interrupted clone can leave .git without the checked-out files.
+      [Console]::Error.WriteLine("[marketplaces] $target has no .claude-plugin\marketplace.json (incomplete checkout?). Move that folder aside, then re-run chezmoi apply to clone it again.")
+      $failed++
     }
     continue
   }

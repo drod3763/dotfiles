@@ -38,6 +38,9 @@
         {{- end -}}
       {{- end -}}
       {{- $valid = and (eq (len $urls) 1) (eq (index ($urls | default (list "")) 0) $marketplace.clone_url) -}}
+      {{- /* An interrupted clone can leave .git without a checked-out tree;
+        require the marketplace manifest Claude reads, like the clone hook. */ -}}
+      {{- $valid = and $valid (stat (joinPath $checkout ".claude-plugin" "marketplace.json")) -}}
     {{- end -}}
     {{- if not $valid -}}
       {{- $_ := unset $modified $name -}}
