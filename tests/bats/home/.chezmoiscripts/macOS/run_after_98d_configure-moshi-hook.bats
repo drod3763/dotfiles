@@ -291,7 +291,25 @@ run_interactive() {
   [[ "${output}" == *"E2EE: enabled"* ]]
 }
 
-@test "GIVEN setup stops on warnings and user continues EXPECT forced setup and e2ee enable" {
+@test "GIVEN forced pairing and e2ee prompt answered yes EXPECT forced setup and e2ee enable" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${TEST_TMPDIR}/after.json" true current off
+  export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
+  export MOCK_MOSHI_SETUP_NEEDS_FORCE=1
+
+  run_interactive "y" "y" "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *"Tailscale SSH is enabled on this host"* ]] || false
+  [[ "${output}" == *"Pairing stopped on the warnings above. Continue past them with --force? [y/N]"* ]] || false
+  [[ "${output}" == *"Turn on end-to-end encryption now? [y/N]"* ]] || false
+  moshi_called "host setup --host mac.tailnet.ts.net"
+  moshi_called "host setup --host mac.tailnet.ts.net --force"
+  moshi_called "e2ee enable"
+  [[ "${output}" == *"Pairing: paired (continued past prerequisite warnings with --force)."* ]]
+}
+
+@test "GIVEN forced pairing and e2ee prompt not answered EXPECT e2ee left off with a hint" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
   write_status "${TEST_TMPDIR}/after.json" true current off
   export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
@@ -300,12 +318,10 @@ run_interactive() {
   run_interactive "y" "y"
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" == *"Tailscale SSH is enabled on this host"* ]] || false
-  [[ "${output}" == *"Pairing stopped on the warnings above. Continue past them with --force? [y/N]"* ]] || false
-  moshi_called "host setup --host mac.tailnet.ts.net"
   moshi_called "host setup --host mac.tailnet.ts.net --force"
-  moshi_called "e2ee enable"
-  [[ "${output}" == *"Pairing: paired (continued past prerequisite warnings with --force)."* ]]
+  ! moshi_called_like "^e2ee" || false
+  [[ "${output}" == *"E2EE: left off after a forced pairing"* ]] || false
+  [[ "${output}" == *"moshi-hook e2ee enable"* ]]
 }
 
 @test "GIVEN Tailscale drops while the force prompt is open EXPECT no forced setup and a re-run hint" {

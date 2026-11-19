@@ -123,6 +123,7 @@ fi
 
 moshi_paired="$(moshi_field '.paired // false')"
 moshi_paired_now=false
+moshi_setup_forced=false
 if [[ "${moshi_paired}" == "true" ]]; then
   note "Pairing: already paired."
 elif [[ ! -t 0 ]]; then
@@ -212,11 +213,16 @@ fi
 # E2EE: enable it as part of a pairing this run made. On a host that was already paired,
 # keep its policy: it may have been turned off on purpose (a phone without SSH access can't
 # fetch the key and so can't approve), and an unattended apply must not undo that.
+# A forced pairing skipped moshi's SSH checks (e.g. its authorized_keys key goes unused under
+# Tailscale SSH), so whether the phone can fetch the key is unverified: ask instead of assuming.
 moshi_e2ee_policy="$(moshi_field '.e2ee.policy // empty')"
 if [[ "${moshi_e2ee_policy}" == "on" ]]; then
   note "E2EE: on."
 elif [[ "${moshi_paired_now}" != "true" ]]; then
   note "E2EE: off, left as is. To turn it on, run: moshi-hook e2ee enable"
+elif [[ "${moshi_setup_forced}" == "true" ]] &&
+  ! confirm "Pairing skipped moshi's SSH checks. Each phone fetches the E2EE key over SSH (Tailscale SSH works). Turn on end-to-end encryption now?"; then
+  note "E2EE: left off after a forced pairing. Once a phone connects over SSH, run: moshi-hook e2ee enable"
 elif moshi-hook e2ee enable; then
   note "E2EE: enabled (each phone fetches the key over SSH when it connects)."
 else
