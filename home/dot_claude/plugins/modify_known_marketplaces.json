@@ -30,8 +30,9 @@
   {{- if hasPrefix "git@" $marketplace.clone_url -}}
     {{- $checkout := joinPath $root $name -}}
     {{- $valid := false -}}
-    {{- $gitConfig := joinPath $checkout ".git" "config" -}}
-    {{- if stat $gitConfig -}}
+    {{- /* .git is a folder in a clone and a file in a linked worktree; git
+      resolves either, like the clone hook's Test-Path check. */ -}}
+    {{- if stat (joinPath $checkout ".git") -}}
       {{- /* Ask git, the same `config --get-all` the clone hook uses, so both
         apply git's own parsing (repeated sections, quoting, key case). It runs
         through PowerShell with exit 0 because chezmoi's output aborts the whole
