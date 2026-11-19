@@ -228,11 +228,17 @@ foreach ($file in $files) {
 
 # Prove the staged keyring decrypts the encrypted sources before touching the
 # live pair: a valid but wrong or prematurely rotated key in 1Password would
-# otherwise replace working keys. On failure the live files stay as they are and
-# the script exits non-zero.
+# otherwise replace working keys. On failure the live files stay as they are; the
+# script exits non-zero only if they do not decrypt either.
 if (-not (Test-AgeKeyring $files[0].Staged)) {
   foreach ($file in $files) { Remove-Item -LiteralPath $file.Staged -Force -ErrorAction SilentlyContinue }
-  Write-BootstrapLog 'The identities from 1Password cannot decrypt the managed files; leaving the existing identities untouched. Check the age key items in 1Password, then re-run chezmoi apply.'
+  Write-BootstrapLog 'The identities from 1Password cannot decrypt the managed files; leaving the existing identities untouched. Check the age key items in 1Password (or re-encrypt the files for a rotated key).'
+  # A key rotated in 1Password before the files were re-encrypted should not
+  # block updates on machines whose current keys still work.
+  if ((Test-Path -LiteralPath $identitiesFile) -and (Test-AgeKeyring $identitiesFile)) {
+    Write-BootstrapLog 'The existing identities still decrypt the managed files; continuing.'
+    exit 0
+  }
   exit 1
 }
 
