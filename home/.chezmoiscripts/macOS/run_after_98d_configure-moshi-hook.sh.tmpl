@@ -77,6 +77,7 @@ moshi_still_unpaired() {
 # moshi's prerequisite refusal: either the generic "Or pass --force to continue without
 # these." or a specific stop such as Tailscale SSH ("Then run `moshi-hook host setup` again.").
 moshi_setup_refused_on_checks() {
+  [[ -n "${moshi_setup_log}" ]] || return 1
   # shellcheck disable=SC2016 # The backticks are literal text in moshi's message.
   grep -qE 'pass --force|Then run `moshi-hook host setup` again' "${moshi_setup_log}"
 }
@@ -141,13 +142,14 @@ else
   # setup that still finds the host paired (e.g. from another terminal) is not ours.
   moshi_setup_ok=false
   moshi_setup_forced=false
-  moshi_setup_log="$(mktemp)"
-  trap 'rm -f "${moshi_setup_log}"; print_report' EXIT
+  # Without a log (mktemp failed) setup still runs with its checks; --force is just not offered.
+  moshi_setup_log="$(mktemp 2>/dev/null || true)"
+  trap '[[ -z "${moshi_setup_log}" ]] || rm -f "${moshi_setup_log}"; print_report' EXIT
   build_moshi_setup_args
   # Judge setup by its own exit status: with pipefail, a failed log write would otherwise
-  # make a successful setup look failed. A missing log just means --force is not offered.
+  # make a successful setup look failed.
   moshi_setup_rc=0
-  moshi-hook "${moshi_setup_args[@]}" 2>&1 | tee "${moshi_setup_log}" || moshi_setup_rc="${PIPESTATUS[0]}"
+  moshi-hook "${moshi_setup_args[@]}" 2>&1 | tee "${moshi_setup_log:-/dev/null}" || moshi_setup_rc="${PIPESTATUS[0]}"
   if [[ "${moshi_setup_rc}" -eq 0 ]]; then
     moshi_setup_ok=true
   elif moshi_setup_refused_on_checks && moshi_still_unpaired &&
@@ -194,9 +196,15 @@ else
 fi
 
 if [[ "${moshi_paired}" != "true" ]]; then
-  build_moshi_setup_args
-  moshi_pair_command="$(moshi_setup_command)"
-  note "Pairing: to pair, run: ${moshi_pair_command} (add --force to continue past its warnings)"
+  # Recommend pairing only when a valid status confirms the host is unpaired; if status is
+  # unreadable (e.g. the daemon restarting after a setup attempt), check before re-running.
+  if moshi_status_valid; then
+    build_moshi_setup_args
+    moshi_pair_command="$(moshi_setup_command)"
+    note "Pairing: to pair, run: ${moshi_pair_command} (add --force to continue past its warnings)"
+  else
+    note "Pairing: state unknown (status unreadable). Check: moshi-hook status before pairing again."
+  fi
   note "E2EE: not changed (needs a pairing)."
   exit 0
 fi

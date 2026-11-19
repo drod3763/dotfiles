@@ -343,6 +343,52 @@ EOF
   [[ "${output}" == *"Pairing: paired."* ]]
 }
 
+@test "GIVEN setup fails and status is unreadable after EXPECT check-status hint, not a pair command" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  export MOCK_MOSHI_SETUP_FAILS=1
+  export MOCK_MOSHI_STATUS_FAILS_MARKER="${TEST_TMPDIR}/status-broken"
+
+  run_interactive "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" != *"to pair, run"* ]] || false
+  [[ "${output}" == *"Check: moshi-hook status"* ]] || false
+  ! moshi_called_like "^e2ee" || false
+}
+
+@test "GIVEN the setup log cannot be created EXPECT checked setup still runs and apply succeeds" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${TEST_TMPDIR}/after.json" true current off
+  export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
+  cat > "${MOCK_BIN_DIR}/mktemp" <<'EOF'
+#!/usr/bin/env bash
+exit 1
+EOF
+  chmod +x "${MOCK_BIN_DIR}/mktemp"
+
+  run_interactive "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  moshi_called "host setup --host mac.tailnet.ts.net"
+  [[ "${output}" == *"Pairing: paired."* ]]
+}
+
+@test "GIVEN the setup log cannot be created and setup stops on warnings EXPECT no force offered" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  export MOCK_MOSHI_SETUP_NEEDS_FORCE=1
+  cat > "${MOCK_BIN_DIR}/mktemp" <<'EOF'
+#!/usr/bin/env bash
+exit 1
+EOF
+  chmod +x "${MOCK_BIN_DIR}/mktemp"
+
+  run_interactive "y" "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  ! moshi_called_like "force" || false
+  [[ "${output}" == *"Pairing: did not complete."* ]]
+}
+
 @test "GIVEN setup stops on warnings and the force prompt is not answered EXPECT no forced setup" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
   export MOCK_MOSHI_SETUP_NEEDS_FORCE=1
