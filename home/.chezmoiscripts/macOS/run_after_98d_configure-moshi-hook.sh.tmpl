@@ -40,12 +40,18 @@ confirm() {
   return 1
 }
 
+# Empty unless `moshi-hook status` itself succeeds, so error output is never parsed as status.
 moshi_status() {
-  moshi-hook status --json 2>/dev/null || true
+  local out
+  if out="$(moshi-hook status --json 2>/dev/null)"; then
+    printf '%s' "${out}"
+  fi
 }
 
+# Valid means the shape this script relies on: an object with a boolean `paired`.
 moshi_status_valid() {
-  [[ -n "${moshi_status_json}" ]] && jq -e . >/dev/null 2>&1 <<<"${moshi_status_json}"
+  [[ -n "${moshi_status_json}" ]] &&
+    jq -e 'type == "object" and (.paired | type == "boolean")' >/dev/null 2>&1 <<<"${moshi_status_json}"
 }
 
 moshi_field() {
@@ -105,7 +111,7 @@ fi
 # Agent hooks: `not_found` means that agent CLI is not installed; anything other than
 # `current` (e.g. hooks removed when chezmoi rewrites ~/.config/claude/settings.json) needs a reinstall.
 stale_hook_targets="$(jq -r '[.hooks[]? | select(.status != "current" and .status != "not_found") | .target] | join(",")' \
-  <<<"${moshi_status_json}")"
+  <<<"${moshi_status_json}" 2>/dev/null || true)"
 if [[ -z "${stale_hook_targets}" ]]; then
   note "Hooks: current."
 elif moshi-hook install --target "${stale_hook_targets}"; then
@@ -122,6 +128,10 @@ elif [[ ! -t 0 ]]; then
   note "Pairing: not paired, and this apply is not interactive, so pairing was not offered."
 elif ! confirm "This Mac is not paired with Moshi. Pair now?"; then
   note "Pairing: declined (or no answer in ${moshi_prompt_timeout}s)."
+elif ! moshi_still_unpaired; then
+  # Re-checked after the answer: the host may have been paired elsewhere while the prompt waited.
+  note "Pairing: not run; by the time you answered, the host no longer read as unpaired."
+  moshi_paired="$(moshi_field '.paired // false')"
 else
   # Run setup with moshi's prerequisite checks first; its output stays on screen and is kept
   # to recognise a prerequisite refusal (e.g. the Remote Login or Tailscale SSH warnings,
@@ -137,7 +147,8 @@ else
   if moshi-hook "${moshi_setup_args[@]}" 2>&1 | tee "${moshi_setup_log}"; then
     moshi_setup_ok=true
   elif moshi_setup_refused_on_checks && moshi_still_unpaired &&
-    confirm "Pairing stopped on the warnings above. Continue past them with --force?"; then
+    confirm "Pairing stopped on the warnings above. Continue past them with --force?" &&
+    moshi_still_unpaired; then
     build_moshi_setup_args
     if moshi-hook "${moshi_setup_args[@]}" --force; then
       moshi_setup_ok=true

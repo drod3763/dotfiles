@@ -23,6 +23,10 @@ setup() {
 printf '%s\n' "$*" >> "${MOCK_MOSHI_CALLS_FILE:?}"
 case "$1" in
   status)
+    if [[ -n "${MOCK_MOSHI_STATUS_RAW:-}" ]]; then
+      printf '%s\n' "${MOCK_MOSHI_STATUS_RAW}"
+      exit "${MOCK_MOSHI_STATUS_RAW_EXIT:-0}"
+    fi
     [[ -z "${MOCK_MOSHI_STATUS_FAILS:-}" ]] || exit 1
     [[ ! -e "${MOCK_MOSHI_STATUS_FAILS_MARKER:-/nonexistent}" ]] || exit 1
     # After setup, MOCK_MOSHI_STALE_READS reads still return the pre-setup status.
@@ -162,6 +166,57 @@ run_interactive() {
   [[ "${status}" -eq 0 ]] || false
   [[ "${output}" == *"Skipped: moshi-hook status is unavailable"* ]] || false
   ! moshi_called_like "install" || false
+}
+
+@test "GIVEN status prints a JSON error string EXPECT skip reported without failing apply" {
+  run_rendered_script MOCK_MOSHI_STATUS_RAW='"daemon not running"'
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *"Skipped: moshi-hook status is unavailable"* ]] || false
+  ! moshi_called_like "install" || false
+}
+
+@test "GIVEN status prints JSON but exits nonzero EXPECT skip" {
+  run_rendered_script MOCK_MOSHI_STATUS_RAW='{"paired":false,"hooks":[]}' MOCK_MOSHI_STATUS_RAW_EXIT=1
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *"Skipped: moshi-hook status is unavailable"* ]]
+}
+
+@test "GIVEN status object without a paired field EXPECT skip" {
+  run_rendered_script MOCK_MOSHI_STATUS_RAW='{"error":"not ready"}'
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *"Skipped: moshi-hook status is unavailable"* ]]
+}
+
+@test "GIVEN host gets paired while the pair prompt is open EXPECT no setup" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${MOCK_MOSHI_STATUS_FILE}.next" true current off
+  # The read before the prompt shows unpaired; the next read (after "y") shows paired.
+  printf '1\n' > "${MOCK_MOSHI_STATUS_FILE}.stale"
+
+  run_interactive "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  ! moshi_called_like "^host" || false
+  ! moshi_called_like "^e2ee" || false
+  [[ "${output}" == *"Pairing: not run"* ]]
+}
+
+@test "GIVEN host gets paired while the force prompt is open EXPECT no forced setup" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${MOCK_MOSHI_STATUS_FILE}.next" true current off
+  export MOCK_MOSHI_SETUP_NEEDS_FORCE=1
+  # Reads: before the pair prompt, after "y", before the force prompt: unpaired; after "y": paired.
+  printf '3\n' > "${MOCK_MOSHI_STATUS_FILE}.stale"
+
+  run_interactive "y" "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *"--force? [y/N]"* ]] || false
+  ! moshi_called_like "force" || false
+  ! moshi_called_like "^e2ee" || false
 }
 
 @test "GIVEN unpaired and non-interactive EXPECT no setup and pair command in report" {
