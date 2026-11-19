@@ -14,6 +14,14 @@
 {{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
 {{- $root := joinPath .chezmoi.homeDir ".claude" "plugins" "marketplaces" -}}
 {{- $now := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
+{{- /* Marketplaces the data defines but this machine type does not use (e.g.
+  work ones on a personal machine) are unregistered, so changing a type retires
+  them; names the data never defined are Claude's own and are kept. */ -}}
+{{- range $name := keys (.claude_code.marketplaces | default (dict)) -}}
+  {{- if not (hasKey $marketplaces $name) -}}
+    {{- $_ := unset $modified $name -}}
+  {{- end -}}
+{{- end -}}
 {{- range $name, $marketplace := $marketplaces -}}
   {{- /* Private (SSH) marketplaces are cloned after apply by
     run_after_clone-private-marketplaces; register them only while a

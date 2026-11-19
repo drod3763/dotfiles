@@ -18,13 +18,35 @@
   the manifest is owned here: the renderer emits only active, enabled ones,
   so any of the rest already present are set to false (disabled, ineligible
   for this machine type, or excluded on this OS). */ -}}
+{{- /* Every marketplace defined in the data is managed here: active ones are
+  set, and ones inactive on this machine type are dropped. Plugins of an owned
+  marketplace are all managed too, so one deleted from the manifest is removed,
+  as the add-claude-code-plugin skill documents. */ -}}
+{{- $definedMarketplaces := .claude_code.marketplaces | default (dict) -}}
+{{- $ownedMarketplaces := list -}}
+{{- range $name, $marketplace := $definedMarketplaces -}}
+  {{- if get $marketplace "owned" -}}
+    {{- $ownedMarketplaces = append $ownedMarketplaces $name -}}
+  {{- end -}}
+{{- end -}}
 {{- $known := deepCopy (get $current "extraKnownMarketplaces" | default (dict)) -}}
+{{- range $name := keys $definedMarketplaces -}}
+  {{- if not (hasKey $marketplaces $name) -}}
+    {{- $_ := unset $known $name -}}
+  {{- end -}}
+{{- end -}}
 {{- range $name, $marketplace := $marketplaces -}}
   {{- $_ := set $known $name (dict "source" $marketplace.source) -}}
 {{- end -}}
 {{- $_ := set $modified "extraKnownMarketplaces" $known -}}
 {{- $enabled := deepCopy (get $current "enabledPlugins" | default (dict)) -}}
-{{- range $key, $plugin := (.claude_code.plugins | default (dict)) -}}
+{{- $manifestPlugins := .claude_code.plugins | default (dict) -}}
+{{- range $key := keys $enabled -}}
+  {{- if and (not (hasKey $manifestPlugins $key)) (has (regexReplaceAll "^.*@" $key "") $ownedMarketplaces) -}}
+    {{- $_ := unset $enabled $key -}}
+  {{- end -}}
+{{- end -}}
+{{- range $key, $plugin := $manifestPlugins -}}
   {{- if and (eq (get $plugin "scope" | default "") "user") (hasKey $enabled $key) -}}
     {{- $_ := set $enabled $key false -}}
   {{- end -}}
