@@ -150,8 +150,10 @@ write_moshi_live() {
   [[ "${status}" -eq 0 ]]
 }
 
-@test "GIVEN modify runs without lifecycle scripts EXPECT managed entries recorded as owned" {
+@test "GIVEN targeted apply without lifecycle scripts EXPECT managed entries recorded as owned" {
   export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/state/chezmoi/owned.json"
+  export CHEZMOI_COMMAND="apply"
+  export CHEZMOI_ARGS="chezmoi apply ${HOME}/.config/claude/settings.json"
   input_file="${TEST_TMPDIR}/input.json"
   write_moshi_live "${input_file}"
 
@@ -165,8 +167,40 @@ write_moshi_live() {
   [[ "${status}" -eq 0 ]]
 }
 
+@test "GIVEN diff or dry-run apply EXPECT no ownership recorded" {
+  input_file="${TEST_TMPDIR}/input.json"
+  cp "${MANAGED_FILE}" "${input_file}"
+
+  for invocation in "diff:chezmoi diff" "apply:chezmoi apply --dry-run" "apply:chezmoi apply -nv" "status:chezmoi status"; do
+    export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/owned-${RANDOM}.json"
+    export CHEZMOI_COMMAND="${invocation%%:*}"
+    export CHEZMOI_ARGS="${invocation#*:}"
+
+    run_modify "${input_file}"
+
+    [[ ! -e "${CLAUDE_SETTINGS_OWNERSHIP}" ]]
+  done
+}
+
+@test "GIVEN ownership lock held by another run EXPECT settings still merged and ledger untouched" {
+  export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/owned.json"
+  export CHEZMOI_COMMAND="apply"
+  export CHEZMOI_ARGS="chezmoi apply"
+  mkdir "${CLAUDE_SETTINGS_OWNERSHIP}.lock"
+  input_file="${TEST_TMPDIR}/input.json"
+  cp "${MANAGED_FILE}" "${input_file}"
+
+  run_modify "${input_file}"
+
+  cmp "${OUTPUT_FILE}" "${input_file}"
+  [[ ! -e "${CLAUDE_SETTINGS_OWNERSHIP}" ]]
+  [[ -z "$(find "${TEST_TMPDIR}" -name '.claude-settings.owned.*')" ]]
+}
+
 @test "GIVEN ownership from an earlier run EXPECT it kept when the template drops entries" {
   export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/owned.json"
+  export CHEZMOI_COMMAND="apply"
+  export CHEZMOI_ARGS="chezmoi apply"
   printf '%s\n' '{"keys": {"[\"env\",\"RETIRED_VAR\"]": ["1"]}, "hooks": {}}' >"${CLAUDE_SETTINGS_OWNERSHIP}"
   input_file="${TEST_TMPDIR}/input.json"
   cp "${MANAGED_FILE}" "${input_file}"

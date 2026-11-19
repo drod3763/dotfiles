@@ -6,11 +6,11 @@ set -euo pipefail
 # hook groups added by other tools are appended to the managed ones. When the merge changes
 # nothing but key order, the live file is passed through untouched so `chezmoi diff` stays clean.
 #
-# Every run records the key values and hook groups the template has ever managed in an ownership
-# file outside settings.json. It only grows, so recording during `chezmoi diff` or a targeted
-# apply is harmless. Owned entries the template no longer defines are removed when the live file
-# still holds an owned value, so retired plugins and replaced hooks don't linger, while values
-# edited locally and entries from other tools stay.
+# Each real apply (targeted ones included; never diff, status or --dry-run) records the key values
+# and hook groups the template has managed in an append-only ownership file outside settings.json.
+# Owned entries the template no longer defines are removed when the live file still holds an
+# owned value, so retired plugins and replaced hooks don't linger, while values edited locally
+# and entries from other tools stay.
 
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "${tmp_dir}"' EXIT
@@ -47,11 +47,71 @@ record_ownership() {
         .hooks[$event.key] = ((.hooks[$event.key] // []) + $event.value | unique))
   ' >"${owned_next_file}"
 
-  if ! jq -e -n --slurpfile a "${previous_owned_file}" --slurpfile b "${owned_next_file}" '$a[0] == $b[0]' >/dev/null; then
-    if ! { mkdir -p "$(dirname "${owned_file}")" && cp "${owned_next_file}" "${owned_file}.tmp" && mv "${owned_file}.tmp" "${owned_file}"; }; then
+  # Both helpers check each step and return explicitly, so running them without set -e is fine.
+  # shellcheck disable=SC2310
+  if is_real_apply && ! jq -e -n --slurpfile a "${previous_owned_file}" --slurpfile b "${owned_next_file}" '$a[0] == $b[0]' >/dev/null; then
+    # shellcheck disable=SC2310
+    if ! persist_ownership; then
       printf '%s\n' "claude settings.json: could not record ownership in ${owned_file}; retired entries may linger." >&2
     fi
   fi
+}
+
+# Only an apply that writes files may claim ownership; diff, status and --dry-run previews
+# must not, or a previewed branch could later retire a matching local setting.
+is_real_apply() {
+  case "${CHEZMOI_COMMAND:-}" in
+    apply | init | update) ;;
+    *) return 1 ;;
+  esac
+  local arg
+  for arg in ${CHEZMOI_ARGS:-}; do
+    case "${arg}" in
+      --dry-run | --dry-run=true) return 1 ;;
+      --*) ;;
+      -*n*) return 1 ;;
+      *) ;;
+    esac
+  done
+  return 0
+}
+
+# Re-read, merge and publish under a lock so concurrent runs can't drop each other's additions.
+persist_ownership() {
+  local owned_dir lock_dir attempt staged
+  owned_dir="$(dirname "${owned_file}")"
+  lock_dir="${owned_file}.lock"
+  mkdir -p "${owned_dir}" || return 1
+  for attempt in $(seq 1 50); do
+    if mkdir "${lock_dir}" 2>/dev/null; then
+      break
+    fi
+    if [[ "${attempt}" -eq 50 ]]; then
+      return 1
+    fi
+    sleep 0.1
+  done
+  staged="$(mktemp "${owned_dir}/.claude-settings.owned.XXXXXX")" || {
+    rmdir "${lock_dir}"
+    return 1
+  }
+  # Union with whatever another run published since this one read the ledger.
+  local sources=("${owned_next_file}")
+  if [[ -s "${owned_file}" ]] && jq -e 'type == "object"' "${owned_file}" >/dev/null 2>&1; then
+    sources+=("${owned_file}")
+  fi
+  if jq -s '
+      def union($field): map(.[$field] // {})
+        | reduce .[] as $part ({}; reduce ($part | to_entries[]) as $e (.; .[$e.key] = ((.[$e.key] // []) + $e.value | unique)));
+      {keys: union("keys"), hooks: union("hooks")}
+    ' "${sources[@]}" >"${staged}" &&
+    mv "${staged}" "${owned_file}"; then
+    rmdir "${lock_dir}"
+    return 0
+  fi
+  rm -f "${staged}"
+  rmdir "${lock_dir}"
+  return 1
 }
 
 if [[ ! -s "${live_file}" ]]; then
