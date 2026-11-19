@@ -8,9 +8,14 @@ set -euo pipefail
 # Pairing needs a phone to scan a QR code, so it is offered only on an interactive apply
 # (stdin is a TTY) and defaults to "no" when the prompt is not answered in time.
 moshi_pair_prompt_timeout="${MOSHI_PAIR_PROMPT_TIMEOUT:-30}"
+moshi_status_retry_delay="${MOSHI_STATUS_RETRY_DELAY:-2}"
 
 moshi_status() {
   moshi-hook status --json 2>/dev/null || true
+}
+
+moshi_status_valid() {
+  [[ -n "${moshi_status_json}" ]] && jq -e . >/dev/null 2>&1 <<<"${moshi_status_json}"
 }
 
 moshi_field() {
@@ -18,7 +23,7 @@ moshi_field() {
 }
 
 moshi_status_json="$(moshi_status)"
-if [[ -z "${moshi_status_json}" ]] || ! jq -e . >/dev/null 2>&1 <<<"${moshi_status_json}"; then
+if ! moshi_status_valid; then
   printf '%s\n' "moshi-hook status is unavailable; skipping Moshi setup." >&2
   exit 0
 fi
@@ -77,7 +82,19 @@ if [[ "${moshi_paired}" != "true" ]] && [[ -t 0 ]]; then
     else
       printf '%s\n' "Moshi pairing did not complete." >&2
     fi
+    # The daemon restarts into a new pairing, so the status read can briefly fail; retry.
     moshi_status_json="$(moshi_status)"
+    for _ in 1 2 3; do
+      moshi_status_valid && break
+      sleep "${moshi_status_retry_delay}"
+      moshi_status_json="$(moshi_status)"
+    done
+    if [[ "${moshi_setup_ok}" == "true" ]] && ! moshi_status_valid; then
+      printf '\n%s\n' "Moshi pairing finished, but its status could not be read to confirm it."
+      printf '%s\n' "Check it with: moshi-hook status"
+      printf '%s\n\n' "If it shows paired, turn on end-to-end encryption with: moshi-hook e2ee enable"
+      exit 0
+    fi
     moshi_paired="$(moshi_field '.paired // false')"
     if [[ "${moshi_setup_ok}" == "true" ]] && [[ "${moshi_paired}" == "true" ]]; then
       moshi_paired_now=true
