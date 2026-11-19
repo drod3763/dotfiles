@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Claude Code and other tools (moshi-hook, /model, /plugin) write into settings.json and
+# reorder its keys. Template-defined keys win; everything else in the live file is kept, and
+# hook groups added by other tools are appended to the managed ones. When the merge changes
+# nothing but key order, the live file is passed through untouched so `chezmoi diff` stays clean.
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "${tmp_dir}"' EXIT
+
+managed_file="${tmp_dir}/managed.json"
+live_file="${tmp_dir}/live.json"
+merged_file="${tmp_dir}/merged.json"
+
+cat >"${managed_file}" <<'CLAUDE_SETTINGS_JSON'
+{{ includeTemplate "claude_code_settings.json.tmpl" . | trim }}
+CLAUDE_SETTINGS_JSON
+
+cat >"${live_file}"
+
+if ! command -v jq >/dev/null 2>&1 ||
+  [[ ! -s "${live_file}" ]] ||
+  ! jq -e 'type == "object"' "${live_file}" >/dev/null 2>&1; then
+  cat "${managed_file}"
+  exit 0
+fi
+
+jq -n \
+  --slurpfile live "${live_file}" \
+  --slurpfile managed "${managed_file}" '
+  $live[0] as $l
+  | $managed[0] as $m
+  | ($l * $m)
+  | .hooks = (
+      reduce (($l.hooks // {}) | to_entries[] | select(.value | type == "array")) as $event
+        (($m.hooks // {});
+          (.[$event.key] // []) as $base
+          | .[$event.key] = $base + [$event.value[] as $group | select(any($base[]; . == $group) | not) | $group]
+        )
+    )
+' >"${merged_file}"
+
+if jq -e -n --slurpfile a "${live_file}" --slurpfile b "${merged_file}" '$a[0] == $b[0]' >/dev/null; then
+  cat "${live_file}"
+else
+  cat "${merged_file}"
+fi
