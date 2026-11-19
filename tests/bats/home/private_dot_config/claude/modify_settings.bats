@@ -11,8 +11,6 @@ setup() {
   RENDERED_SCRIPT="${TEST_TMPDIR}/modify_settings"
   MANAGED_FILE="${TEST_TMPDIR}/managed.json"
   OUTPUT_FILE="${TEST_TMPDIR}/output.json"
-  # Never read or write the real ownership file under ~/.local/state.
-  export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/no-ownership.json"
 
   chezmoi_execute_template --source "${REPO_ROOT}" <"${TEMPLATE_PATH}" >"${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
@@ -26,6 +24,16 @@ teardown() {
 run_modify() {
   run bash -c '"${0}" <"${1}" >"${2}"' "${RENDERED_SCRIPT}" "${1}" "${OUTPUT_FILE}"
   [[ "${status}" -eq 0 ]]
+}
+
+# Render the script with a retired_settings override, as the repo data would supply it.
+render_with_retired() {
+  override_file="${TEST_TMPDIR}/override.json"
+  printf '%s\n' "${1}" >"${override_file}"
+  RENDERED_SCRIPT="${TEST_TMPDIR}/modify_settings_retired"
+  chezmoi_execute_template --source "${REPO_ROOT}" --override-data-file "${override_file}" \
+    <"${TEMPLATE_PATH}" >"${RENDERED_SCRIPT}"
+  chmod +x "${RENDERED_SCRIPT}"
 }
 
 # Live file shaped like `moshi-hook install --target claude` output on top of the managed one.
@@ -117,99 +125,34 @@ write_moshi_live() {
   [[ "${status}" -eq 0 ]]
 }
 
-@test "GIVEN entries retired from the template since last apply EXPECT them removed and third-party kept" {
-  export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/owned.json"
-  retired_hook='{"hooks": [{"command": "retired-hook", "type": "command"}]}'
-  jq -n --argjson g "${retired_hook}" '{
-    keys: {"[\"enabledPlugins\",\"retired@market\"]": [true], "[\"env\",\"RETIRED_VAR\"]": ["1"]},
-    hooks: {Stop: [$g]}
-  }' >"${CLAUDE_SETTINGS_OWNERSHIP}"
+@test "GIVEN retired keys and hook commands EXPECT them removed and third-party kept" {
+  render_with_retired '{"claude_code": {"retired_settings": {
+    "keys": [["enabledPlugins", "retired@market"], ["env", "RETIRED_VAR"], ["statusLine"]],
+    "hook_commands": ["retired-hook"]}}}'
   input_file="${TEST_TMPDIR}/input.json"
   write_moshi_live "${TEST_TMPDIR}/moshi.json"
-  jq --argjson g "${retired_hook}" '
+  jq '
     .enabledPlugins["retired@market"] = true
     | .env.RETIRED_VAR = "1"
-    | .hooks.Stop = [$g] + .hooks.Stop
+    | .hooks.Stop = [{"hooks": [{"command": "retired-hook", "type": "command"}]}] + .hooks.Stop
   ' "${TEST_TMPDIR}/moshi.json" >"${input_file}"
 
   run_modify "${input_file}"
 
+  # statusLine is still managed by the template, so listing it as retired never removes it.
   run jq -e --slurpfile want "${TEST_TMPDIR}/moshi.json" '. == $want[0]' "${OUTPUT_FILE}"
   [[ "${status}" -eq 0 ]]
 }
 
-@test "GIVEN retired entry edited locally since last apply EXPECT local value kept" {
-  export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/owned.json"
-  printf '%s\n' '{"keys": {"[\"env\",\"RETIRED_VAR\"]": ["1"]}, "hooks": {}}' >"${CLAUDE_SETTINGS_OWNERSHIP}"
+@test "GIVEN empty retired list EXPECT local plugins and hooks kept" {
+  render_with_retired '{"claude_code": {"retired_settings": {"keys": [], "hook_commands": []}}}'
   input_file="${TEST_TMPDIR}/input.json"
-  jq '.env.RETIRED_VAR = "2"' "${MANAGED_FILE}" >"${input_file}"
-
-  run_modify "${input_file}"
-
-  run jq -e '.env.RETIRED_VAR == "2"' "${OUTPUT_FILE}"
-  [[ "${status}" -eq 0 ]]
-}
-
-@test "GIVEN targeted apply without lifecycle scripts EXPECT managed entries recorded as owned" {
-  export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/state/chezmoi/owned.json"
-  export CHEZMOI_COMMAND="apply"
-  export CHEZMOI_ARGS="chezmoi apply ${HOME}/.config/claude/settings.json"
-  input_file="${TEST_TMPDIR}/input.json"
-  write_moshi_live "${input_file}"
-
-  run_modify "${input_file}"
-
-  run jq -e --slurpfile m "${MANAGED_FILE}" '
-    (.keys["[\"statusLine\",\"type\"]"] | index("command")) != null
-    and (.hooks.Notification | index($m[0].hooks.Notification)) != null
-    and ([.hooks[][].hooks[]?.command | strings] | any(test("moshi-hook")) | not)
-  ' "${CLAUDE_SETTINGS_OWNERSHIP}"
-  [[ "${status}" -eq 0 ]]
-}
-
-@test "GIVEN diff or dry-run apply EXPECT no ownership recorded" {
-  input_file="${TEST_TMPDIR}/input.json"
-  cp "${MANAGED_FILE}" "${input_file}"
-
-  for invocation in "diff:chezmoi diff" "apply:chezmoi apply --dry-run" "apply:chezmoi apply -nv" "status:chezmoi status"; do
-    export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/owned-${RANDOM}.json"
-    export CHEZMOI_COMMAND="${invocation%%:*}"
-    export CHEZMOI_ARGS="${invocation#*:}"
-
-    run_modify "${input_file}"
-
-    [[ ! -e "${CLAUDE_SETTINGS_OWNERSHIP}" ]]
-  done
-}
-
-@test "GIVEN ownership lock held by another run EXPECT settings still merged and ledger untouched" {
-  export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/owned.json"
-  export CHEZMOI_COMMAND="apply"
-  export CHEZMOI_ARGS="chezmoi apply"
-  mkdir "${CLAUDE_SETTINGS_OWNERSHIP}.lock"
-  input_file="${TEST_TMPDIR}/input.json"
-  cp "${MANAGED_FILE}" "${input_file}"
+  write_moshi_live "${TEST_TMPDIR}/moshi.json"
+  jq '.enabledPlugins["local@market"] = true' "${TEST_TMPDIR}/moshi.json" >"${input_file}"
 
   run_modify "${input_file}"
 
   cmp "${OUTPUT_FILE}" "${input_file}"
-  [[ ! -e "${CLAUDE_SETTINGS_OWNERSHIP}" ]]
-  [[ -z "$(find "${TEST_TMPDIR}" -name '.claude-settings.owned.*')" ]]
-}
-
-@test "GIVEN ownership from an earlier run EXPECT it kept when the template drops entries" {
-  export CLAUDE_SETTINGS_OWNERSHIP="${TEST_TMPDIR}/owned.json"
-  export CHEZMOI_COMMAND="apply"
-  export CHEZMOI_ARGS="chezmoi apply"
-  printf '%s\n' '{"keys": {"[\"env\",\"RETIRED_VAR\"]": ["1"]}, "hooks": {}}' >"${CLAUDE_SETTINGS_OWNERSHIP}"
-  input_file="${TEST_TMPDIR}/input.json"
-  cp "${MANAGED_FILE}" "${input_file}"
-
-  run_modify "${input_file}"
-  run_modify "${input_file}"
-
-  run jq -e '.keys["[\"env\",\"RETIRED_VAR\"]"] == ["1"]' "${CLAUDE_SETTINGS_OWNERSHIP}"
-  [[ "${status}" -eq 0 ]]
 }
 
 @test "GIVEN live already holds managed hook groups EXPECT no duplicates" {
