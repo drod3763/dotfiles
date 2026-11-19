@@ -37,7 +37,7 @@ EOF
 #!/usr/bin/env bash
 [[ -z "${MOCK_TAILSCALE_DOWN:-}" ]] || exit 1
 case "$1" in
-  status) printf '{"Self":{"DNSName":"mac.tailnet.ts.net."}}\n' ;;
+  status) printf '{"BackendState":"%s","Self":{"DNSName":"mac.tailnet.ts.net."}}\n' "${MOCK_TAILSCALE_BACKEND:-Running}" ;;
   debug) printf '{"RunSSH": %s}\n' "${MOCK_TAILSCALE_RUN_SSH:-true}" ;;
 esac
 EOF
@@ -180,6 +180,15 @@ run_interactive() {
 
   [[ "${status}" -eq 0 ]]
   moshi_called "host setup --host mac.tailnet.ts.net"
+}
+
+@test "GIVEN Tailscale SSH on but backend stopped EXPECT setup without host or force" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+
+  run_interactive "y" MOCK_TAILSCALE_BACKEND=Stopped
+
+  [[ "${status}" -eq 0 ]]
+  moshi_called "host setup"
 }
 
 @test "GIVEN tailscale unavailable EXPECT plain host setup" {

@@ -34,18 +34,22 @@ if [[ -n "${stale_hook_targets}" ]]; then
   fi
 fi
 
-# Advertise the tailnet name when Tailscale is up. With Tailscale SSH serving port 22,
-# `host setup` warns that Remote Login is off and that its authorized_keys key goes unused;
-# both are expected here (the tailnet ACL authorizes the phone), so --force past them.
+# Advertise the tailnet name only while Tailscale is connected. With Tailscale SSH serving
+# port 22, `host setup` warns that Remote Login is off and that its authorized_keys key goes
+# unused; both are expected here (the tailnet ACL authorizes the phone), so --force past them.
+# A stopped or logged-out backend keeps moshi's prerequisite checks in force.
 moshi_setup_args=(host setup)
 if command -v tailscale >/dev/null 2>&1; then
-  tailnet_host="$(tailscale status --json 2>/dev/null | jq -r '.Self.DNSName // empty' 2>/dev/null || true)"
+  tailscale_status_json="$(tailscale status --json 2>/dev/null || true)"
+  tailscale_backend="$(jq -r '.BackendState // empty' <<<"${tailscale_status_json}" 2>/dev/null || true)"
+  tailnet_host="$(jq -r '.Self.DNSName // empty' <<<"${tailscale_status_json}" 2>/dev/null || true)"
   tailnet_host="${tailnet_host%.}"
-  if [[ -n "${tailnet_host}" ]]; then
+  if [[ "${tailscale_backend}" == "Running" ]] && [[ -n "${tailnet_host}" ]]; then
     moshi_setup_args+=(--host "${tailnet_host}")
-  fi
-  if [[ "$(tailscale debug prefs 2>/dev/null | jq -r '.RunSSH // false' 2>/dev/null || true)" == "true" ]]; then
-    moshi_setup_args+=(--force)
+    tailscale_run_ssh="$(tailscale debug prefs 2>/dev/null | jq -r '.RunSSH // false' 2>/dev/null || true)"
+    if [[ "${tailscale_run_ssh}" == "true" ]]; then
+      moshi_setup_args+=(--force)
+    fi
   fi
 fi
 
