@@ -2,7 +2,8 @@
 os = "common"
 type = "common"
 target_class = "all"
-when_tool = "pwsh"
+use_mise = true
+mise_tool_name = "powershell"
 
 [shell_manifest.entries.powershell]
 priority = 247

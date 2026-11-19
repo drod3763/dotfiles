@@ -101,6 +101,9 @@ render_with_overrides() {
   run jq -e '.mise_packages | index("dotnet@8") != null' "${resolver_json}"
   [ "${status}" -eq 0 ]
 
+  run jq -e '.mise_packages | index("powershell") != null' "${resolver_json}"
+  [ "${status}" -eq 0 ]
+
   run jq -e '.mise_packages | index("go") == null' "${resolver_json}"
   [ "${status}" -eq 0 ]
 
