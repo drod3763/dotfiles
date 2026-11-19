@@ -115,15 +115,17 @@ function Get-AgeRecipient([string]$Identity) {
   }
 }
 
-# Key lines as one comparable string: trimmed, comments dropped, sorted and
-# de-duplicated case-sensitively.
-function Get-KeySet([string[]]$Lines) {
-  (@($Lines | ForEach-Object { "$_".Trim() } |
-      Where-Object { $_ -and -not $_.StartsWith('#') } | Sort-Object -Unique -CaseSensitive)) -join "`n"
+# UTF-8 without BOM and LF endings, matching what age and the macOS files expect.
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+function ConvertTo-KeyFileText($Lines) {
+  (($Lines | Select-Object -Unique) -join "`n") + "`n"
 }
-function Get-FileKeySet([string]$Path) {
-  if (-not (Test-Path -LiteralPath $Path)) { return $null }
-  Get-KeySet (Get-Content -LiteralPath $Path)
+# Byte-for-byte comparison with the file this script would write. Decoding with
+# Get-Content would hide a UTF-16 or BOM-marked copy that age cannot read.
+function Test-KeyFileCurrent([string]$Path, [string]$Text) {
+  if (-not (Test-Path -LiteralPath $Path)) { return $false }
+  $actual = [Convert]::ToBase64String([IO.File]::ReadAllBytes($Path))
+  return $actual -ceq [Convert]::ToBase64String($utf8.GetBytes($Text))
 }
 
 {{ if not (lookPath "op") -}}
@@ -184,17 +186,16 @@ if ($failed.Count -gt 0) {
   exit 1
 }
 
-# Nothing to do when the live pair already holds exactly what 1Password has; this
-# also catches recipients.txt left stale by an interrupted swap, and a key that
-# was rotated out even though the remaining keys still decrypt everything.
-if (((Get-FileKeySet $identitiesFile) -ceq (Get-KeySet $identities)) -and
-    ((Get-FileKeySet $recipientsFile) -ceq (Get-KeySet $recipients))) {
+# Nothing to do when the live pair is byte-identical to what this script writes
+# from 1Password. Anything else (recipients.txt left stale by an interrupted
+# swap, a key rotated out while the rest still decrypt, a re-encoded or
+# hand-edited copy) is rewritten through the verified swap below.
+if ((Test-KeyFileCurrent $identitiesFile (ConvertTo-KeyFileText $identities)) -and
+    (Test-KeyFileCurrent $recipientsFile (ConvertTo-KeyFileText $recipients))) {
   exit 0
 }
 Write-BootstrapLog 'Local identities differ from 1Password; updating them.'
 
-# UTF-8 without BOM and LF endings, matching what age and the macOS files expect.
-$utf8 = New-Object System.Text.UTF8Encoding($false)
 # Stage both files first, then swap each into place; ReplaceFile is atomic on
 # NTFS, so the live files are never truncated. The previous pair stays as .bak
 # until both swaps finish, so an interrupted update can be recovered by hand.
@@ -207,7 +208,7 @@ $files = @(
 foreach ($file in $files) {
   $file.Staged = "$($file.Live).partial"
   $file.Backup = "$($file.Live).bak"
-  [IO.File]::WriteAllText($file.Staged, (($file.Lines | Select-Object -Unique) -join "`n") + "`n", $utf8)
+  [IO.File]::WriteAllText($file.Staged, (ConvertTo-KeyFileText $file.Lines), $utf8)
 }
 
 # Prove the staged keyring decrypts the encrypted sources before touching the
