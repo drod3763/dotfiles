@@ -36,8 +36,13 @@ EOF
   cat > "${MOCK_BIN_DIR}/tailscale" <<'EOF'
 #!/usr/bin/env bash
 [[ -z "${MOCK_TAILSCALE_DOWN:-}" ]] || exit 1
+backend="${MOCK_TAILSCALE_BACKEND:-Running}"
+# Once MOCK_TAILSCALE_STOPPED_MARKER exists, Tailscale reports Stopped.
+if [[ -n "${MOCK_TAILSCALE_STOPPED_MARKER:-}" ]] && [[ -e "${MOCK_TAILSCALE_STOPPED_MARKER}" ]]; then
+  backend=Stopped
+fi
 case "$1" in
-  status) printf '{"BackendState":"%s","Self":{"DNSName":"mac.tailnet.ts.net."}}\n' "${MOCK_TAILSCALE_BACKEND:-Running}" ;;
+  status) printf '{"BackendState":"%s","Self":{"DNSName":"mac.tailnet.ts.net."}}\n' "${backend}" ;;
   debug) printf '{"RunSSH": %s}\n' "${MOCK_TAILSCALE_RUN_SSH:-true}" ;;
 esac
 EOF
@@ -89,10 +94,11 @@ run_rendered_script() {
   run env PATH="${PATH}" "$@" bash "${RENDERED_SCRIPT}" </dev/null
 }
 
+# Submits the answer with a newline, as pressing Enter would.
 run_interactive() {
   local answer="$1"
   shift
-  run env PATH="${PATH}" "$@" bash -c 'printf "%s" "$1" | bash "$2"' _ "${answer}" "${INTERACTIVE_SCRIPT}"
+  run env PATH="${PATH}" "$@" bash -c 'printf "%s\n" "$1" | bash "$2"' _ "${answer}" "${INTERACTIVE_SCRIPT}"
 }
 
 @test "GIVEN converged host EXPECT only a status read" {
@@ -159,6 +165,43 @@ run_interactive() {
   [[ "${status}" -eq 0 ]]
   ! moshi_called_like "^host"
   [[ "${output}" == *"To pair it, run"* ]]
+}
+
+@test "GIVEN unpaired interactive and y then EOF without Enter EXPECT no setup" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+
+  run env PATH="${PATH}" bash -c 'printf "y" | bash "$1"' _ "${INTERACTIVE_SCRIPT}"
+
+  [[ "${status}" -eq 0 ]]
+  ! moshi_called_like "^host"
+}
+
+@test "GIVEN unpaired interactive and answer other than yes EXPECT no setup" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+
+  run_interactive "yolo"
+
+  [[ "${status}" -eq 0 ]]
+  ! moshi_called_like "^host"
+}
+
+@test "GIVEN Tailscale stops while the prompt is open EXPECT setup without host or force" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  # Tailscale is Running until the prompt is on screen, then Stopped when "yes" is submitted.
+  local marker="${TEST_TMPDIR}/tailscale-stopped"
+  local screen="${TEST_TMPDIR}/screen"
+  : > "${screen}"
+
+  run env PATH="${PATH}" MOCK_TAILSCALE_STOPPED_MARKER="${marker}" MOSHI_PAIR_PROMPT_TIMEOUT=10 bash -c '
+    {
+      for _ in {1..100}; do grep -q "Pair now" "$3" && break; /bin/sleep 0.1; done
+      touch "$1"
+      printf "yes\n"
+    } | bash "$2" > "$3"
+    cat "$3"' _ "${marker}" "${INTERACTIVE_SCRIPT}" "${screen}"
+
+  [[ "${status}" -eq 0 ]]
+  moshi_called "host setup"
 }
 
 @test "GIVEN unpaired interactive and answer yes EXPECT setup then e2ee enable" {
