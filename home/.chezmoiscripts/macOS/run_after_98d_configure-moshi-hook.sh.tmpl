@@ -1,0 +1,83 @@
+{{ if lookPath "moshi-hook" -}}
+#!/bin/bash
+
+set -euo pipefail
+
+# Bring moshi-hook to a working state: agent hooks installed, host paired, E2EE on.
+# Every step is driven by `moshi-hook status --json`, so a converged host does nothing.
+# Pairing needs a phone to scan a QR code, so it is offered only on an interactive apply
+# (stdin is a TTY) and defaults to "no" when the prompt is not answered in time.
+moshi_pair_prompt_timeout="${MOSHI_PAIR_PROMPT_TIMEOUT:-30}"
+
+moshi_status() {
+  moshi-hook status --json 2>/dev/null || true
+}
+
+moshi_field() {
+  jq -r "$1" <<<"${moshi_status_json}" 2>/dev/null || true
+}
+
+moshi_status_json="$(moshi_status)"
+if [[ -z "${moshi_status_json}" ]] || ! jq -e . >/dev/null 2>&1 <<<"${moshi_status_json}"; then
+  printf '%s\n' "moshi-hook status is unavailable; skipping Moshi setup." >&2
+  exit 0
+fi
+
+# Agent hooks: `not_found` means that agent CLI is not installed; anything other than
+# `current` (e.g. hooks removed when chezmoi rewrites ~/.config/claude/settings.json) needs a reinstall.
+stale_hook_targets="$(jq -r '[.hooks[]? | select(.status != "current" and .status != "not_found") | .target] | join(",")' \
+  <<<"${moshi_status_json}")"
+if [[ -n "${stale_hook_targets}" ]]; then
+  printf '%s\n' "Installing moshi-hook agent hooks for: ${stale_hook_targets}"
+  if ! moshi-hook install --target "${stale_hook_targets}"; then
+    printf '%s\n' "Failed to install moshi-hook hooks. Run: moshi-hook install" >&2
+  fi
+fi
+
+# Advertise the tailnet name when Tailscale is up. With Tailscale SSH serving port 22,
+# `host setup` warns that Remote Login is off and that its authorized_keys key goes unused;
+# both are expected here (the tailnet ACL authorizes the phone), so --force past them.
+moshi_setup_args=(host setup)
+if command -v tailscale >/dev/null 2>&1; then
+  tailnet_host="$(tailscale status --json 2>/dev/null | jq -r '.Self.DNSName // empty' 2>/dev/null || true)"
+  tailnet_host="${tailnet_host%.}"
+  if [[ -n "${tailnet_host}" ]]; then
+    moshi_setup_args+=(--host "${tailnet_host}")
+  fi
+  if [[ "$(tailscale debug prefs 2>/dev/null | jq -r '.RunSSH // false' 2>/dev/null || true)" == "true" ]]; then
+    moshi_setup_args+=(--force)
+  fi
+fi
+
+moshi_paired="$(moshi_field '.paired // false')"
+if [[ "${moshi_paired}" != "true" ]] && [[ -t 0 ]]; then
+  pair_answer=""
+  printf '\nThis Mac is not paired with Moshi. Pair now? [y/N] (no in %ss) ' "${moshi_pair_prompt_timeout}"
+  read -r -t "${moshi_pair_prompt_timeout}" pair_answer || true
+  printf '\n'
+  if [[ "${pair_answer}" =~ ^[Yy] ]]; then
+    if ! moshi-hook "${moshi_setup_args[@]}"; then
+      printf '%s\n' "Moshi pairing did not complete." >&2
+    fi
+    moshi_status_json="$(moshi_status)"
+    moshi_paired="$(moshi_field '.paired // false')"
+  fi
+fi
+
+if [[ "${moshi_paired}" != "true" ]]; then
+  printf '\n%s\n' "This Mac is not paired with Moshi. To pair it, run:"
+  printf '  moshi-hook'
+  printf ' %q' "${moshi_setup_args[@]}"
+  printf '\n\n'
+  exit 0
+fi
+
+# E2EE needs a pairing; enabling it is idempotent but keep converged applies quiet.
+moshi_e2ee_policy="$(moshi_field '.e2ee.policy // empty')"
+if [[ "${moshi_e2ee_policy}" != "on" ]]; then
+  printf '%s\n' "Enabling moshi-hook end-to-end encryption."
+  if ! moshi-hook e2ee enable; then
+    printf '%s\n' "Failed to enable moshi-hook E2EE. Run: moshi-hook e2ee enable" >&2
+  fi
+fi
+{{ end -}}
