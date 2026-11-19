@@ -52,6 +52,29 @@ moshi_field() {
   jq -r "$1" <<<"${moshi_status_json}" 2>/dev/null || true
 }
 
+moshi_confirmed_paired() {
+  moshi_status_valid || return 1
+  local paired
+  paired="$(moshi_field '.paired // false')"
+  [[ "${paired}" == "true" ]]
+}
+
+# Refreshes status; true only when it reads cleanly and shows the host unpaired.
+moshi_still_unpaired() {
+  moshi_status_json="$(moshi_status)"
+  moshi_status_valid || return 1
+  local paired
+  paired="$(moshi_field '.paired // false')"
+  [[ "${paired}" != "true" ]]
+}
+
+# moshi's prerequisite refusal: either the generic "Or pass --force to continue without
+# these." or a specific stop such as Tailscale SSH ("Then run `moshi-hook host setup` again.").
+moshi_setup_refused_on_checks() {
+  # shellcheck disable=SC2016 # The backticks are literal text in moshi's message.
+  grep -qE 'pass --force|Then run `moshi-hook host setup` again' "${moshi_setup_log}"
+}
+
 # Advertise the tailnet name only while Tailscale is connected. Called right before each
 # use, so a prompt left open while Tailscale disconnects never reuses stale state.
 build_moshi_setup_args() {
@@ -100,16 +123,21 @@ elif [[ ! -t 0 ]]; then
 elif ! confirm "This Mac is not paired with Moshi. Pair now?"; then
   note "Pairing: declined (or no answer in ${moshi_prompt_timeout}s)."
 else
-  # Run setup with moshi's prerequisite checks first. If it stops (e.g. on the Remote Login
-  # or Tailscale SSH warnings, which are expected on a Tailscale SSH host), offer --force.
+  # Run setup with moshi's prerequisite checks first; its output stays on screen and is kept
+  # to recognise a prerequisite refusal (e.g. the Remote Login or Tailscale SSH warnings,
+  # expected on a Tailscale SSH host). Only that refusal, on a host still unpaired, offers
+  # --force; any other failure is just reported.
   # Only a successful setup counts as this run's pairing: `paired` is host-wide, so a failed
   # setup that still finds the host paired (e.g. from another terminal) is not ours.
   moshi_setup_ok=false
   moshi_setup_forced=false
+  moshi_setup_log="$(mktemp)"
+  trap 'rm -f "${moshi_setup_log}"; print_report' EXIT
   build_moshi_setup_args
-  if moshi-hook "${moshi_setup_args[@]}"; then
+  if moshi-hook "${moshi_setup_args[@]}" 2>&1 | tee "${moshi_setup_log}"; then
     moshi_setup_ok=true
-  elif confirm "Pairing stopped (see above). Continue past moshi's prerequisite warnings with --force?"; then
+  elif moshi_setup_refused_on_checks && moshi_still_unpaired &&
+    confirm "Pairing stopped on the warnings above. Continue past them with --force?"; then
     build_moshi_setup_args
     if moshi-hook "${moshi_setup_args[@]}" --force; then
       moshi_setup_ok=true
@@ -117,21 +145,21 @@ else
     fi
   fi
 
-  # The daemon restarts into a new pairing, so the status read can briefly fail; retry.
   moshi_status_json="$(moshi_status)"
-  for _ in 1 2 3; do
-    moshi_status_valid && break
-    sleep "${moshi_status_retry_delay}"
-    moshi_status_json="$(moshi_status)"
-  done
-  if [[ "${moshi_setup_ok}" == "true" ]] && ! moshi_status_valid; then
-    note "Pairing: setup finished, but its status could not be read to confirm it. Check: moshi-hook status"
-    note "E2EE: not changed. If the host shows paired, run: moshi-hook e2ee enable"
-    exit 0
-  fi
-
-  moshi_paired="$(moshi_field '.paired // false')"
-  if [[ "${moshi_setup_ok}" == "true" ]] && [[ "${moshi_paired}" == "true" ]]; then
+  if [[ "${moshi_setup_ok}" == "true" ]]; then
+    # The daemon restarts into the new pairing, so status can briefly fail or still read
+    # unpaired; wait for it to confirm the pairing rather than trusting the first answer.
+    for _ in 1 2 3; do
+      moshi_confirmed_paired && break
+      sleep "${moshi_status_retry_delay}"
+      moshi_status_json="$(moshi_status)"
+    done
+    if ! moshi_confirmed_paired; then
+      note "Pairing: setup finished, but moshi-hook could not confirm the pairing. Check: moshi-hook status"
+      note "E2EE: not changed. If the host shows paired, run: moshi-hook e2ee enable"
+      exit 0
+    fi
+    moshi_paired=true
     moshi_paired_now=true
     if [[ "${moshi_setup_forced}" == "true" ]]; then
       note "Pairing: paired (continued past prerequisite warnings with --force)."
@@ -140,6 +168,7 @@ else
     fi
   else
     note "Pairing: did not complete."
+    moshi_paired="$(moshi_field '.paired // false')"
   fi
 fi
 
