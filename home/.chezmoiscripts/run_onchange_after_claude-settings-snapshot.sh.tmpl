@@ -1,0 +1,16 @@
+{{ if ne .chezmoi.os "windows" -}}
+#!/bin/bash
+
+set -euo pipefail
+
+# Record the managed Claude settings this apply wrote, so the next apply's
+# modify_settings.json can retire keys and hook groups the template has since dropped.
+# Runs only on apply (never on diff) and again whenever the managed JSON below changes.
+snapshot_file="${CLAUDE_SETTINGS_SNAPSHOT:-{{ template "claude_code_settings_snapshot_path.tmpl" . }}}"
+mkdir -p "$(dirname "${snapshot_file}")"
+
+cat >"${snapshot_file}.tmp" <<'CLAUDE_SETTINGS_JSON'
+{{ includeTemplate "claude_code_settings.json.tmpl" . | trim }}
+CLAUDE_SETTINGS_JSON
+mv "${snapshot_file}.tmp" "${snapshot_file}"
+{{ end -}}

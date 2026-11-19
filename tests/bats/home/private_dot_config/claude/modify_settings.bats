@@ -11,6 +11,8 @@ setup() {
   RENDERED_SCRIPT="${TEST_TMPDIR}/modify_settings"
   MANAGED_FILE="${TEST_TMPDIR}/managed.json"
   OUTPUT_FILE="${TEST_TMPDIR}/output.json"
+  # Never read the real last-apply snapshot under ~/.local/state.
+  export CLAUDE_SETTINGS_SNAPSHOT="${TEST_TMPDIR}/no-snapshot.json"
 
   chezmoi_execute_template --source "${REPO_ROOT}" <"${TEMPLATE_PATH}" >"${RENDERED_SCRIPT}"
   chmod +x "${RENDERED_SCRIPT}"
@@ -113,6 +115,51 @@ write_moshi_live() {
   [[ "${status}" -eq 0 ]]
   run jq -e '.hooks.Notification[0].matcher == "" and .hooks.Notification[1].matcher == "permission_prompt"' "${OUTPUT_FILE}"
   [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN entries retired from the template since last apply EXPECT them removed and third-party kept" {
+  export CLAUDE_SETTINGS_SNAPSHOT="${TEST_TMPDIR}/snapshot.json"
+  jq '
+    .enabledPlugins["retired@market"] = true
+    | .env.RETIRED_VAR = "1"
+    | .hooks.Stop = [{"hooks": [{"command": "retired-hook", "type": "command"}]}]
+  ' "${MANAGED_FILE}" >"${CLAUDE_SETTINGS_SNAPSHOT}"
+  input_file="${TEST_TMPDIR}/input.json"
+  write_moshi_live "${TEST_TMPDIR}/moshi.json"
+  jq --slurpfile prev "${CLAUDE_SETTINGS_SNAPSHOT}" '
+    .enabledPlugins["retired@market"] = true
+    | .env.RETIRED_VAR = "1"
+    | .hooks.Stop = $prev[0].hooks.Stop + .hooks.Stop
+  ' "${TEST_TMPDIR}/moshi.json" >"${input_file}"
+
+  run_modify "${input_file}"
+
+  run jq -e --slurpfile want "${TEST_TMPDIR}/moshi.json" '. == $want[0]' "${OUTPUT_FILE}"
+  [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN retired entry edited locally since last apply EXPECT local value kept" {
+  export CLAUDE_SETTINGS_SNAPSHOT="${TEST_TMPDIR}/snapshot.json"
+  jq '.env.RETIRED_VAR = "1"' "${MANAGED_FILE}" >"${CLAUDE_SETTINGS_SNAPSHOT}"
+  input_file="${TEST_TMPDIR}/input.json"
+  jq '.env.RETIRED_VAR = "2"' "${MANAGED_FILE}" >"${input_file}"
+
+  run_modify "${input_file}"
+
+  run jq -e '.env.RETIRED_VAR == "2"' "${OUTPUT_FILE}"
+  [[ "${status}" -eq 0 ]]
+}
+
+@test "GIVEN snapshot script runs EXPECT snapshot equals managed settings" {
+  snapshot_script="${TEST_TMPDIR}/snapshot.sh"
+  chezmoi_execute_template --source "${REPO_ROOT}" \
+    <"${REPO_ROOT}/home/.chezmoiscripts/run_onchange_after_claude-settings-snapshot.sh.tmpl" >"${snapshot_script}"
+  export CLAUDE_SETTINGS_SNAPSHOT="${TEST_TMPDIR}/state/chezmoi/snapshot.json"
+
+  run bash "${snapshot_script}"
+
+  [[ "${status}" -eq 0 ]]
+  cmp "${CLAUDE_SETTINGS_SNAPSHOT}" "${MANAGED_FILE}"
 }
 
 @test "GIVEN live already holds managed hook groups EXPECT no duplicates" {
