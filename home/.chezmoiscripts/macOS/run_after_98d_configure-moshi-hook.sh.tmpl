@@ -1,0 +1,231 @@
+{{ if lookPath "moshi-hook" -}}
+#!/bin/bash
+# shellcheck disable=SC2310 # confirm and moshi_status_valid are status checks used in conditions on purpose.
+
+set -euo pipefail
+
+# Bring moshi-hook to a working state: agent hooks installed, host paired, E2EE on.
+# Every step is driven by `moshi-hook status --json`, so a converged host changes nothing.
+# Pairing needs a phone to scan a QR code, so it is offered only on an interactive apply
+# (stdin is a TTY). Every prompt defaults to "no" when it is not answered in time.
+# A report of what happened is printed when the script exits.
+moshi_prompt_timeout="${MOSHI_PROMPT_TIMEOUT:-30}"
+moshi_status_retry_delay="${MOSHI_STATUS_RETRY_DELAY:-2}"
+
+moshi_report=()
+
+note() {
+  moshi_report+=("$1")
+}
+
+print_report() {
+  if [[ "${#moshi_report[@]}" -gt 0 ]]; then
+    printf '\nMoshi setup report\n'
+    printf '  - %s\n' "${moshi_report[@]}"
+    printf '\n'
+  fi
+}
+trap print_report EXIT
+
+# confirm <question>: true only for a submitted y/yes. A timeout, EOF, an answer left
+# unsubmitted, or anything else is "no".
+confirm() {
+  local answer=""
+  printf '\n%s [y/N] (no in %ss) ' "$1" "${moshi_prompt_timeout}"
+  if read -r -t "${moshi_prompt_timeout}" answer && [[ "${answer}" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]; then
+    printf '\n'
+    return 0
+  fi
+  printf '\n'
+  return 1
+}
+
+# Empty unless `moshi-hook status` itself succeeds, so error output is never parsed as status.
+moshi_status() {
+  local out
+  if out="$(moshi-hook status --json 2>/dev/null)"; then
+    printf '%s' "${out}"
+  fi
+}
+
+# Valid means the shape this script relies on: an object with a boolean `paired`.
+moshi_status_valid() {
+  [[ -n "${moshi_status_json}" ]] &&
+    jq -e 'type == "object" and (.paired | type == "boolean")' >/dev/null 2>&1 <<<"${moshi_status_json}"
+}
+
+moshi_field() {
+  jq -r "$1" <<<"${moshi_status_json}" 2>/dev/null || true
+}
+
+moshi_confirmed_paired() {
+  moshi_status_valid || return 1
+  local paired
+  paired="$(moshi_field '.paired // false')"
+  [[ "${paired}" == "true" ]]
+}
+
+# Refreshes status; true only when it reads cleanly and shows the host unpaired.
+moshi_still_unpaired() {
+  moshi_status_json="$(moshi_status)"
+  moshi_status_valid || return 1
+  local paired
+  paired="$(moshi_field '.paired // false')"
+  [[ "${paired}" != "true" ]]
+}
+
+# moshi's prerequisite refusal: either the generic "Or pass --force to continue without
+# these." or a specific stop such as Tailscale SSH ("Then run `moshi-hook host setup` again.").
+moshi_setup_refused_on_checks() {
+  [[ -n "${moshi_setup_log}" ]] || return 1
+  # shellcheck disable=SC2016 # The backticks are literal text in moshi's message.
+  grep -qE 'pass --force|Then run `moshi-hook host setup` again' "${moshi_setup_log}"
+}
+
+# Advertise the tailnet name only while Tailscale is connected. Called right before each
+# use, so a prompt left open while Tailscale disconnects never reuses stale state.
+build_moshi_setup_args() {
+  moshi_setup_args=(host setup)
+  command -v tailscale >/dev/null 2>&1 || return 0
+  local status_json backend host
+  status_json="$(tailscale status --json 2>/dev/null || true)"
+  backend="$(jq -r '.BackendState // empty' <<<"${status_json}" 2>/dev/null || true)"
+  host="$(jq -r '.Self.DNSName // empty' <<<"${status_json}" 2>/dev/null || true)"
+  host="${host%.}"
+  if [[ "${backend}" == "Running" ]] && [[ -n "${host}" ]]; then
+    moshi_setup_args+=(--host "${host}")
+  fi
+}
+
+moshi_setup_command() {
+  local cmd
+  printf -v cmd ' %q' "${moshi_setup_args[@]}"
+  printf 'moshi-hook%s' "${cmd}"
+}
+
+moshi_status_json="$(moshi_status)"
+if ! moshi_status_valid; then
+  note "Skipped: moshi-hook status is unavailable, so nothing was checked or changed."
+  exit 0
+fi
+
+# Agent hooks: `not_found` means that agent CLI is not installed; anything other than
+# `current` (e.g. hooks removed when chezmoi rewrites ~/.config/claude/settings.json) needs a reinstall.
+stale_hook_targets="$(jq -r '[.hooks[]? | select(.status != "current" and .status != "not_found") | .target] | join(",")' \
+  <<<"${moshi_status_json}" 2>/dev/null || true)"
+if [[ -z "${stale_hook_targets}" ]]; then
+  note "Hooks: current."
+elif moshi-hook install --target "${stale_hook_targets}"; then
+  note "Hooks: reinstalled for ${stale_hook_targets}."
+else
+  note "Hooks: install failed for ${stale_hook_targets}. Run: moshi-hook install"
+fi
+
+moshi_paired="$(moshi_field '.paired // false')"
+moshi_paired_now=false
+moshi_setup_forced=false
+if [[ "${moshi_paired}" == "true" ]]; then
+  note "Pairing: already paired."
+elif [[ ! -t 0 ]]; then
+  note "Pairing: not paired, and this apply is not interactive, so pairing was not offered."
+elif ! confirm "This Mac is not paired with Moshi. Pair now?"; then
+  note "Pairing: declined (or no answer in ${moshi_prompt_timeout}s)."
+elif ! moshi_still_unpaired; then
+  # Re-checked after the answer: the host may have been paired elsewhere while the prompt waited.
+  note "Pairing: not run; by the time you answered, the host no longer read as unpaired."
+  moshi_paired="$(moshi_field '.paired // false')"
+else
+  # Run setup with moshi's prerequisite checks first; its output stays on screen and is kept
+  # to recognise a prerequisite refusal (e.g. the Remote Login or Tailscale SSH warnings,
+  # expected on a Tailscale SSH host). Only that refusal, on a host still unpaired, offers
+  # --force; any other failure is just reported.
+  # Only a successful setup counts as this run's pairing: `paired` is host-wide, so a failed
+  # setup that still finds the host paired (e.g. from another terminal) is not ours.
+  moshi_setup_ok=false
+  moshi_setup_forced=false
+  # Without a log (mktemp failed) setup still runs with its checks; --force is just not offered.
+  moshi_setup_log="$(mktemp 2>/dev/null || true)"
+  trap '[[ -z "${moshi_setup_log}" ]] || rm -f "${moshi_setup_log}"; print_report' EXIT
+  build_moshi_setup_args
+  # Judge setup by its own exit status: with pipefail, a failed log write would otherwise
+  # make a successful setup look failed.
+  moshi_setup_rc=0
+  moshi-hook "${moshi_setup_args[@]}" 2>&1 | tee "${moshi_setup_log:-/dev/null}" || moshi_setup_rc="${PIPESTATUS[0]}"
+  if [[ "${moshi_setup_rc}" -eq 0 ]]; then
+    moshi_setup_ok=true
+  elif moshi_setup_refused_on_checks && moshi_still_unpaired &&
+    confirm "Pairing stopped on the warnings above. Continue past them with --force?" &&
+    moshi_still_unpaired; then
+    # Approval to force covers the endpoint the warnings were about. Re-derive it after the
+    # prompt; if it changed (e.g. Tailscale dropped meanwhile), don't force a stale or
+    # unchecked endpoint: a fresh, checked setup has to run first.
+    moshi_checked_args="${moshi_setup_args[*]}"
+    build_moshi_setup_args
+    if [[ "${moshi_setup_args[*]}" != "${moshi_checked_args}" ]]; then
+      note "Pairing: --force not used; the Tailscale endpoint changed while you were deciding. Run setup again."
+    elif moshi-hook "${moshi_setup_args[@]}" --force; then
+      moshi_setup_ok=true
+      moshi_setup_forced=true
+    fi
+  fi
+
+  moshi_status_json="$(moshi_status)"
+  if [[ "${moshi_setup_ok}" == "true" ]]; then
+    # The daemon restarts into the new pairing, so status can briefly fail or still read
+    # unpaired; wait for it to confirm the pairing rather than trusting the first answer.
+    for _ in 1 2 3; do
+      moshi_confirmed_paired && break
+      sleep "${moshi_status_retry_delay}"
+      moshi_status_json="$(moshi_status)"
+    done
+    if ! moshi_confirmed_paired; then
+      note "Pairing: setup finished, but moshi-hook could not confirm the pairing. Check: moshi-hook status"
+      note "E2EE: not changed. If the host shows paired, run: moshi-hook e2ee enable"
+      exit 0
+    fi
+    moshi_paired=true
+    moshi_paired_now=true
+    if [[ "${moshi_setup_forced}" == "true" ]]; then
+      note "Pairing: paired (continued past prerequisite warnings with --force)."
+    else
+      note "Pairing: paired."
+    fi
+  else
+    note "Pairing: did not complete."
+    moshi_paired="$(moshi_field '.paired // false')"
+  fi
+fi
+
+if [[ "${moshi_paired}" != "true" ]]; then
+  # Recommend pairing only when a valid status confirms the host is unpaired; if status is
+  # unreadable (e.g. the daemon restarting after a setup attempt), check before re-running.
+  if moshi_status_valid; then
+    build_moshi_setup_args
+    moshi_pair_command="$(moshi_setup_command)"
+    note "Pairing: to pair, run: ${moshi_pair_command} (add --force to continue past its warnings)"
+  else
+    note "Pairing: state unknown (status unreadable). Check: moshi-hook status before pairing again."
+  fi
+  note "E2EE: not changed (needs a pairing)."
+  exit 0
+fi
+
+# E2EE: enable it as part of a pairing this run made. On a host that was already paired,
+# keep its policy: it may have been turned off on purpose (a phone without SSH access can't
+# fetch the key and so can't approve), and an unattended apply must not undo that.
+# A forced pairing skipped moshi's SSH checks (e.g. its authorized_keys key goes unused under
+# Tailscale SSH), so whether the phone can fetch the key is unverified: ask instead of assuming.
+moshi_e2ee_policy="$(moshi_field '.e2ee.policy // empty')"
+if [[ "${moshi_e2ee_policy}" == "on" ]]; then
+  note "E2EE: on."
+elif [[ "${moshi_paired_now}" != "true" ]]; then
+  note "E2EE: off, left as is. To turn it on, run: moshi-hook e2ee enable"
+elif [[ "${moshi_setup_forced}" == "true" ]] &&
+  ! confirm "Pairing skipped moshi's SSH checks. Each phone fetches the E2EE key over SSH (Tailscale SSH works). Turn on end-to-end encryption now?"; then
+  note "E2EE: left off after a forced pairing. Once a phone connects over SSH, run: moshi-hook e2ee enable"
+elif moshi-hook e2ee enable; then
+  note "E2EE: enabled (each phone fetches the key over SSH when it connects)."
+else
+  note "E2EE: enable failed. Run: moshi-hook e2ee enable"
+fi
+{{ end -}}
