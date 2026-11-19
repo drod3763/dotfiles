@@ -1,5 +1,8 @@
 #!/usr/bin/env bats
 
+# Assertions that are not a test's last command end in `|| false`: bats runs under macOS
+# bash 3.2 here, where a failing `[[ ]]` or `! cmd` mid-test does not fail the test.
+
 load "${BATS_TEST_DIRNAME}/../../../helpers/chezmoi"
 
 setup() {
@@ -12,8 +15,9 @@ setup() {
   MOCK_BIN_DIR="${TEST_TMPDIR}/bin"
   mkdir -p "${MOCK_BIN_DIR}"
 
-  # Status comes from MOCK_MOSHI_STATUS_FILE; a successful `host setup` swaps in
+  # Status comes from MOCK_MOSHI_STATUS_FILE; `host setup` swaps in
   # MOCK_MOSHI_STATUS_AFTER_SETUP_FILE so the post-pairing re-read can be asserted.
+  # MOCK_MOSHI_SETUP_NEEDS_FORCE mimics moshi's prerequisite stop: exit 1 unless --force.
   cat > "${MOCK_BIN_DIR}/moshi-hook" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "${MOCK_MOSHI_CALLS_FILE:?}"
@@ -25,6 +29,10 @@ case "$1" in
     ;;
   install) [[ -z "${MOCK_MOSHI_INSTALL_FAILS:-}" ]] ;;
   host)
+    if [[ -n "${MOCK_MOSHI_SETUP_NEEDS_FORCE:-}" ]] && [[ " $* " != *" --force "* ]]; then
+      printf '%s\n' "Tailscale SSH is enabled on this host. Then run \`moshi-hook host setup\` again."
+      exit 1
+    fi
     if [[ -n "${MOCK_MOSHI_STATUS_AFTER_SETUP_FILE:-}" ]]; then
       cp "${MOCK_MOSHI_STATUS_AFTER_SETUP_FILE}" "${MOCK_MOSHI_STATUS_FILE}"
     fi
@@ -47,7 +55,6 @@ if [[ -n "${MOCK_TAILSCALE_STOPPED_MARKER:-}" ]] && [[ -e "${MOCK_TAILSCALE_STOP
 fi
 case "$1" in
   status) printf '{"BackendState":"%s","Self":{"DNSName":"mac.tailnet.ts.net."}}\n' "${backend}" ;;
-  debug) printf '{"RunSSH": %s}\n' "${MOCK_TAILSCALE_RUN_SSH:-true}" ;;
 esac
 EOF
 
@@ -56,7 +63,8 @@ EOF
   export PATH="${MOCK_BIN_DIR}:${PATH}"
   export MOCK_MOSHI_CALLS_FILE="${TEST_TMPDIR}/moshi.calls"
   export MOCK_MOSHI_STATUS_FILE="${TEST_TMPDIR}/status.json"
-  export MOSHI_PAIR_PROMPT_TIMEOUT=1
+  export MOSHI_PROMPT_TIMEOUT=1
+  export MOSHI_STATUS_RETRY_DELAY=0
   touch "${MOCK_MOSHI_CALLS_FILE}"
 
   # Default fixture: fully converged host.
@@ -68,7 +76,7 @@ EOF
 
   # Same script with the TTY guard forced on, for the interactive pairing paths.
   INTERACTIVE_SCRIPT="${TEST_TMPDIR}/interactive.sh"
-  sed 's/\[\[ -t 0 \]\]/true/' "${RENDERED_SCRIPT}" > "${INTERACTIVE_SCRIPT}"
+  sed 's/\[\[ ! -t 0 \]\]/false/' "${RENDERED_SCRIPT}" > "${INTERACTIVE_SCRIPT}"
 }
 
 teardown() {
@@ -98,18 +106,20 @@ run_rendered_script() {
   run env PATH="${PATH}" "$@" bash "${RENDERED_SCRIPT}" </dev/null
 }
 
-# Submits the answer with a newline, as pressing Enter would.
+# run_interactive <answer>...: each answer is submitted with Enter; then stdin hits EOF.
 run_interactive() {
-  local answer="$1"
-  shift
-  run env PATH="${PATH}" "$@" bash -c 'printf "%s\n" "$1" | bash "$2"' _ "${answer}" "${INTERACTIVE_SCRIPT}"
+  run env PATH="${PATH}" bash -c 'shift; printf "%s\n" "$@" | bash "$0"' "${INTERACTIVE_SCRIPT}" _ "$@"
 }
 
-@test "GIVEN converged host EXPECT only a status read" {
+@test "GIVEN converged host EXPECT only a status read and an all-clear report" {
   run_rendered_script
 
   [[ "${status}" -eq 0 ]] || false
   [[ "$(cat "${MOCK_MOSHI_CALLS_FILE}")" == "status --json" ]] || false
+  [[ "${output}" == *"Moshi setup report"* ]] || false
+  [[ "${output}" == *"Hooks: current."* ]] || false
+  [[ "${output}" == *"Pairing: already paired."* ]] || false
+  [[ "${output}" == *"E2EE: on."* ]]
 }
 
 @test "GIVEN claude hooks not current EXPECT install only stale targets" {
@@ -119,59 +129,62 @@ run_interactive() {
 
   [[ "${status}" -eq 0 ]] || false
   moshi_called "install --target claude"
+  [[ "${output}" == *"Hooks: reinstalled for claude."* ]]
 }
 
-@test "GIVEN hook install fails EXPECT warning without failing apply" {
+@test "GIVEN hook install fails EXPECT reported without failing apply" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" true missing on
 
   run_rendered_script MOCK_MOSHI_INSTALL_FAILS=1
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" == *"Failed to install moshi-hook hooks"* ]] || false
+  [[ "${output}" == *"Hooks: install failed for claude"* ]]
 }
 
-@test "GIVEN status unavailable EXPECT skip without failing apply" {
+@test "GIVEN status unavailable EXPECT skip reported without failing apply" {
   run_rendered_script MOCK_MOSHI_STATUS_FAILS=1
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" == *"skipping Moshi setup"* ]] || false
+  [[ "${output}" == *"Skipped: moshi-hook status is unavailable"* ]] || false
   ! moshi_called_like "install" || false
 }
 
-@test "GIVEN unpaired and non-interactive EXPECT pair hint and no setup" {
+@test "GIVEN unpaired and non-interactive EXPECT no setup and pair command in report" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
 
   run_rendered_script
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" == *"not paired"* ]] || false
-  [[ "${output}" == *"moshi-hook host setup --host mac.tailnet.ts.net --force"* ]] || false
+  [[ "${output}" == *"not interactive, so pairing was not offered"* ]] || false
+  [[ "${output}" == *"to pair, run: moshi-hook host setup --host mac.tailnet.ts.net (add --force"* ]] || false
+  [[ "${output}" == *"E2EE: not changed (needs a pairing)."* ]] || false
   ! moshi_called_like "^host" || false
   ! moshi_called_like "^e2ee" || false
 }
 
-@test "GIVEN unpaired interactive and prompt times out EXPECT no setup and pair hint" {
+@test "GIVEN pair prompt times out EXPECT no setup and declined in report" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+
   # A pipe whose writer stays silent past the 1s timeout makes `read -t` time out.
   run env PATH="${PATH}" bash -c '/bin/sleep 2 | bash "$1"' _ "${INTERACTIVE_SCRIPT}"
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" == *"Pair now? [y/N]"* ]] || false
-  [[ "${output}" == *"To pair it, run"* ]] || false
+  [[ "${output}" == *"Pair now? [y/N] (no in 1s)"* ]] || false
+  [[ "${output}" == *"Pairing: declined (or no answer in 1s)."* ]] || false
   ! moshi_called_like "^host" || false
 }
 
-@test "GIVEN unpaired interactive and answer no EXPECT no setup" {
+@test "GIVEN pair prompt answered no EXPECT no setup" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
 
   run_interactive "n"
 
   [[ "${status}" -eq 0 ]] || false
   ! moshi_called_like "^host" || false
-  [[ "${output}" == *"To pair it, run"* ]] || false
+  [[ "${output}" == *"Pairing: declined"* ]]
 }
 
-@test "GIVEN unpaired interactive and y then EOF without Enter EXPECT no setup" {
+@test "GIVEN y then EOF without Enter EXPECT no setup" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
 
   run env PATH="${PATH}" bash -c 'printf "y" | bash "$1"' _ "${INTERACTIVE_SCRIPT}"
@@ -180,7 +193,7 @@ run_interactive() {
   ! moshi_called_like "^host" || false
 }
 
-@test "GIVEN unpaired interactive and answer other than yes EXPECT no setup" {
+@test "GIVEN answer other than yes EXPECT no setup" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
 
   run_interactive "yolo"
@@ -189,14 +202,69 @@ run_interactive() {
   ! moshi_called_like "^host" || false
 }
 
-@test "GIVEN Tailscale stops while the prompt is open EXPECT setup without host or force" {
+@test "GIVEN answer yes and setup passes its checks EXPECT setup without force then e2ee enable" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${TEST_TMPDIR}/after.json" true current off
+  export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
+
+  run_interactive "yes"
+
+  [[ "${status}" -eq 0 ]] || false
+  moshi_called "host setup --host mac.tailnet.ts.net"
+  ! moshi_called_like "force" || false
+  moshi_called "e2ee enable"
+  [[ "${output}" == *"Pairing: paired."* ]] || false
+  [[ "${output}" == *"E2EE: enabled"* ]]
+}
+
+@test "GIVEN setup stops on warnings and user continues EXPECT forced setup and e2ee enable" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${TEST_TMPDIR}/after.json" true current off
+  export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
+  export MOCK_MOSHI_SETUP_NEEDS_FORCE=1
+
+  run_interactive "y" "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *"Tailscale SSH is enabled on this host"* ]] || false
+  [[ "${output}" == *"Continue past moshi's prerequisite warnings with --force? [y/N]"* ]] || false
+  moshi_called "host setup --host mac.tailnet.ts.net"
+  moshi_called "host setup --host mac.tailnet.ts.net --force"
+  moshi_called "e2ee enable"
+  [[ "${output}" == *"Pairing: paired (continued past prerequisite warnings with --force)."* ]]
+}
+
+@test "GIVEN setup stops on warnings and the force prompt is not answered EXPECT no forced setup" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  export MOCK_MOSHI_SETUP_NEEDS_FORCE=1
+
+  run_interactive "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  ! moshi_called_like "force" || false
+  ! moshi_called_like "^e2ee" || false
+  [[ "${output}" == *"Pairing: did not complete."* ]] || false
+  [[ "${output}" == *"to pair, run: moshi-hook host setup --host mac.tailnet.ts.net"* ]]
+}
+
+@test "GIVEN Tailscale backend stopped EXPECT setup without host" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  export MOCK_TAILSCALE_BACKEND=Stopped
+
+  run_interactive "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  moshi_called "host setup"
+}
+
+@test "GIVEN Tailscale stops while the prompt is open EXPECT setup without host" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
   # Tailscale is Running until the prompt is on screen, then Stopped when "yes" is submitted.
   local marker="${TEST_TMPDIR}/tailscale-stopped"
   local screen="${TEST_TMPDIR}/screen"
   : > "${screen}"
 
-  run env PATH="${PATH}" MOCK_TAILSCALE_STOPPED_MARKER="${marker}" MOSHI_PAIR_PROMPT_TIMEOUT=10 bash -c '
+  run env PATH="${PATH}" MOCK_TAILSCALE_STOPPED_MARKER="${marker}" MOSHI_PROMPT_TIMEOUT=10 bash -c '
     {
       for _ in {1..100}; do grep -q "Pair now" "$3" && break; /bin/sleep 0.1; done
       touch "$1"
@@ -208,78 +276,53 @@ run_interactive() {
   moshi_called "host setup"
 }
 
-@test "GIVEN unpaired interactive and answer yes EXPECT setup then e2ee enable" {
-  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
-  write_status "${TEST_TMPDIR}/after.json" true current off
-
-  run_interactive "y" MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
-
-  [[ "${status}" -eq 0 ]] || false
-  moshi_called "host setup --host mac.tailnet.ts.net --force"
-  moshi_called "e2ee enable"
-  [[ "${output}" != *"To pair it, run"* ]] || false
-}
-
-@test "GIVEN Tailscale SSH off EXPECT setup without force" {
-  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
-
-  run_interactive "y" MOCK_TAILSCALE_RUN_SSH=false
-
-  [[ "${status}" -eq 0 ]] || false
-  moshi_called "host setup --host mac.tailnet.ts.net"
-}
-
-@test "GIVEN Tailscale SSH on but backend stopped EXPECT setup without host or force" {
-  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
-
-  run_interactive "y" MOCK_TAILSCALE_BACKEND=Stopped
-
-  [[ "${status}" -eq 0 ]] || false
-  moshi_called "host setup"
-}
-
 @test "GIVEN tailscale unavailable EXPECT plain host setup" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  export MOCK_TAILSCALE_DOWN=1
 
-  run_interactive "y" MOCK_TAILSCALE_DOWN=1
+  run_interactive "y"
 
   [[ "${status}" -eq 0 ]] || false
   moshi_called "host setup"
 }
 
-@test "GIVEN setup fails EXPECT warning, pair hint, and no e2ee" {
+@test "GIVEN setup fails and the retry is declined EXPECT not completed and no e2ee" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  export MOCK_MOSHI_SETUP_FAILS=1
 
-  run_interactive "y" MOCK_MOSHI_SETUP_FAILS=1
+  run_interactive "y" "n"
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" == *"pairing did not complete"* ]] || false
-  [[ "${output}" == *"To pair it, run"* ]] || false
+  [[ "${output}" == *"Pairing: did not complete."* ]] || false
+  ! moshi_called_like "force" || false
   ! moshi_called_like "^e2ee" || false
 }
 
 @test "GIVEN setup succeeds but status cannot be read after EXPECT verify hint, not re-pair" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  export MOCK_MOSHI_STATUS_FAILS_MARKER="${TEST_TMPDIR}/status-broken"
 
-  run_interactive "y" MOCK_MOSHI_STATUS_FAILS_MARKER="${TEST_TMPDIR}/status-broken" MOSHI_STATUS_RETRY_DELAY=0
+  run_interactive "y"
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" != *"To pair it, run"* ]] || false
-  [[ "${output}" == *"moshi-hook status"* ]] || false
-  [[ "${output}" == *"moshi-hook e2ee enable"* ]] || false
+  [[ "${output}" != *"to pair, run"* ]] || false
+  [[ "${output}" == *"could not be read to confirm it. Check: moshi-hook status"* ]] || false
+  [[ "${output}" == *"run: moshi-hook e2ee enable"* ]] || false
   ! moshi_called_like "^e2ee" || false
 }
 
 @test "GIVEN setup fails but host reports paired EXPECT no e2ee change" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
   write_status "${TEST_TMPDIR}/after.json" true current off
+  export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
+  export MOCK_MOSHI_SETUP_FAILS=1
 
-  run_interactive "y" MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json" MOCK_MOSHI_SETUP_FAILS=1
+  run_interactive "y" "n"
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" == *"pairing did not complete"* ]] || false
+  [[ "${output}" == *"Pairing: did not complete."* ]] || false
   ! moshi_called_like "^e2ee" || false
-  [[ "${output}" == *"moshi-hook e2ee enable"* ]] || false
+  [[ "${output}" == *"E2EE: off, left as is"* ]]
 }
 
 @test "GIVEN already paired with e2ee off EXPECT policy kept and enable hint" {
@@ -289,15 +332,17 @@ run_interactive() {
 
   [[ "${status}" -eq 0 ]] || false
   ! moshi_called_like "^e2ee" || false
-  [[ "${output}" == *"moshi-hook e2ee enable"* ]] || false
+  [[ "${output}" == *"E2EE: off, left as is. To turn it on, run: moshi-hook e2ee enable"* ]]
 }
 
-@test "GIVEN e2ee enable fails after pairing EXPECT warning without failing apply" {
+@test "GIVEN e2ee enable fails after pairing EXPECT reported without failing apply" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
   write_status "${TEST_TMPDIR}/after.json" true current off
+  export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
+  export MOCK_MOSHI_E2EE_FAILS=1
 
-  run_interactive "y" MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json" MOCK_MOSHI_E2EE_FAILS=1
+  run_interactive "y"
 
   [[ "${status}" -eq 0 ]] || false
-  [[ "${output}" == *"Failed to enable moshi-hook E2EE"* ]] || false
+  [[ "${output}" == *"E2EE: enable failed. Run: moshi-hook e2ee enable"* ]]
 }
