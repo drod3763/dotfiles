@@ -6,9 +6,11 @@ set -euo pipefail
 # hook groups added by other tools are appended to the managed ones. When the merge changes
 # nothing but key order, the live file is passed through untouched so `chezmoi diff` stays clean.
 #
-# Keys and hook groups the template managed at the last apply (snapshot written by
-# run_onchange_after_claude-settings-snapshot) but no longer defines are removed when the live
-# file still holds the old value, so retired plugins and replaced hooks don't linger.
+# Every run records the key values and hook groups the template has ever managed in an ownership
+# file outside settings.json. It only grows, so recording during `chezmoi diff` or a targeted
+# apply is harmless. Owned entries the template no longer defines are removed when the live file
+# still holds an owned value, so retired plugins and replaced hooks don't linger, while values
+# edited locally and entries from other tools stay.
 
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "${tmp_dir}"' EXIT
@@ -16,8 +18,9 @@ trap 'rm -rf "${tmp_dir}"' EXIT
 managed_file="${tmp_dir}/managed.json"
 live_file="${tmp_dir}/live.json"
 merged_file="${tmp_dir}/merged.json"
-snapshot_file="${CLAUDE_SETTINGS_SNAPSHOT:-{{ template "claude_code_settings_snapshot_path.tmpl" . }}}"
-previous_file="${tmp_dir}/previous.json"
+owned_file="${CLAUDE_SETTINGS_OWNERSHIP:-{{ .chezmoi.homeDir }}/.local/state/chezmoi/claude-settings.owned.json}"
+previous_owned_file="${tmp_dir}/previous-owned.json"
+owned_next_file="${tmp_dir}/owned.json"
 
 cat >"${managed_file}" <<'CLAUDE_SETTINGS_JSON'
 {{ includeTemplate "claude_code_settings.json.tmpl" . | trim }}
@@ -25,7 +28,36 @@ CLAUDE_SETTINGS_JSON
 
 cat >"${live_file}"
 
+record_ownership() {
+  if [[ -s "${owned_file}" ]] && jq -e 'type == "object"' "${owned_file}" >/dev/null 2>&1; then
+    cat "${owned_file}" >"${previous_owned_file}"
+  else
+    printf '{}\n' >"${previous_owned_file}"
+  fi
+
+  # Ownership: {"keys": {"<json path>": [values ever managed]}, "hooks": {"<event>": [groups ever managed]}}.
+  jq -n \
+    --slurpfile previous "${previous_owned_file}" \
+    --slurpfile managed "${managed_file}" '
+    $managed[0] as $m
+    | {keys: ($previous[0].keys // {}), hooks: ($previous[0].hooks // {})}
+    | reduce ($m | paths(type != "object") | select(all(.[]; type == "string")) | select(.[0] != "hooks")) as $k (.;
+        .keys[$k | tojson] = ((.keys[$k | tojson] // []) + [$m | getpath($k)] | unique))
+    | reduce (($m.hooks // {}) | to_entries[] | select(.value | type == "array")) as $event (.;
+        .hooks[$event.key] = ((.hooks[$event.key] // []) + $event.value | unique))
+  ' >"${owned_next_file}"
+
+  if ! jq -e -n --slurpfile a "${previous_owned_file}" --slurpfile b "${owned_next_file}" '$a[0] == $b[0]' >/dev/null; then
+    if ! { mkdir -p "$(dirname "${owned_file}")" && cp "${owned_next_file}" "${owned_file}.tmp" && mv "${owned_file}.tmp" "${owned_file}"; }; then
+      printf '%s\n' "claude settings.json: could not record ownership in ${owned_file}; retired entries may linger." >&2
+    fi
+  fi
+}
+
 if [[ ! -s "${live_file}" ]]; then
+  if command -v jq >/dev/null 2>&1; then
+    record_ownership
+  fi
   cat "${managed_file}"
   exit 0
 fi
@@ -40,25 +72,24 @@ if ! jq -e 'type == "object"' "${live_file}" >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ -s "${snapshot_file}" ]] && jq -e 'type == "object"' "${snapshot_file}" >/dev/null 2>&1; then
-  cat "${snapshot_file}" >"${previous_file}"
-else
-  printf '{}\n' >"${previous_file}"
-fi
+record_ownership
 
 jq -n \
   --slurpfile live "${live_file}" \
   --slurpfile managed "${managed_file}" \
-  --slurpfile previous "${previous_file}" '
+  --slurpfile owned "${owned_next_file}" '
   def at($path): try getpath($path) catch null;
   $managed[0] as $m
-  | $previous[0] as $p
-  # Retire non-hook keys the last apply managed, the template dropped, and nobody edited since.
-  | [$p | paths(type != "object") | select(all(.[]; type == "string")) | select(.[0] != "hooks")] as $prevKeys
-  | [$prevKeys[] as $k | select(($m | at($k)) == null and ($live[0] | at($k)) == ($p | at($k))) | $k] as $gone
+  | $owned[0] as $o
+  # Retire owned keys the template dropped whose live value is still one the template set.
+  | [$o.keys | to_entries[] | (.key | fromjson) as $k | .value as $values
+      | select(($m | at($k)) == null)
+      | ($live[0] | at($k)) as $v
+      | select($v != null and any($values[]; . == $v))
+      | $k] as $gone
   | ($live[0] | delpaths($gone))
-  # Retire hook groups the last apply managed that the template no longer has.
-  | reduce (($p.hooks // {}) | to_entries[] | select(.value | type == "array")) as $event (.;
+  # Retire owned hook groups the template no longer has.
+  | reduce ($o.hooks | to_entries[]) as $event (.;
       if (.hooks[$event.key] | type) == "array" then
         .hooks[$event.key] |= map(. as $group
           | select((any($event.value[]; . == $group) and (any(($m.hooks[$event.key] // [])[]; . == $group) | not)) | not))
