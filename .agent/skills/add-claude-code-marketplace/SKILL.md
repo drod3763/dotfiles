@@ -20,7 +20,7 @@ description: Add Claude Code marketplace TOML under home/.chezmoidata/claude_cod
 5. Require explicit `owned = true` or `owned = false`.
 6. Use `source = "github"` with `repo = "owner/name"`, or `source = "git"` with `url = "..."`.
 7. Do not manage or edit `known_marketplaces.json`.
-8. Render `home/private_dot_config/claude/settings.json.tmpl` and validate JSON.
+8. Render `home/.chezmoitemplates/claude_code_settings.json.tmpl` (via `chezmoi execute-template '{{ includeTemplate "claude_code_settings.json.tmpl" . }}'`) and validate JSON.
 
 ## Template
 

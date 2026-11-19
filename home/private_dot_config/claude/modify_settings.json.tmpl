@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Claude Code and other tools (moshi-hook, /model, /plugin) write into settings.json and
+# reorder its keys. Template-defined keys win; everything else in the live file is kept, and
+# hook groups added by other tools are appended to the managed ones. When the merge changes
+# nothing but key order, the live file is passed through untouched so `chezmoi diff` stays clean.
+#
+# Dropping something from the template leaves it on machines that already have it. To remove it
+# there too, list it in home/.chezmoidata/claude_code/retired_settings.toml.
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "${tmp_dir}"' EXIT
+
+managed_file="${tmp_dir}/managed.json"
+retired_file="${tmp_dir}/retired.json"
+live_file="${tmp_dir}/live.json"
+merged_file="${tmp_dir}/merged.json"
+
+cat >"${managed_file}" <<'CLAUDE_SETTINGS_JSON'
+{{ includeTemplate "claude_code_settings.json.tmpl" . | trim }}
+CLAUDE_SETTINGS_JSON
+
+{{- $retired := dict }}
+{{- if hasKey .claude_code "retired_settings" }}
+{{- $retired = .claude_code.retired_settings }}
+{{- end }}
+cat >"${retired_file}" <<'CLAUDE_RETIRED_JSON'
+{{ dict "keys" (get $retired "keys" | default list) "hook_commands" (get $retired "hook_commands" | default list) | toJson }}
+CLAUDE_RETIRED_JSON
+
+cat >"${live_file}"
+
+if [[ ! -s "${live_file}" ]]; then
+  cat "${managed_file}"
+  exit 0
+fi
+
+# Failing leaves the existing file untouched; emitting managed JSON here would erase it.
+if ! command -v jq >/dev/null 2>&1; then
+  printf '%s\n' "claude settings.json: jq not found; leaving the existing file unchanged." >&2
+  exit 1
+fi
+if ! jq -e -s 'length == 1 and (.[0] | type == "object")' "${live_file}" >/dev/null 2>&1; then
+  printf '%s\n' "claude settings.json: existing file is not a JSON object; fix or delete it, then re-apply." >&2
+  exit 1
+fi
+
+jq -n \
+  --slurpfile live "${live_file}" \
+  --slurpfile managed "${managed_file}" \
+  --slurpfile retired "${retired_file}" '
+  $managed[0] as $m
+  | $retired[0] as $r
+  # Retired keys go unless the template still defines them; retired hook commands drop their groups.
+  | ($live[0]
+      | delpaths([$r.keys[] | select(. as $k | ($m | try getpath($k) catch null) == null)])
+      | if (.hooks | type) == "object" then
+          .hooks |= map_values(
+            if type == "array" then
+              # Drop only retired hooks; drop a group only when that leaves it empty.
+              map(
+                if (.hooks | type) == "array" and any(.hooks[]; .command as $c | $r.hook_commands | index([$c])) then
+                  .hooks |= map(select(.command as $c | $r.hook_commands | index([$c]) | not))
+                  | select(.hooks != [])
+                else . end)
+            else . end)
+        else . end) as $l
+  | ($l * $m)
+  | .hooks = (
+      reduce (($l.hooks // {}) | to_entries[] | select(.value | type == "array")) as $event
+        (($m.hooks // {});
+          (.[$event.key] // []) as $base
+          | .[$event.key] = $base + [$event.value[] as $group | select(any($base[]; . == $group) | not) | $group]
+        )
+    )
+' >"${merged_file}"
+
+if jq -e -n --slurpfile a "${live_file}" --slurpfile b "${merged_file}" '$a[0] == $b[0]' >/dev/null; then
+  cat "${live_file}"
+else
+  cat "${merged_file}"
+fi

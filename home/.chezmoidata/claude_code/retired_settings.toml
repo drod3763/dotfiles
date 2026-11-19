@@ -1,0 +1,11 @@
+# Entries dropped from ~/.config/claude/settings.json on every apply.
+#
+# settings.json merges the template over the live file and keeps keys the template doesn't
+# define, so removing something from the template leaves it on machines that already have it.
+# List it here to remove it there too. A key the template still defines is never removed.
+[claude_code.retired_settings]
+# JSON paths as key lists, e.g. ["enabledPlugins", "old-plugin@market"] or ["env", "OLD_VAR"].
+keys = []
+# Hooks with exactly this command are removed from every event; other hooks in the same group stay,
+# and a group is dropped only when nothing is left in it.
+hook_commands = []
