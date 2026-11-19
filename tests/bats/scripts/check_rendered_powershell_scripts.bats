@@ -66,9 +66,9 @@ if [[ "${command}" == *"Get-Module"* ]]; then
   exit "${MOCK_PWSH_MODULE_EXIT:-0}"
 fi
 if [[ "${command}" == *"Invoke-ScriptAnalyzer"* ]]; then
-  dir="${command#*-Path \'}"
-  dir="${dir%%\'*}"
-  ls "${dir}" >>"${MOCK_ANALYZER_CALLS_FILE:?}"
+  # The path arrives in the environment, never inside the command text.
+  [[ "${command}" == *'-Path $env:PS_ANALYZE_DIR'* ]] || exit 2
+  ls "${PS_ANALYZE_DIR:?}" >>"${MOCK_ANALYZER_CALLS_FILE:?}"
   exit "${MOCK_ANALYZER_EXIT:-0}"
 fi
 exit 1
@@ -172,4 +172,15 @@ teardown() {
 
   [ "${status}" -eq 0 ]
   [[ "${output}" == *"Skipping PowerShell lint: pwsh is not installed."* ]]
+}
+
+@test "GIVEN a temp path with an apostrophe EXPECT the analyzer still runs" {
+  export MOCK_STAGED_PATHS='home/.chezmoiscripts/windows/b.ps1'
+  export TMPDIR="${TEST_TMPDIR}/O'Brien"
+  mkdir -p "${TMPDIR}"
+
+  run bash "${CHECK_SCRIPT}"
+
+  [ "${status}" -eq 0 ]
+  [ "$(cat "${MOCK_ANALYZER_CALLS_FILE}")" == "home__.chezmoiscripts__windows__b.ps1" ]
 }

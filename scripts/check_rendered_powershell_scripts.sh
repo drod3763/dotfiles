@@ -112,8 +112,10 @@ if command -v cygpath >/dev/null 2>&1; then
   analyze_dir="$(cygpath -w "${out_dir}")"
 fi
 
-if ! "${pwsh_cmd}" -NoProfile -NonInteractive -Command \
-  "\$results = Invoke-ScriptAnalyzer -Path '${analyze_dir}' -Severity Error,Warning; if (\$results) { \$results | Format-Table ScriptName, Line, Severity, RuleName, Message -AutoSize -Wrap | Out-String -Width 200 | Write-Host; exit 1 }"; then
+# Pass the path through the environment, so quotes in it (e.g. a profile
+# named O'Brien) cannot break the command.
+if ! PS_ANALYZE_DIR="${analyze_dir}" "${pwsh_cmd}" -NoProfile -NonInteractive -Command \
+  "\$ErrorActionPreference = 'Stop'; \$results = Invoke-ScriptAnalyzer -Path \$env:PS_ANALYZE_DIR -Severity Error,Warning; if (\$results) { \$results | Format-Table ScriptName, Line, Severity, RuleName, Message -AutoSize -Wrap | Out-String -Width 200 | Write-Host; exit 1 }"; then
   echo "PSScriptAnalyzer found issues in rendered Windows scripts." >&2
   status=1
 fi
