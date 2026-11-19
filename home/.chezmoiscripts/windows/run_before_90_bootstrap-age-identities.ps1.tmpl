@@ -182,7 +182,14 @@ foreach ($source in $sources) {
 # (locked vault, denied prompt) never replaces a working keyring. The next
 # chezmoi apply runs this script again and retries.
 if ($failed.Count -gt 0) {
-  Write-BootstrapLog "Leaving existing identities untouched: $($failed.Count) of $($sources.Count) source(s) failed ($($failed -join ', ')). Unlock 1Password and re-run chezmoi apply."
+  Write-BootstrapLog "Leaving existing identities untouched: $($failed.Count) of $($sources.Count) source(s) failed ($($failed -join ', '))."
+  # A denied prompt or missing item should not block unrelated updates while the
+  # live keyring still decrypts the managed files; the next apply compares again.
+  if ((Test-Path -LiteralPath $identitiesFile) -and (Test-AgeKeyring $identitiesFile)) {
+    Write-BootstrapLog 'The existing identities still decrypt the managed files; continuing. Fix the 1Password lookup so key rotations reach this machine.'
+    exit 0
+  }
+  Write-BootstrapLog 'No working identities to fall back on. Unlock 1Password and re-run chezmoi apply.'
   exit 1
 }
 
@@ -192,6 +199,14 @@ if ($failed.Count -gt 0) {
 # hand-edited copy) is rewritten through the verified swap below.
 if ((Test-KeyFileCurrent $identitiesFile (ConvertTo-KeyFileText $identities)) -and
     (Test-KeyFileCurrent $recipientsFile (ConvertTo-KeyFileText $recipients))) {
+  # A run interrupted after both swaps leaves the previous (possibly retired)
+  # keys in .bak. Once the live pair is proven to work, they are not needed.
+  $backups = @($identitiesFile, $recipientsFile | ForEach-Object { "$_.bak" } |
+      Where-Object { Test-Path -LiteralPath $_ })
+  if ($backups.Count -gt 0 -and (Test-AgeKeyring $identitiesFile)) {
+    Remove-Item -LiteralPath $backups -Force
+    Write-BootstrapLog 'Removed backups left by an interrupted update.'
+  }
   exit 0
 }
 Write-BootstrapLog 'Local identities differ from 1Password; updating them.'
