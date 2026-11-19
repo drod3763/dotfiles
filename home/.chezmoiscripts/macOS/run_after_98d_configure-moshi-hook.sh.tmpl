@@ -153,9 +153,14 @@ else
   elif moshi_setup_refused_on_checks && moshi_still_unpaired &&
     confirm "Pairing stopped on the warnings above. Continue past them with --force?" &&
     moshi_still_unpaired; then
-    # Reuse the exact arguments the warnings were about: approval to force covers that
-    # endpoint, not one recomputed after the prompt (e.g. if Tailscale dropped meanwhile).
-    if moshi-hook "${moshi_setup_args[@]}" --force; then
+    # Approval to force covers the endpoint the warnings were about. Re-derive it after the
+    # prompt; if it changed (e.g. Tailscale dropped meanwhile), don't force a stale or
+    # unchecked endpoint: a fresh, checked setup has to run first.
+    moshi_checked_args="${moshi_setup_args[*]}"
+    build_moshi_setup_args
+    if [[ "${moshi_setup_args[*]}" != "${moshi_checked_args}" ]]; then
+      note "Pairing: --force not used; the Tailscale endpoint changed while you were deciding. Run setup again."
+    elif moshi-hook "${moshi_setup_args[@]}" --force; then
       moshi_setup_ok=true
       moshi_setup_forced=true
     fi

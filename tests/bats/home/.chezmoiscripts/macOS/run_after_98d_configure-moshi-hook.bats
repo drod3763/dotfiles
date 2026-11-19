@@ -308,7 +308,7 @@ run_interactive() {
   [[ "${output}" == *"Pairing: paired (continued past prerequisite warnings with --force)."* ]]
 }
 
-@test "GIVEN Tailscale drops while the force prompt is open EXPECT forced setup reuses the checked endpoint" {
+@test "GIVEN Tailscale drops while the force prompt is open EXPECT no forced setup and a re-run hint" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
   write_status "${TEST_TMPDIR}/after.json" true current off
   export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
@@ -319,8 +319,9 @@ run_interactive() {
   run_interactive "y" "y"
 
   [[ "${status}" -eq 0 ]] || false
-  moshi_called "host setup --host mac.tailnet.ts.net --force"
-  ! moshi_called "host setup --force" || false
+  ! moshi_called_like "force" || false
+  ! moshi_called_like "^e2ee" || false
+  [[ "${output}" == *"endpoint changed while you were deciding"* ]]
 }
 
 @test "GIVEN setup succeeds but writing its log fails EXPECT pairing confirmed and e2ee enabled" {
