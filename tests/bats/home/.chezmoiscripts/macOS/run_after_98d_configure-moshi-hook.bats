@@ -211,19 +211,21 @@ run_interactive() {
   ! moshi_called_like "^e2ee"
 }
 
-@test "GIVEN paired with e2ee off EXPECT e2ee enable" {
+@test "GIVEN already paired with e2ee off EXPECT policy kept and enable hint" {
   write_status "${MOCK_MOSHI_STATUS_FILE}" true current off
 
   run_rendered_script
 
   [[ "${status}" -eq 0 ]]
-  moshi_called "e2ee enable"
+  ! moshi_called_like "^e2ee"
+  [[ "${output}" == *"moshi-hook e2ee enable"* ]]
 }
 
-@test "GIVEN e2ee enable fails EXPECT warning without failing apply" {
-  write_status "${MOCK_MOSHI_STATUS_FILE}" true current off
+@test "GIVEN e2ee enable fails after pairing EXPECT warning without failing apply" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${TEST_TMPDIR}/after.json" true current off
 
-  run_rendered_script MOCK_MOSHI_E2EE_FAILS=1
+  run_interactive "y" MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json" MOCK_MOSHI_E2EE_FAILS=1
 
   [[ "${status}" -eq 0 ]]
   [[ "${output}" == *"Failed to enable moshi-hook E2EE"* ]]

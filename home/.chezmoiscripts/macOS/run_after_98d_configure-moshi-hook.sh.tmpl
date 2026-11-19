@@ -54,6 +54,7 @@ if command -v tailscale >/dev/null 2>&1; then
 fi
 
 moshi_paired="$(moshi_field '.paired // false')"
+moshi_paired_now=false
 if [[ "${moshi_paired}" != "true" ]] && [[ -t 0 ]]; then
   pair_answer=""
   printf '\nThis Mac is not paired with Moshi. Pair now? [y/N] (no in %ss) ' "${moshi_pair_prompt_timeout}"
@@ -65,6 +66,9 @@ if [[ "${moshi_paired}" != "true" ]] && [[ -t 0 ]]; then
     fi
     moshi_status_json="$(moshi_status)"
     moshi_paired="$(moshi_field '.paired // false')"
+    if [[ "${moshi_paired}" == "true" ]]; then
+      moshi_paired_now=true
+    fi
   fi
 fi
 
@@ -76,12 +80,18 @@ if [[ "${moshi_paired}" != "true" ]]; then
   exit 0
 fi
 
-# E2EE needs a pairing; enabling it is idempotent but keep converged applies quiet.
+# E2EE: enable it as part of a pairing this run made. On a host that was already paired,
+# keep its policy: it may have been turned off on purpose (a phone without SSH access can't
+# fetch the key and so can't approve), and an unattended apply must not undo that.
 moshi_e2ee_policy="$(moshi_field '.e2ee.policy // empty')"
 if [[ "${moshi_e2ee_policy}" != "on" ]]; then
-  printf '%s\n' "Enabling moshi-hook end-to-end encryption."
-  if ! moshi-hook e2ee enable; then
-    printf '%s\n' "Failed to enable moshi-hook E2EE. Run: moshi-hook e2ee enable" >&2
+  if [[ "${moshi_paired_now}" == "true" ]]; then
+    printf '%s\n' "Enabling moshi-hook end-to-end encryption (each phone fetches the key over SSH)."
+    if ! moshi-hook e2ee enable; then
+      printf '%s\n' "Failed to enable moshi-hook E2EE. Run: moshi-hook e2ee enable" >&2
+    fi
+  else
+    printf '%s\n' "Moshi end-to-end encryption is off on this Mac. To turn it on, run: moshi-hook e2ee enable"
   fi
 fi
 {{ end -}}
