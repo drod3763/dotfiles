@@ -155,6 +155,18 @@ write_moshi_live() {
   [[ "${status}" -eq 0 ]]
 }
 
+@test "GIVEN retired command sharing a group with a local hook EXPECT only the retired hook removed" {
+  render_with_retired '{"claude_code": {"retired_settings": {"keys": [], "hook_commands": ["retired-hook"]}}}'
+  input_file="${TEST_TMPDIR}/input.json"
+  jq '.hooks.Stop = [{"matcher": "x", "hooks": [{"command": "retired-hook", "type": "command"}, {"command": "local-hook", "type": "command"}]},
+                     {"hooks": [{"command": "retired-hook", "type": "command"}]}]' "${MANAGED_FILE}" >"${input_file}"
+
+  run_modify "${input_file}"
+
+  run jq -e '.hooks.Stop == [{"matcher": "x", "hooks": [{"command": "local-hook", "type": "command"}]}]' "${OUTPUT_FILE}"
+  [[ "${status}" -eq 0 ]]
+}
+
 @test "GIVEN empty retired list EXPECT local plugins and hooks kept" {
   render_with_retired '{"claude_code": {"retired_settings": {"keys": [], "hook_commands": []}}}'
   input_file="${TEST_TMPDIR}/input.json"

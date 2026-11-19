@@ -58,7 +58,12 @@ jq -n \
       | if (.hooks | type) == "object" then
           .hooks |= map_values(
             if type == "array" then
-              map(select(any(.hooks[]?.command; . as $c | $r.hook_commands | index([$c])) | not))
+              # Drop only retired hooks; drop a group only when that leaves it empty.
+              map(
+                if (.hooks | type) == "array" and any(.hooks[]; .command as $c | $r.hook_commands | index([$c])) then
+                  .hooks |= map(select(.command as $c | $r.hook_commands | index([$c]) | not))
+                  | select(.hooks != [])
+                else . end)
             else . end)
         else . end) as $l
   | ($l * $m)

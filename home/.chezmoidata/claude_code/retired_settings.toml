@@ -6,5 +6,6 @@
 [claude_code.retired_settings]
 # JSON paths as key lists, e.g. ["enabledPlugins", "old-plugin@market"] or ["env", "OLD_VAR"].
 keys = []
-# Hook groups containing a hook with exactly this command are removed from every event.
+# Hooks with exactly this command are removed from every event; other hooks in the same group stay,
+# and a group is dropped only when nothing is left in it.
 hook_commands = []
