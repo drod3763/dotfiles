@@ -144,12 +144,17 @@ else
   moshi_setup_log="$(mktemp)"
   trap 'rm -f "${moshi_setup_log}"; print_report' EXIT
   build_moshi_setup_args
-  if moshi-hook "${moshi_setup_args[@]}" 2>&1 | tee "${moshi_setup_log}"; then
+  # Judge setup by its own exit status: with pipefail, a failed log write would otherwise
+  # make a successful setup look failed. A missing log just means --force is not offered.
+  moshi_setup_rc=0
+  moshi-hook "${moshi_setup_args[@]}" 2>&1 | tee "${moshi_setup_log}" || moshi_setup_rc="${PIPESTATUS[0]}"
+  if [[ "${moshi_setup_rc}" -eq 0 ]]; then
     moshi_setup_ok=true
   elif moshi_setup_refused_on_checks && moshi_still_unpaired &&
     confirm "Pairing stopped on the warnings above. Continue past them with --force?" &&
     moshi_still_unpaired; then
-    build_moshi_setup_args
+    # Reuse the exact arguments the warnings were about: approval to force covers that
+    # endpoint, not one recomputed after the prompt (e.g. if Tailscale dropped meanwhile).
     if moshi-hook "${moshi_setup_args[@]}" --force; then
       moshi_setup_ok=true
       moshi_setup_forced=true

@@ -45,6 +45,10 @@ case "$1" in
   host)
     if [[ -n "${MOCK_MOSHI_SETUP_NEEDS_FORCE:-}" ]] && [[ " $* " != *" --force "* ]]; then
       printf '%s\n' "Tailscale SSH is enabled on this host. Then run \`moshi-hook host setup\` again."
+      # Simulates Tailscale dropping while the force prompt that follows is open.
+      if [[ -n "${MOCK_STOP_TAILSCALE_AFTER_REFUSAL:-}" ]]; then
+        touch "${MOCK_TAILSCALE_STOPPED_MARKER:?}"
+      fi
       exit 1
     fi
     if [[ -n "${MOCK_MOSHI_STATUS_AFTER_SETUP_FILE:-}" ]]; then
@@ -302,6 +306,40 @@ run_interactive() {
   moshi_called "host setup --host mac.tailnet.ts.net --force"
   moshi_called "e2ee enable"
   [[ "${output}" == *"Pairing: paired (continued past prerequisite warnings with --force)."* ]]
+}
+
+@test "GIVEN Tailscale drops while the force prompt is open EXPECT forced setup reuses the checked endpoint" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${TEST_TMPDIR}/after.json" true current off
+  export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
+  export MOCK_MOSHI_SETUP_NEEDS_FORCE=1
+  export MOCK_STOP_TAILSCALE_AFTER_REFUSAL=1
+  export MOCK_TAILSCALE_STOPPED_MARKER="${TEST_TMPDIR}/tailscale-stopped"
+
+  run_interactive "y" "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  moshi_called "host setup --host mac.tailnet.ts.net --force"
+  ! moshi_called "host setup --force" || false
+}
+
+@test "GIVEN setup succeeds but writing its log fails EXPECT pairing confirmed and e2ee enabled" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${TEST_TMPDIR}/after.json" true current off
+  export MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json"
+  # A tee that still passes output through but fails, as on a full or unwritable temp dir.
+  cat > "${MOCK_BIN_DIR}/tee" <<'EOF'
+#!/usr/bin/env bash
+cat
+exit 1
+EOF
+  chmod +x "${MOCK_BIN_DIR}/tee"
+
+  run_interactive "y"
+
+  [[ "${status}" -eq 0 ]] || false
+  moshi_called "e2ee enable"
+  [[ "${output}" == *"Pairing: paired."* ]]
 }
 
 @test "GIVEN setup stops on warnings and the force prompt is not answered EXPECT no forced setup" {
