@@ -41,7 +41,7 @@ if ! command -v jq >/dev/null 2>&1; then
   printf '%s\n' "claude settings.json: jq not found; leaving the existing file unchanged." >&2
   exit 1
 fi
-if ! jq -e 'type == "object"' "${live_file}" >/dev/null 2>&1; then
+if ! jq -e -s 'length == 1 and (.[0] | type == "object")' "${live_file}" >/dev/null 2>&1; then
   printf '%s\n' "claude settings.json: existing file is not a JSON object; fix or delete it, then re-apply." >&2
   exit 1
 fi

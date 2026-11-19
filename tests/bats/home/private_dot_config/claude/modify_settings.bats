@@ -61,6 +61,17 @@ write_moshi_live() {
   [[ ! -s "${OUTPUT_FILE}" ]]
 }
 
+@test "GIVEN concatenated json objects EXPECT failure without output" {
+  input_file="${TEST_TMPDIR}/input.json"
+  jq '.model = "opus"' "${MANAGED_FILE}" >"${input_file}"
+  printf '%s\n' '{"second": true}' >>"${input_file}"
+
+  run bash -c '"${0}" <"${1}" >"${2}"' "${RENDERED_SCRIPT}" "${input_file}" "${OUTPUT_FILE}"
+
+  [[ "${status}" -ne 0 ]]
+  [[ ! -s "${OUTPUT_FILE}" ]]
+}
+
 @test "GIVEN existing settings and no jq EXPECT failure without output" {
   input_file="${TEST_TMPDIR}/input.json"
   write_moshi_live "${input_file}"
