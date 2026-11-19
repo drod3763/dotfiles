@@ -24,10 +24,10 @@ case "$1" in
     ;;
   install) [[ -z "${MOCK_MOSHI_INSTALL_FAILS:-}" ]] ;;
   host)
-    [[ -z "${MOCK_MOSHI_SETUP_FAILS:-}" ]] || exit 1
     if [[ -n "${MOCK_MOSHI_STATUS_AFTER_SETUP_FILE:-}" ]]; then
       cp "${MOCK_MOSHI_STATUS_AFTER_SETUP_FILE}" "${MOCK_MOSHI_STATUS_FILE}"
     fi
+    [[ -z "${MOCK_MOSHI_SETUP_FAILS:-}" ]]
     ;;
   e2ee) [[ -z "${MOCK_MOSHI_E2EE_FAILS:-}" ]] ;;
 esac
@@ -209,6 +209,18 @@ run_interactive() {
   [[ "${output}" == *"pairing did not complete"* ]]
   [[ "${output}" == *"To pair it, run"* ]]
   ! moshi_called_like "^e2ee"
+}
+
+@test "GIVEN setup fails but host reports paired EXPECT no e2ee change" {
+  write_status "${MOCK_MOSHI_STATUS_FILE}" false current off
+  write_status "${TEST_TMPDIR}/after.json" true current off
+
+  run_interactive "y" MOCK_MOSHI_STATUS_AFTER_SETUP_FILE="${TEST_TMPDIR}/after.json" MOCK_MOSHI_SETUP_FAILS=1
+
+  [[ "${status}" -eq 0 ]]
+  [[ "${output}" == *"pairing did not complete"* ]]
+  ! moshi_called_like "^e2ee"
+  [[ "${output}" == *"moshi-hook e2ee enable"* ]]
 }
 
 @test "GIVEN already paired with e2ee off EXPECT policy kept and enable hint" {

@@ -61,12 +61,17 @@ if [[ "${moshi_paired}" != "true" ]] && [[ -t 0 ]]; then
   read -r -t "${moshi_pair_prompt_timeout}" pair_answer || true
   printf '\n'
   if [[ "${pair_answer}" =~ ^[Yy] ]]; then
-    if ! moshi-hook "${moshi_setup_args[@]}"; then
+    # Only a successful setup counts as this run's pairing: `paired` is host-wide, so a
+    # failed setup that still finds the host paired (e.g. from another terminal) is not ours.
+    moshi_setup_ok=false
+    if moshi-hook "${moshi_setup_args[@]}"; then
+      moshi_setup_ok=true
+    else
       printf '%s\n' "Moshi pairing did not complete." >&2
     fi
     moshi_status_json="$(moshi_status)"
     moshi_paired="$(moshi_field '.paired // false')"
-    if [[ "${moshi_paired}" == "true" ]]; then
+    if [[ "${moshi_setup_ok}" == "true" ]] && [[ "${moshi_paired}" == "true" ]]; then
       moshi_paired_now=true
     fi
   fi
