@@ -41,12 +41,41 @@ write_moshi_live() {
   [[ "${status}" -eq 0 ]]
 }
 
-@test "GIVEN invalid json EXPECT managed settings" {
+@test "GIVEN invalid json EXPECT failure without output" {
   input_file="${TEST_TMPDIR}/input.json"
   printf '%s\n' "not-json" >"${input_file}"
 
-  run_modify "${input_file}"
+  run bash -c '"${0}" <"${1}" >"${2}"' "${RENDERED_SCRIPT}" "${input_file}" "${OUTPUT_FILE}"
 
+  [[ "${status}" -ne 0 ]]
+  [[ ! -s "${OUTPUT_FILE}" ]]
+}
+
+@test "GIVEN existing settings and no jq EXPECT failure without output" {
+  input_file="${TEST_TMPDIR}/input.json"
+  write_moshi_live "${input_file}"
+  no_jq_bin="${TEST_TMPDIR}/no-jq-bin"
+  mkdir -p "${no_jq_bin}"
+  for tool in bash cat mktemp rm; do
+    ln -s "$(command -v "${tool}")" "${no_jq_bin}/${tool}"
+  done
+
+  run env PATH="${no_jq_bin}" bash -c '"${0}" <"${1}" >"${2}"' "${RENDERED_SCRIPT}" "${input_file}" "${OUTPUT_FILE}"
+
+  [[ "${status}" -ne 0 ]]
+  [[ ! -s "${OUTPUT_FILE}" ]]
+}
+
+@test "GIVEN empty stdin and no jq EXPECT managed settings" {
+  no_jq_bin="${TEST_TMPDIR}/no-jq-bin"
+  mkdir -p "${no_jq_bin}"
+  for tool in bash cat mktemp rm; do
+    ln -s "$(command -v "${tool}")" "${no_jq_bin}/${tool}"
+  done
+
+  run env PATH="${no_jq_bin}" bash -c '"${0}" </dev/null >"${1}"' "${RENDERED_SCRIPT}" "${OUTPUT_FILE}"
+
+  [[ "${status}" -eq 0 ]]
   cmp "${OUTPUT_FILE}" "${MANAGED_FILE}"
 }
 
