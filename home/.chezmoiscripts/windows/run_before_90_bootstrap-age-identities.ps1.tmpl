@@ -2,9 +2,11 @@
 # Fetches the age identities listed in onepassword.age_identities from 1Password
 # so chezmoi can decrypt encrypted_ files. Keys are never written to the console.
 # Runs before every apply (not run_once) so a deleted keyring or a key rotated in
-# 1Password is repaired. Each run first restricts the folder to the current user;
-# when the live keys already decrypt the Windows-managed files and recipients.txt
-# matches them, it exits without calling op.
+# 1Password is repaired. Each run first restricts the folder to the current user,
+# then compares the live pair with 1Password, the only authoritative key list (a
+# local check cannot tell a rotated-out key from a current one). Applies already
+# call op for the onepassword templates, so this adds no prompt; files are only
+# rewritten when they differ.
 $ErrorActionPreference = 'Stop'
 
 function Write-BootstrapLog([string]$Message) {
@@ -113,33 +115,19 @@ function Get-AgeRecipient([string]$Identity) {
   }
 }
 
-# Key lines of an identities or recipients file, sorted and de-duplicated.
-function Get-KeyLine([string]$Path) {
-  @(Get-Content -LiteralPath $Path | ForEach-Object { $_.Trim() } |
-      Where-Object { $_ -and -not $_.StartsWith('#') } | Sort-Object -Unique)
+# Key lines as one comparable string: trimmed, comments dropped, sorted and
+# de-duplicated case-sensitively.
+function Get-KeySet([string[]]$Lines) {
+  (@($Lines | ForEach-Object { "$_".Trim() } |
+      Where-Object { $_ -and -not $_.StartsWith('#') } | Sort-Object -Unique -CaseSensitive)) -join "`n"
 }
-
-# True when recipients.txt lists exactly the recipients of the live identities.
-# An interrupted swap can leave new identities beside old recipients, and chezmoi
-# would then encrypt to keys this machine no longer holds.
-function Test-RecipientsMatch {
-  $derived = foreach ($identity in (Get-KeyLine $identitiesFile)) {
-    $recipient = Get-AgeRecipient $identity
-    if (-not $recipient) { return $false }
-    $recipient
-  }
-  $derived = @($derived | Sort-Object -Unique)
-  $listed = Get-KeyLine $recipientsFile
-  return ($derived.Count -gt 0) -and (($derived -join "`n") -ceq ($listed -join "`n"))
-}
-
-if ((Test-Path -LiteralPath $identitiesFile) -and (Test-Path -LiteralPath $recipientsFile) -and (Test-AgeKeyring $identitiesFile)) {
-  if (Test-RecipientsMatch) { exit 0 }
-  Write-BootstrapLog 'recipients.txt does not match identities.txt; refreshing both from 1Password.'
+function Get-FileKeySet([string]$Path) {
+  if (-not (Test-Path -LiteralPath $Path)) { return $null }
+  Get-KeySet (Get-Content -LiteralPath $Path)
 }
 
 {{ if not (lookPath "op") -}}
-# Rendered without op on PATH, and the live keys did not pass the check above.
+# Rendered without op on PATH, so 1Password cannot be consulted.
 # With existing keys there is nothing to block on; without any, encrypted files
 # cannot be decrypted, so stop here with instructions instead of failing later.
 if (Test-Path -LiteralPath (Join-Path $HOME '.config\chezmoi\age-identities\identities.txt')) {
@@ -195,6 +183,15 @@ if ($failed.Count -gt 0) {
   Write-BootstrapLog "Leaving existing identities untouched: $($failed.Count) of $($sources.Count) source(s) failed ($($failed -join ', ')). Unlock 1Password and re-run chezmoi apply."
   exit 1
 }
+
+# Nothing to do when the live pair already holds exactly what 1Password has; this
+# also catches recipients.txt left stale by an interrupted swap, and a key that
+# was rotated out even though the remaining keys still decrypt everything.
+if (((Get-FileKeySet $identitiesFile) -ceq (Get-KeySet $identities)) -and
+    ((Get-FileKeySet $recipientsFile) -ceq (Get-KeySet $recipients))) {
+  exit 0
+}
+Write-BootstrapLog 'Local identities differ from 1Password; updating them.'
 
 # UTF-8 without BOM and LF endings, matching what age and the macOS files expect.
 $utf8 = New-Object System.Text.UTF8Encoding($false)
