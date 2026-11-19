@@ -96,10 +96,10 @@ function Protect-OwnerOnly([string]$Path, [switch]$Container) {
   if ($others) { throw "Could not restrict $Path to the current user." }
 }
 Protect-OwnerOnly $ageDir -Container
-Get-ChildItem -LiteralPath $ageDir -File | ForEach-Object { Protect-OwnerOnly $_.FullName }
+Get-ChildItem -LiteralPath $ageDir -File -Force | ForEach-Object { Protect-OwnerOnly $_.FullName }
 # Plaintext scratch files live only inside the restricted folder; clear any an
 # interrupted run left behind.
-Get-ChildItem -LiteralPath $ageDir -Filter '*.partial' -File | Remove-Item -Force
+Get-ChildItem -LiteralPath $ageDir -Filter '*.partial' -File -Force | Remove-Item -Force
 
 # Returns the age recipient for one identity, or $null if age cannot parse it.
 # The scratch copy stays in the restricted folder, never the shared temp dir.
