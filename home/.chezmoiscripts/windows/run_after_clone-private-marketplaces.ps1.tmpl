@@ -1,0 +1,62 @@
+{{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
+{{- $private := list -}}
+{{- range $name := keys $marketplaces | sortAlpha -}}
+  {{- $cloneUrl := get (get $marketplaces $name) "clone_url" -}}
+  {{- if hasPrefix "git@" $cloneUrl -}}
+    {{- $private = append $private (dict "name" $name "url" $cloneUrl) -}}
+  {{- end -}}
+{{- end -}}
+{{- if $private -}}
+# Clones private (SSH) Claude Code marketplaces after every file is applied, so
+# the 1Password agent.toml that exposes the SSH key is already in place (public
+# ones are chezmoi externals). Runs on every apply, so a deleted checkout is
+# cloned again; existing checkouts of the right repo are left alone. A failed
+# clone or a checkout of another repo exits non-zero. The next apply then
+# registers each new checkout in known_marketplaces.json.
+$ErrorActionPreference = 'Stop'
+
+$root = Join-Path $HOME '.claude\plugins\marketplaces'
+# Windows OpenSSH reaches the 1Password agent; Git's bundled ssh cannot.
+$sshExe = 'C:/Windows/System32/OpenSSH/ssh.exe'
+$sshCommand = "core.sshCommand=$sshExe"
+$marketplaces = @(
+{{- range $private }}
+  @{ Name = '{{ .name }}'; Url = '{{ .url }}' }
+{{- end }}
+)
+
+$failed = 0
+foreach ($marketplace in $marketplaces) {
+  $target = Join-Path $root $marketplace.Name
+  if (Test-Path -LiteralPath (Join-Path $target '.git')) {
+    # An existing checkout only counts if it tracks the manifest's repo; a
+    # mismatch (renamed repo, hand-made fork) is left alone and reported. Like
+    # the known_marketplaces.json check, it needs exactly one origin url.
+    $urls = @(& git -C $target config --get-all remote.origin.url | Where-Object { $_ })
+    $origin = $urls -join ', '
+    if ($urls.Count -ne 1 -or $urls[0] -ne $marketplace.Url) {
+      # Only a fresh clone guarantees the files come from the manifest's repo;
+      # changing the remote URL would relabel whatever is checked out.
+      [Console]::Error.WriteLine("[marketplaces] $target tracks '$origin', not '$($marketplace.Url)'. Move that folder aside (keeping any local changes), then re-run chezmoi apply to clone the expected repo.")
+      $failed++
+    } elseif (-not (Test-Path -LiteralPath (Join-Path $target '.claude-plugin\marketplace.json'))) {
+      # An interrupted clone can leave .git without the checked-out files.
+      [Console]::Error.WriteLine("[marketplaces] $target has no .claude-plugin\marketplace.json (incomplete checkout?). Move that folder aside, then re-run chezmoi apply to clone it again.")
+      $failed++
+    }
+    continue
+  }
+  if (-not (Test-Path -LiteralPath $sshExe)) {
+    [Console]::Error.WriteLine("[marketplaces] Cannot clone $($marketplace.Name): the Windows OpenSSH client ($sshExe) is not installed. Add the 'OpenSSH Client' optional feature, then re-run chezmoi apply.")
+    $failed++
+    continue
+  }
+  New-Item -ItemType Directory -Force -Path $root | Out-Null
+  & git clone --quiet --config $sshCommand $marketplace.Url $target
+  if ($LASTEXITCODE -ne 0) {
+    [Console]::Error.WriteLine("[marketplaces] Could not clone $($marketplace.Name); check the 1Password SSH agent, then re-run chezmoi apply.")
+    $failed++
+  }
+}
+if ($failed -gt 0) { exit 1 }
+{{ end -}}

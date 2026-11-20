@@ -1,0 +1,72 @@
+{{/* chezmoi:modify-template */}}
+{{- /*
+  Windows only. Registers the dotfiles' marketplaces, which .chezmoiexternal
+  clones into ~/.claude/plugins/marketplaces, so Claude Code installs the
+  enabledPlugins from them without `claude plugin marketplace add`. Entries
+  Claude added itself (e.g. claude-plugins-official) are kept.
+*/ -}}
+{{- $current := dict -}}
+{{- $stdin := get .chezmoi "stdin" -}}
+{{- if $stdin -}}
+  {{- $current = $stdin | fromJson -}}
+{{- end -}}
+{{- $modified := deepCopy $current -}}
+{{- $marketplaces := includeTemplate "claude_code_windows_marketplaces.tmpl" . | mustFromJson -}}
+{{- $root := joinPath .chezmoi.homeDir ".claude" "plugins" "marketplaces" -}}
+{{- $now := dateInZone "2006-01-02T15:04:05.000Z" now "UTC" -}}
+{{- /* Marketplaces the data defines but this machine type does not use (e.g.
+  work ones on a personal machine) are unregistered, so changing a type retires
+  them; names the data never defined are Claude's own and are kept. */ -}}
+{{- range $name := keys (.claude_code.marketplaces | default (dict)) -}}
+  {{- if not (hasKey $marketplaces $name) -}}
+    {{- $_ := unset $modified $name -}}
+  {{- end -}}
+{{- end -}}
+{{- range $name, $marketplace := $marketplaces -}}
+  {{- /* Private (SSH) marketplaces are cloned after apply by
+    run_after_clone-private-marketplaces; register them only while a
+    checkout of the manifest's repo exists, and drop any earlier registration
+    otherwise, so Claude never points at a missing folder or another repo. */ -}}
+  {{- if hasPrefix "git@" $marketplace.clone_url -}}
+    {{- $checkout := joinPath $root $name -}}
+    {{- $valid := false -}}
+    {{- /* .git is a folder in a clone and a file in a linked worktree; git
+      resolves either, like the clone hook's Test-Path check. */ -}}
+    {{- if stat (joinPath $checkout ".git") -}}
+      {{- /* Ask git, the same `config --get-all` the clone hook uses, so both
+        apply git's own parsing (repeated sections, quoting, key case). It runs
+        through PowerShell with exit 0 because chezmoi's output aborts the whole
+        apply on a non-zero exit, as git gives for a malformed config; that
+        checkout then yields no url and counts as unverified. Exactly one
+        matching origin url is required; several are ambiguous. */ -}}
+      {{- $command := printf "git -C '%s' config --get-all remote.origin.url 2>$null; exit 0" (replace "'" "''" $checkout) -}}
+      {{- $urls := list -}}
+      {{- range splitList "\n" (output "powershell.exe" "-NoProfile" "-NonInteractive" "-Command" $command) -}}
+        {{- if trim . -}}
+          {{- $urls = append $urls (trim .) -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $valid = and (eq (len $urls) 1) (eq (index ($urls | default (list "")) 0) $marketplace.clone_url) -}}
+      {{- /* An interrupted clone can leave .git without a checked-out tree;
+        require the marketplace manifest Claude reads, like the clone hook. */ -}}
+      {{- $valid = and $valid (stat (joinPath $checkout ".claude-plugin" "marketplace.json")) -}}
+    {{- end -}}
+    {{- if not $valid -}}
+      {{- $_ := unset $modified $name -}}
+      {{- continue -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $entry := deepCopy (get $current $name | default (dict)) -}}
+  {{- $_ := set $entry "source" $marketplace.source -}}
+  {{- $_ := set $entry "installLocation" (joinPath $root $name) -}}
+  {{- if not (hasKey $entry "lastUpdated") -}}
+    {{- $_ := set $entry "lastUpdated" $now -}}
+  {{- end -}}
+  {{- $_ := set $modified $name $entry -}}
+{{- end -}}
+{{- /* Re-emit the file untouched when nothing changed, so Claude's key order does not cause a permanent diff. */ -}}
+{{- if deepEqual $current $modified -}}
+{{ $stdin }}
+{{- else -}}
+{{ $modified | toPrettyJson }}
+{{- end -}}

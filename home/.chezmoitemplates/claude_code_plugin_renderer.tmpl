@@ -63,6 +63,13 @@
   {{- if and $active (eq $pluginType "work") $ctx.personal -}}
     {{- $active = false -}}
   {{- end -}}
+  {{- $notOs := (get $plugin "not_os" | default (list)) -}}
+  {{- if not (kindIs "slice" $notOs) -}}
+    {{- fail (printf "not_os must be a list for Claude plugin %q" $key) -}}
+  {{- end -}}
+  {{- if has $ctx.chezmoi.os $notOs -}}
+    {{- $active = false -}}
+  {{- end -}}
   {{- $hasMatchingDependency := false -}}
   {{- range $dependsOn -}}
     {{- $dependency := . -}}

@@ -9,7 +9,7 @@ if ! command -v chezmoi >/dev/null 2>&1; then
 fi
 
 if ! command -v shellcheck >/dev/null 2>&1; then
-  echo "shellcheck is required to lint rendered script templates." >&2
+  echo "shellcheck is required to lint rendered script templates. Run 'mise install' in the repo root." >&2
   exit 1
 fi
 
@@ -43,7 +43,7 @@ while IFS= read -r path; do
   home/.chezmoitemplates/*.tmpl)
     check_all=1
     ;;
-  home/.chezmoiscripts/*/*.tmpl)
+  home/.chezmoiscripts/*/*.sh.tmpl)
     add_candidate "${path}"
     ;;
   *) ;;
@@ -58,7 +58,7 @@ if [[ ${check_all} -eq 1 ]]; then
 
   while IFS= read -r rel_path; do
     case "${rel_path}" in
-    home/.chezmoiscripts/*/*.tmpl)
+    home/.chezmoiscripts/*/*.sh.tmpl)
       add_candidate "${rel_path}"
       ;;
     *) ;;
@@ -79,6 +79,12 @@ for template in "${candidates[@]}"; do
     echo "Failed to render template: ${template}" >&2
     rm -f "${tmp}"
     status=1
+    continue
+  fi
+
+  # An OS-gated script renders empty off its platform; chezmoi skips those too.
+  if ! grep -q '[^[:space:]]' "${tmp}"; then
+    rm -f "${tmp}"
     continue
   fi
 

@@ -1,0 +1,258 @@
+# Windows counterpart of macOS/run_once_before_90_bootstrap-age-identities.sh.tmpl.
+# Fetches the age identities listed in onepassword.age_identities from 1Password
+# so chezmoi can decrypt encrypted_ files. Keys are never written to the console.
+# Runs before every apply (not run_once) so a deleted keyring or a key rotated in
+# 1Password is repaired. Each run first restricts the folder to the current user,
+# then compares the live pair with 1Password, the only authoritative key list (a
+# local check cannot tell a rotated-out key from a current one). Applies already
+# call op for the onepassword templates, so this adds no prompt; files are only
+# rewritten when they differ.
+$ErrorActionPreference = 'Stop'
+
+function Write-BootstrapLog([string]$Message) {
+  [Console]::Error.WriteLine("[age-bootstrap] $Message")
+}
+
+# Windows PowerShell 5.1 turns redirected native stderr into a terminating error
+# under 'Stop', so native calls run under 'Continue' and are checked by exit code.
+function Invoke-Native([scriptblock]$Command) {
+  $previous = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try { (& $Command 2>$null | Out-String).Trim() } finally { $ErrorActionPreference = $previous }
+}
+
+# chezmoi exports its own path to scripts; fall back to PATH when run by hand.
+$chezmoi = if ($env:CHEZMOI_EXECUTABLE) { $env:CHEZMOI_EXECUTABLE } else { 'chezmoi' }
+
+$ageDir = Join-Path $HOME '.config\chezmoi\age-identities'
+$identitiesFile = Join-Path $ageDir 'identities.txt'
+$recipientsFile = Join-Path $ageDir 'recipients.txt'
+# Encrypted sources Windows applies; a keyring is only good if it decrypts them.
+$encryptedSources = @(
+{{- range (list "private_dot_ssh/encrypted_config.tmpl.age" "private_dot_config/private_1Password/private_ssh/encrypted_private_agent.toml.age") }}
+  '{{ joinPath $.chezmoi.sourceDir . | replace "'" "''" }}'
+{{- end }}
+)
+
+# True when $IdentityFile decrypts every encrypted source. Uses a throwaway
+# config and state file so it never contends with the running apply's state lock.
+function Test-AgeKeyring([string]$IdentityFile) {
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  $verifyConfig = Join-Path $ageDir "verify-$([guid]::NewGuid().ToString('N')).partial"
+  $verifyState = "$verifyConfig-state"
+  $identity = $IdentityFile.Replace('\', '/')
+  [IO.File]::WriteAllText($verifyConfig, "encryption = `"age`"`n[age]`n    identity = `"$identity`"`n", $utf8NoBom)
+  try {
+    foreach ($encrypted in $encryptedSources) {
+      if (-not (Test-Path -LiteralPath $encrypted)) { continue }
+      $null = Invoke-Native { & $chezmoi --config $verifyConfig --config-format toml --persistent-state $verifyState decrypt $encrypted }
+      if ($LASTEXITCODE -ne 0) { return $false }
+    }
+    return $true
+  } finally {
+    Remove-Item -LiteralPath $verifyConfig, $verifyState -Force -ErrorAction SilentlyContinue
+  }
+}
+
+New-Item -ItemType Directory -Force -Path $ageDir | Out-Null
+# chezmoi's state lock already serializes applies; this per-user mutex also
+# covers a hand-run copy, so two runs never share the staging files below.
+# Held until the process exits (Windows releases it then, even on `exit 1`).
+$bootstrapLock = New-Object System.Threading.Mutex($false, 'Local\chezmoi-age-bootstrap')
+try {
+  [void]$bootstrapLock.WaitOne()
+} catch [System.Threading.AbandonedMutexException] {
+  Write-BootstrapLog 'A previous bootstrap ended without releasing its lock; continuing.'
+}
+# Equivalent of chmod 700, done on every run before anything is read or written:
+# replace the folder's ACL with a protected one granting only the current user
+# (by SID), so inherited and explicit grants to anyone else are dropped. Existing
+# files get the same treatment, since a parent ACL change does not touch their
+# explicit entries; this also repairs keys restored by hand with wider access.
+$userSid = [Security.Principal.WindowsIdentity]::GetCurrent().User
+function Protect-OwnerOnly([string]$Path, [switch]$Container) {
+  if ($Container) {
+    $item = New-Object System.IO.DirectoryInfo($Path)
+    $acl = New-Object System.Security.AccessControl.DirectorySecurity
+    $inherit = [Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit'
+  } else {
+    $item = New-Object System.IO.FileInfo($Path)
+    $acl = New-Object System.Security.AccessControl.FileSecurity
+    $inherit = [Security.AccessControl.InheritanceFlags]::None
+  }
+  $acl.SetAccessRuleProtection($true, $false)
+  $rule = New-Object System.Security.AccessControl.FileSystemAccessRule($userSid, 'FullControl', $inherit, 'None', 'Allow')
+  $acl.AddAccessRule($rule)
+  # Writes only the DACL (Set-Acl on Windows PowerShell also touches the SACL,
+  # which needs SeSecurityPrivilege). .NET Core moved the method to an extension.
+  if ($item.PSObject.Methods['SetAccessControl']) {
+    $item.SetAccessControl($acl)
+  } else {
+    [System.IO.FileSystemAclExtensions]::SetAccessControl($item, $acl)
+  }
+  $others = (Get-Acl -LiteralPath $Path).Access | Where-Object {
+    $_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]) -ne $userSid
+  }
+  if ($others) { throw "Could not restrict $Path to the current user." }
+}
+Protect-OwnerOnly $ageDir -Container
+Get-ChildItem -LiteralPath $ageDir -File -Force | ForEach-Object { Protect-OwnerOnly $_.FullName }
+# Plaintext scratch files live only inside the restricted folder; clear any an
+# interrupted run left behind.
+Get-ChildItem -LiteralPath $ageDir -Filter '*.partial' -File -Force | Remove-Item -Force
+
+# Returns the age recipient for one identity, or $null if age cannot parse it.
+# The scratch copy stays in the restricted folder, never the shared temp dir.
+function Get-AgeRecipient([string]$Identity) {
+  $tmp = Join-Path $ageDir "validate-$([guid]::NewGuid().ToString('N')).partial"
+  try {
+    [IO.File]::WriteAllText($tmp, "$Identity`n")
+    $recipient = Invoke-Native { & $chezmoi age-keygen -y $tmp }
+    if ($LASTEXITCODE -eq 0 -and $recipient) { return $recipient }
+    return $null
+  } finally {
+    Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+  }
+}
+
+# UTF-8 without BOM and LF endings, matching what age and the macOS files expect.
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+function ConvertTo-KeyFileText($Lines) {
+  (($Lines | Select-Object -Unique) -join "`n") + "`n"
+}
+# Byte-for-byte comparison with the file this script would write. Decoding with
+# Get-Content would hide a UTF-16 or BOM-marked copy that age cannot read.
+function Test-KeyFileCurrent([string]$Path, [string]$Text) {
+  if (-not (Test-Path -LiteralPath $Path)) { return $false }
+  $actual = [Convert]::ToBase64String([IO.File]::ReadAllBytes($Path))
+  return $actual -ceq [Convert]::ToBase64String($utf8.GetBytes($Text))
+}
+
+{{ if not (lookPath "op") -}}
+# Rendered without op on PATH, so 1Password cannot be consulted.
+# With existing keys there is nothing to block on; without any, encrypted files
+# cannot be decrypted, so stop here with instructions instead of failing later.
+if (Test-Path -LiteralPath (Join-Path $HOME '.config\chezmoi\age-identities\identities.txt')) {
+  Write-BootstrapLog 'Skipping: 1Password CLI (op) is not on PATH; keeping the existing identities.'
+  exit 0
+}
+Write-BootstrapLog 'Cannot bootstrap age identities: 1Password CLI (op) is not on PATH. 10_install-packages installs it (winget AgileBits.1Password.CLI); open a new terminal so PATH picks it up, turn on the 1Password app''s CLI integration, then re-run chezmoi apply.'
+exit 1
+{{ end -}}
+
+$sources = @(
+{{- range .onepassword.age_identities }}
+  @{ Item = '{{ .item }}'; Vault = '{{ index $.onepassword.vaults .vault }}' }
+{{- end }}
+)
+
+if ($sources.Count -eq 0) {
+  Write-BootstrapLog 'No age identity sources found; nothing to bootstrap.'
+  exit 0
+}
+Write-BootstrapLog "Found $($sources.Count) identity source(s)."
+
+$identities = New-Object System.Collections.Generic.List[string]
+$recipients = New-Object System.Collections.Generic.List[string]
+
+$failed = New-Object System.Collections.Generic.List[string]
+
+foreach ($source in $sources) {
+  $label = "$($source.Item):$($source.Vault)"
+  # op exits nonzero for a missing item or a denied prompt.
+  $identity = Invoke-Native { op item get $source.Item --vault $source.Vault --fields credential --reveal }
+  if ($LASTEXITCODE -ne 0 -or -not $identity) {
+    Write-BootstrapLog "No credential returned for $label."
+    $failed.Add($label)
+    continue
+  }
+
+  # Only keep identities age can parse; the derived recipient doubles as the check.
+  $recipient = Get-AgeRecipient $identity
+  if (-not $recipient) {
+    Write-BootstrapLog "Credential for $label is not a valid age identity."
+    $failed.Add($label)
+    continue
+  }
+  $identities.Add($identity)
+  $recipients.Add($recipient)
+}
+
+# Write nothing unless every identity was fetched and valid, so a partial lookup
+# (locked vault, denied prompt) never replaces a working keyring. The next
+# chezmoi apply runs this script again and retries.
+if ($failed.Count -gt 0) {
+  Write-BootstrapLog "Leaving existing identities untouched: $($failed.Count) of $($sources.Count) source(s) failed ($($failed -join ', '))."
+  # A denied prompt or missing item should not block unrelated updates while the
+  # live keyring still decrypts the managed files; the next apply compares again.
+  if ((Test-Path -LiteralPath $identitiesFile) -and (Test-AgeKeyring $identitiesFile)) {
+    Write-BootstrapLog 'The existing identities still decrypt the managed files; continuing. Fix the 1Password lookup so key rotations reach this machine.'
+    exit 0
+  }
+  Write-BootstrapLog 'No working identities to fall back on. Unlock 1Password and re-run chezmoi apply.'
+  exit 1
+}
+
+# Nothing to do when the live pair is byte-identical to what this script writes
+# from 1Password. Anything else (recipients.txt left stale by an interrupted
+# swap, a key rotated out while the rest still decrypt, a re-encoded or
+# hand-edited copy) is rewritten through the verified swap below.
+if ((Test-KeyFileCurrent $identitiesFile (ConvertTo-KeyFileText $identities)) -and
+    (Test-KeyFileCurrent $recipientsFile (ConvertTo-KeyFileText $recipients))) {
+  # A run interrupted after both swaps leaves the previous (possibly retired)
+  # keys in .bak. Once the live pair is proven to work, they are not needed.
+  $backups = @($identitiesFile, $recipientsFile | ForEach-Object { "$_.bak" } |
+      Where-Object { Test-Path -LiteralPath $_ })
+  if ($backups.Count -gt 0 -and (Test-AgeKeyring $identitiesFile)) {
+    Remove-Item -LiteralPath $backups -Force
+    Write-BootstrapLog 'Removed backups left by an interrupted update.'
+  }
+  exit 0
+}
+Write-BootstrapLog 'Local identities differ from 1Password; updating them.'
+
+# Stage both files first, then swap each into place; ReplaceFile is atomic on
+# NTFS, so the live files are never truncated. The previous pair stays as .bak
+# until both swaps finish, so an interrupted update can be recovered by hand.
+# A .bak left by an interrupted run already holds the original file, so a retry
+# keeps it instead of backing up the half-updated live file over it.
+$files = @(
+  @{ Live = $identitiesFile; Lines = $identities },
+  @{ Live = $recipientsFile; Lines = $recipients }
+)
+foreach ($file in $files) {
+  $file.Staged = "$($file.Live).partial"
+  $file.Backup = "$($file.Live).bak"
+  [IO.File]::WriteAllText($file.Staged, (ConvertTo-KeyFileText $file.Lines), $utf8)
+}
+
+# Prove the staged keyring decrypts the encrypted sources before touching the
+# live pair: a valid but wrong or prematurely rotated key in 1Password would
+# otherwise replace working keys. On failure the live files stay as they are; the
+# script exits non-zero only if they do not decrypt either.
+if (-not (Test-AgeKeyring $files[0].Staged)) {
+  foreach ($file in $files) { Remove-Item -LiteralPath $file.Staged -Force -ErrorAction SilentlyContinue }
+  Write-BootstrapLog 'The identities from 1Password cannot decrypt the managed files; leaving the existing identities untouched. Check the age key items in 1Password (or re-encrypt the files for a rotated key).'
+  # A key rotated in 1Password before the files were re-encrypted should not
+  # block updates on machines whose current keys still work.
+  if ((Test-Path -LiteralPath $identitiesFile) -and (Test-AgeKeyring $identitiesFile)) {
+    Write-BootstrapLog 'The existing identities still decrypt the managed files; continuing.'
+    exit 0
+  }
+  exit 1
+}
+
+foreach ($file in $files) {
+  if (Test-Path -LiteralPath $file.Live) {
+    # [NullString]: PowerShell would pass $null to a .NET string parameter as "".
+    $backup = if (Test-Path -LiteralPath $file.Backup) { [NullString]::Value } else { $file.Backup }
+    [IO.File]::Replace($file.Staged, $file.Live, $backup)
+  } else {
+    [IO.File]::Move($file.Staged, $file.Live)
+  }
+}
+foreach ($file in $files) {
+  Remove-Item -LiteralPath $file.Backup -Force -ErrorAction SilentlyContinue
+}
+
+Write-BootstrapLog "Wrote identities to $identitiesFile and recipients to $recipientsFile."

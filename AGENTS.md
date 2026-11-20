@@ -256,4 +256,5 @@ fi
 - Template validation via `chezmoi execute-template`
 - Static analysis via shellcheck
 - Dry-run with `chezmoi apply --dry-run`
+- Pester 5 tests for Windows scripts in `tests/pester` (`Invoke-Pester tests/pester`); the pre-commit hook runs them when a Windows script is staged
 - Platform-specific testing on macOS/Linux/Windows
