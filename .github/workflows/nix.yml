@@ -1,0 +1,51 @@
+name: nix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "flake.nix"
+      - "flake.lock"
+      - "nix/**"
+      - ".github/workflows/nix.yml"
+  pull_request:
+    paths:
+      - "flake.nix"
+      - "flake.lock"
+      - "nix/**"
+      - ".github/workflows/nix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nix-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Evaluate and build NixOS hosts
+    runs-on: ubuntu-latest
+    steps:
+      # A full desktop closure (NVIDIA, Steam, niri) needs more than the
+      # runner's default free disk space.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Check formatting
+        run: nix fmt -- --check flake.nix nix
+
+      # Builds every host's system closure (exposed as checks.x86_64-linux.nixos-<host>).
+      - name: Flake check
+        run: nix flake check --print-build-logs --show-trace

@@ -199,7 +199,7 @@ fi
 - `home/.chezmoidata/shell_manifest/` - Canonical shell behavior definitions for aliases, exports, functions, and init
 - `home/.chezmoitemplates/` - Reusable template partials
 - `home/private_*` - Restricted permission files
-- `flake.nix` - Nix flakes configuration
+- `flake.nix` - NixOS hosts (flake-parts + import-tree). Every `.nix` file under `nix/modules/` is a flake-parts module that registers `flake.modules.nixos.<feature>`; hosts live in `nix/modules/hosts/<name>/` and import features by name. Files or folders starting with `_` are skipped by import-tree.
 
 ## Destination Mapping
 
@@ -248,7 +248,7 @@ fi
 - **treefmt**: Multi-language formatter (primary formatting tool)
 - **shellcheck**: Static shell analysis with custom rules
 - **chezmoi**: Template validation and diff capabilities
-- **nix flake**: Reproducible development environment
+- **nix flake**: `nix flake check` evaluates and builds every NixOS host (CI: `.github/workflows/nix.yml`)
 
 ## Testing Approach
 
